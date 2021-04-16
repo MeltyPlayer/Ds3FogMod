@@ -53,6 +53,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FogMod\Flags.cs" />
     <Compile Include="FogMod\GameDataWriter3.cs" />
     <Compile Include="FogMod\GenerateConfig.cs" />
     <Compile Include="FogMod\GraphChecker.cs" />

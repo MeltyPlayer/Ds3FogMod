@@ -17,6 +17,9 @@ namespace FogMod {
     }
 
     public void Connect(RandomizerOptions opt, Graph g, AnnotationData ann) {
+      // TODO: Move this line?
+      Flags.IsDs1 = g.Areas.ContainsKey("asylum");
+
       Dictionary<string, Node> graph = g.Nodes;
       List<Edge> allFroms = graph
                             .Values.SelectMany(
@@ -92,7 +95,7 @@ namespace FogMod {
         g.Start =
             ann.CustomStarts[
                 new Random(opt.Seed - 1).Next(ann.CustomStarts.Count)];
-      } else if (g.Areas.ContainsKey("asylum")) {
+      } else if (Flags.IsDs1) {
         g.Start = new CustomStart {
             Name = "Asylum",
             Area = "asylum",
@@ -449,8 +452,7 @@ namespace FogMod {
       // If any paths have <=4 areas, choose them
       // If any paths have no bosses unique to that path, choose them
       // Otherwise, choose shortest?
-      bool ds1 = g.Areas.ContainsKey("asylum");
-      List<string> upgradeAreas = ds1
+      List<string> upgradeAreas = Flags.IsDs1
                                       ? new List<string> {
                                           "parish_andre", "catacombs",
                                           "anorlondo_blacksmith"
@@ -517,7 +519,7 @@ namespace FogMod {
           // If it's early enough in vanilla (i.e. before expected access to blacksmith in DS1), don't make it easier either.
           else if (defaultCost <=
                    (ann.DefaultCost.TryGetValue(
-                        ds1 ? "parish_church" : "settlement",
+                        Flags.IsDs1 ? "parish_church" : "settlement",
                         out float val)
                         ? val
                         : 0.25) &&
@@ -534,7 +536,7 @@ namespace FogMod {
 
         if (opt["skipprint"]) continue;
         // Print out the connectivity info for spoiler logs
-        if (rec.Area == (ds1 ? "anorlondo_os" : "firelink"))
+        if (rec.Area == (Flags.IsDs1 ? "anorlondo_os" : "firelink"))
           Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         string areas = opt["debugareas"]
                            ? $" [{string.Join(",", new SortedSet<string>(rec.Visited))}]"
@@ -579,7 +581,7 @@ namespace FogMod {
           Area area = g.Areas[entry.Key];
           if (area.HasTag("optional")) continue;
           Console.WriteLine(
-              $"{entry.Key}: {entry.Value}  # SL {(int) (10 + (ds1 ? 60 : 70) * entry.Value)}");
+              $"{entry.Key}: {entry.Value}  # SL {(int) (10 + (Flags.IsDs1 ? 60 : 70) * entry.Value)}");
         }
       }
       Console.WriteLine($"Finished {opt.DisplaySeed} at try {tries}");
