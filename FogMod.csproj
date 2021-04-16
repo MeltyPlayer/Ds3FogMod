@@ -59,6 +59,7 @@
     <Compile Include="FogMod\GraphChecker.cs" />
     <Compile Include="FogMod\GraphConnector.cs" />
     <Compile Include="FogMod\io\FileWriterManager.cs" />
+    <Compile Include="FogMod\io\Writers.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="SoulsFormats\CCM.cs" />
     <Compile Include="SoulsIds\EMEDF.cs" />

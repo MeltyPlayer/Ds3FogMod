@@ -10,6 +10,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
+using FogMod.io;
+
 using YamlDotNet.Serialization;
 
 namespace FogMod {
@@ -19,12 +21,12 @@ namespace FogMod {
         GameSpec.FromGame game,
         string gameDir,
         string outDir) {
-      Console.WriteLine(string.Format("Seed: {0}. Options: {1}",
-                                      (object) opt.DisplaySeed,
-                                      (object) string.Join(
-                                          " ",
-                                          (IEnumerable<string>) opt
-                                              .GetEnabled())));
+      Writers.SpoilerLogs.WriteLine(string.Format("Seed: {0}. Options: {1}",
+                                                  (object) opt.DisplaySeed,
+                                                  (object) string.Join(
+                                                      " ",
+                                                      (IEnumerable<string>) opt
+                                                          .GetEnabled())));
       string path = game == GameSpec.FromGame.DS3
                         ? "fogdist\\fog.txt"
                         : "dist\\fog.txt";
@@ -47,16 +49,16 @@ namespace FogMod {
       g.Construct(opt, ann);
       ItemReader.Result items =
           new ItemReader().FindItems(opt, ann, g, events, gameDir, game);
-      Console.WriteLine(items.Randomized
+      Writers.SpoilerLogs.WriteLine(items.Randomized
                             ? "Key item hash: " + items.ItemHash
                             : "No key items randomized");
-      Console.WriteLine();
+      Writers.SpoilerLogs.WriteLine();
       
       GraphConnector.Randomize(opt, g, ann);
 
       if (opt["bonedryrun"])
         return items;
-      Console.WriteLine();
+      Writers.SpoilerLogs.WriteLine();
       if (game == GameSpec.FromGame.DS3) {
         EventConfig eventConfig;
         using (StreamReader streamReader = File.OpenText("fogdist\\events.txt"))

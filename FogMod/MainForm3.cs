@@ -18,6 +18,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using FogMod.io;
+
 namespace FogMod {
   public class MainForm3 : Form {
     private static string defaultDir =
@@ -198,11 +200,8 @@ namespace FogMod {
                                                                 "yyyy-MM-dd_HH.mm.ss"),
                                                    (object) rand.Seed,
                                                    (object) rand.ConfigHash());
-                                               TextWriter text =
-                                                   (TextWriter) File.CreateText(
-                                                       path);
-                                               TextWriter newOut = Console.Out;
-                                               Console.SetOut(text);
+                                               Writers.SpoilerLogs = File.CreateText(path);
+
                                                try {
                                                  ItemReader.Result result =
                                                      randomizer.Randomize(
@@ -238,8 +237,7 @@ namespace FogMod {
                                                      true,
                                                      false);
                                                } finally {
-                                                 text.Close();
-                                                 Console.SetOut(newOut);
+                                                 Writers.SpoilerLogs.Close();
                                                }
                                              }));
       mainForm3.randb.Enabled = true;

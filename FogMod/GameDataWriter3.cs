@@ -6,6 +6,8 @@ using System.Globalization;
 using System.Linq;
 using System.Numerics;
 
+using FogMod.io;
+
 using static FogMod.Util;
 using static FogMod.AnnotationData;
 using static FogMod.Graph;
@@ -1652,7 +1654,7 @@ namespace FogMod {
 
     private void AddModFile(List<string> writtenFiles, string path) {
       path = FullName(path);
-      Console.WriteLine($"Writing {path}");
+      Writers.SpoilerLogs.WriteLine($"Writing {path}");
       writtenFiles.Add(path);
     }
 
@@ -1660,14 +1662,14 @@ namespace FogMod {
         List<string> writtenFiles,
         string modDir,
         string outPath) {
-      Console.WriteLine("Processing extra mod files...");
+      Writers.SpoilerLogs.WriteLine("Processing extra mod files...");
       bool work = false;
       if (modDir != null) {
         foreach (string gameFile in GetGameFiles(modDir)) {
           string source = FullName($@"{modDir}\{gameFile}");
           string target = FullName($@"{outPath}\{gameFile}");
           if (writtenFiles.Contains(target)) continue;
-          Console.WriteLine($"Copying {source}");
+          Writers.SpoilerLogs.WriteLine($"Copying {source}");
           Directory.CreateDirectory(Path.GetDirectoryName(target));
           File.Copy(source, target, true);
           writtenFiles.Add(target);
@@ -1677,11 +1679,11 @@ namespace FogMod {
       foreach (string gameFile in GetGameFiles(outPath)) {
         string target = FullName($@"{outPath}\{gameFile}");
         if (writtenFiles.Contains(target)) continue;
-        Console.WriteLine(
+        Writers.SpoilerLogs.WriteLine(
             $"Found extra file (delete it if you don't want it): {target}");
         work = true;
       }
-      if (!work) Console.WriteLine("No extra files found");
+      if (!work) Writers.SpoilerLogs.WriteLine("No extra files found");
     }
   }
 }

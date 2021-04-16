@@ -7,6 +7,8 @@ using static FogMod.AnnotationData;
 using static FogMod.GraphChecker;
 using static FogMod.Graph;
 
+using FogMod.io;
+
 using System.IO;
 
 namespace FogMod {
@@ -376,12 +378,12 @@ namespace FogMod {
                   $"  From {e.From}{(e.IsFixed ? " (world)" : "")}: {entry.Value}");
           }
           var maxEdge = rec
-                                              .InEdge.OrderBy(e => e.Value)
-                                              .Where(e => !e.Key.IsFixed &&
-                                                          (e.Key.Pair !=
-                                                           null) ==
-                                                          pairedOnly)
-                                              .LastOrDefault();
+                        .InEdge.OrderBy(e => e.Value)
+                        .Where(e => !e.Key.IsFixed &&
+                                    (e.Key.Pair !=
+                                     null) ==
+                                    pairedOnly)
+                        .LastOrDefault();
           if (maxEdge.Key != null) {
             int inCount = graphNodes[rec.Area].From.Count;
             if (inCount > lastCount) {
@@ -458,15 +460,15 @@ namespace FogMod {
 
       // TODO: Should sqrt also be used in DS1? ... it seems a bit weird, but the curves and area sizes are rather different
       var distances = check
-                                            .Records.Values.OrderBy(r => r.Dist)
-                                            .ToDictionary(
-                                                r => r.Area,
-                                                r => getAreaCost(r.Dist));
+                      .Records.Values.OrderBy(r => r.Dist)
+                      .ToDictionary(
+                          r => r.Area,
+                          r => getAreaCost(r.Dist));
       var thisDist = getCumCost(distances);
       var vCost = getCumCost(annotationData_.DefaultCost);
       var vCosts = annotationData_.DefaultCost.Select(t => t.Value)
-                                          .OrderBy(t => t)
-                                          .ToList();
+                                  .OrderBy(t => t)
+                                  .ToList();
       var ratios = new List<float>();
 
       string maybeName(string area)
@@ -479,15 +481,15 @@ namespace FogMod {
       // If any paths have no bosses unique to that path, choose them
       // Otherwise, choose shortest?
       var upgradeAreas = Flags.IsDs1
-                                      ? new List<string> {
-                                          "parish_andre", "catacombs",
-                                          "anorlondo_blacksmith"
-                                      } // "newlondo" doesn't sell titanite shards... although not that it matters with item rando
-                                      : new List<string> {"firelink"};
+                             ? new List<string> {
+                                 "parish_andre", "catacombs",
+                                 "anorlondo_blacksmith"
+                             } // "newlondo" doesn't sell titanite shards... although not that it matters with item rando
+                             : new List<string> {"firelink"};
       var upgradeNodes = upgradeAreas
-                                      .Select(area => check.Records[area])
-                                      .OrderBy(r => r.Visited.Count)
-                                      .ToList();
+                         .Select(area => check.Records[area])
+                         .OrderBy(r => r.Visited.Count)
+                         .ToList();
       NodeRecord firstUpgrade;
       if (upgradeNodes[0].Visited.Count < 5) {
         firstUpgrade = upgradeNodes[0];
@@ -503,10 +505,10 @@ namespace FogMod {
       }
       var preUpgrade = firstUpgrade.Visited;
       if (!options_["skipprint"]) {
-        Console.WriteLine(
+        Writers.SpoilerLogs.WriteLine(
             $"Areas required before {maybeName(firstUpgrade.Area)}: {string.Join("; ", preUpgrade.Select(maybeName))}");
-        Console.WriteLine($"Other areas are not necessary to get there.");
-        Console.WriteLine();
+        Writers.SpoilerLogs.WriteLine($"Other areas are not necessary to get there.");
+        Writers.SpoilerLogs.WriteLine();
       }
 
       foreach (string area in upgradeAreas) {
@@ -568,7 +570,7 @@ namespace FogMod {
         if (options_["skipprint"]) continue;
         // Print out the connectivity info for spoiler logs
         if (rec.Area == (Flags.IsDs1 ? "anorlondo_os" : "firelink"))
-          Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+          Writers.SpoilerLogs.WriteLine(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         string areas = options_["debugareas"]
                            ? $" [{string.Join(",", new SortedSet<string>(rec.Visited))}]"
                            : "";
@@ -577,10 +579,10 @@ namespace FogMod {
         string explainCost =
             options_["explain"] ? $" {desiredCost * 100:0.}%" : "";
 
-        Console.WriteLine($"{maybeName(rec.Area)}{explainCost}" +
-                          scaling +
-                          areas +
-                          (isBoss ? " <----" : ""));
+        Writers.SpoilerLogs.WriteLine($"{maybeName(rec.Area)}{explainCost}" +
+                                      scaling +
+                                      areas +
+                                      (isBoss ? " <----" : ""));
         foreach (var entry in rec.InEdge.OrderBy(e => e.Value)) {
           var e = entry.Key;
           var itemAreas = e.LinkedExpr == null
@@ -600,10 +602,10 @@ namespace FogMod {
 
           // Don't print entry.Value directly (distance of edge) - hard to visualize
           if (e.Text == e.Link.Text) {
-            Console.WriteLine(
+            Writers.SpoilerLogs.WriteLine(
                 $"  Preexisting: From {maybeName(e.From)} to {maybeName(rec.Area)} ({e.Text}{itemDeps})");
           } else {
-            Console.WriteLine(
+            Writers.SpoilerLogs.WriteLine(
                 $"  Random: From {maybeName(e.From)} ({e.Text}) to {maybeName(rec.Area)} ({e.Link.Text}{itemDeps})");
           }
         }
@@ -616,7 +618,7 @@ namespace FogMod {
               $"{entry.Key}: {entry.Value}  # SL {(int) (10 + (Flags.IsDs1 ? 60 : 70) * entry.Value)}");
         }
       }
-      Console.WriteLine($"Finished {options_.DisplaySeed} at try {tries}");
+      Writers.SpoilerLogs.WriteLine($"Finished {options_.DisplaySeed} at try {tries}");
       if (options_["explain"])
         Console.WriteLine(
             $"Pre-Blacksmith areas ({firstUpgrade.Area}): {string.Join(", ", preUpgrade)}");

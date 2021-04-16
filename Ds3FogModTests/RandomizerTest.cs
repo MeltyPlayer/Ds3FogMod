@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
+using FogMod.io;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using FogMod.Properties;
@@ -59,17 +61,15 @@ namespace FogMod {
 
       var spoilerLogs = tempDir.CreateSubdirectory("spoiler_logs");
       string path = string.Format($"{spoilerLogs.FullName}\\temp.txt");
-      TextWriter text = File.CreateText(path);
-      TextWriter newOut = Console.Out;
-      Console.SetOut(text);
+
+      Writers.SpoilerLogs = File.CreateText(path);
       new Randomizer().Randomize(opt,
                                  SoulsIds.GameSpec.FromGame.DS3,
                                  opt["mergemods"]
                                      ? gameDir + "\\randomizer"
                                      : (string) null,
                                  tempDir.FullName);
-      text.Close();
-      Console.SetOut(newOut);
+      Writers.SpoilerLogs.Close();
 
       /*var directories = new[] {"event", "map", "msg", "script"};
       foreach (var directory in directories) {
