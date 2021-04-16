@@ -51,7 +51,9 @@ namespace FogMod {
                             ? "Key item hash: " + items.ItemHash
                             : "No key items randomized");
       Console.WriteLine();
-      new GraphConnector().Connect(opt, g, ann);
+      
+      GraphConnector.Randomize(opt, g, ann);
+
       if (opt["bonedryrun"])
         return items;
       Console.WriteLine();

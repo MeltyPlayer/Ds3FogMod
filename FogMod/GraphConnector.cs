@@ -11,25 +11,46 @@ using System.IO;
 
 namespace FogMod {
   public class GraphConnector {
+    private readonly RandomizerOptions options_;
+    private readonly Graph graph_;
+    private readonly AnnotationData annotationData_;
+
     enum EdgeSilo {
       PAIRED,
       UNPAIRED
     }
 
-    public void Connect(RandomizerOptions opt, Graph g, AnnotationData ann) {
-      // TODO: Move this line?
-      Flags.IsDs1 = g.Areas.ContainsKey("asylum");
+    public static void Randomize(
+        RandomizerOptions options,
+        Graph graph,
+        AnnotationData annotationData)
+      => new GraphConnector(options, graph, annotationData);
 
-      Dictionary<string, Node> graph = g.Nodes;
-      List<Edge> allFroms = graph
+    private GraphConnector(
+        RandomizerOptions options,
+        Graph graph,
+        AnnotationData annotationData) {
+      this.options_ = options;
+      this.graph_ = graph;
+      this.annotationData_ = annotationData;
+
+      this.Randomize_();
+    }
+
+    private void Randomize_() {
+      // TODO: Move this line?
+      Flags.IsDs1 = this.graph_.Areas.ContainsKey("asylum");
+
+      Dictionary<string, Node> graphNodes = graph_.Nodes;
+      List<Edge> allFroms = graphNodes
                             .Values.SelectMany(
                                 node => node.From.Where(e => e.From == null))
                             .ToList();
-      List<Edge> allTos = graph
+      List<Edge> allTos = graphNodes
                           .Values.SelectMany(
                               node => node.To.Where(e => e.To == null))
                           .ToList();
-      Random shuffleRandom = new Random(opt.Seed);
+      Random shuffleRandom = new Random(options_.Seed);
       Shuffle(shuffleRandom, allFroms);
       Shuffle(shuffleRandom, allTos);
 
@@ -43,12 +64,12 @@ namespace FogMod {
                          .Where(e => (e.Pair == null) ==
                                      (siloType == EdgeSilo.UNPAIRED))
                          .ToList();
-        if (opt["explain"])
+        if (options_["explain"])
           Console.WriteLine(
               $"Connecting silo {siloType}: {froms.Count} with no from, and {tos.Count} with no to");
 
         while (true) {
-          if (opt["vanilla"]) break;
+          if (options_["vanilla"]) break;
           Edge from = null;
           for (int i = 0; i < froms.Count; i++) {
             from = froms[i];
@@ -84,44 +105,44 @@ namespace FogMod {
           if (from.IsFixed || to.IsFixed)
             throw new Exception(
                 $"Internal error: found fixed edges in randomization {from} ({from.IsFixed}) and {to} ({to.IsFixed})");
-          g.Connect(to, from);
+          this.graph_.Connect(to, from);
         }
         if (froms.Count > 0 || tos.Count > 0)
           throw new Exception(
               $"Internal error: unconnected edges after randomization:\nFrom edges: {string.Join(", ", froms)}\nTo edges: {string.Join(", ", tos)}");
       }
 
-      if (opt["start"]) {
-        g.Start =
-            ann.CustomStarts[
-                new Random(opt.Seed - 1).Next(ann.CustomStarts.Count)];
+      if (options_["start"]) {
+        this.graph_.Start =
+            annotationData_.CustomStarts[
+                new Random(options_.Seed - 1).Next(annotationData_.CustomStarts.Count)];
       } else if (Flags.IsDs1) {
-        g.Start = new CustomStart {
+        this.graph_.Start = new CustomStart {
             Name = "Asylum",
             Area = "asylum",
             Respawn = "asylum 1812961",
         };
-      } else if (g.Areas.ContainsKey("firelink_cemetery")) {
-        g.Start = new CustomStart {
+      } else if (this.graph_.Areas.ContainsKey("firelink_cemetery")) {
+        this.graph_.Start = new CustomStart {
             Name = "Cemetery of Ash",
             Area = "firelink_cemetery",
             Respawn = "firelink 1812961",
         };
       }
-      string start = g.Start.Area;
+      string start = this.graph_.Start.Area;
 
       // Massive pile of edge-swapping heuristics incoming
       int tries = 0;
       GraphChecker checker = new GraphChecker();
       CheckRecord check = null;
-      bool pairedOnly = !opt["unconnected"];
+      bool pairedOnly = !options_["unconnected"];
       List<string> triedSwaps = new List<string>();
       while (tries++ < 100) {
-        if (opt["explain"])
+        if (options_["explain"])
           Console.WriteLine($"------------------------ Try {tries}");
-        check = checker.Check(opt, g, start);
+        check = checker.Check(options_, this.graph_, start);
         if (check.Unvisited.Count == 0 &&
-            g.Areas.ContainsKey("firelink_cemetery")) {
+            this.graph_.Areas.ContainsKey("firelink_cemetery")) {
           // Try to minimize distance to Firelink Shrine in DS3
           // This is done by swapping equivalent pairs of areas, matching random cand edge count with random subst edge count, though preferably no additional fixed exits in cand.
           // The first priority is to have Firelink available. If it can be made accessible before the 10th nontrivial area (although not the first, if there's an option), this is done.
@@ -136,7 +157,7 @@ namespace FogMod {
                                    .Records.Values.OrderBy(r => r.Dist)
                                    .Select(r => r.Area)
                                    .ToList();
-          if (opt["explain"])
+          if (options_["explain"])
             Console.WriteLine(
                 $"Trying to place Firelink now. Overall order: [{string.Join(",", areaOrder.Select((a, i) => $"{a}:{i}"))}]");
           Dictionary<string, int> areaIndex = areaOrder
@@ -146,26 +167,26 @@ namespace FogMod {
                                                   a => a.Item2);
 
           int nontrivialCount =
-              areaOrder.Count(a => !g.Areas[a].HasTag("trivial"));
+              areaOrder.Count(a => !this.graph_.Areas[a].HasTag("trivial"));
           string reasonable = areaOrder
-                              .Where(a => !g.Areas[a].HasTag("trivial"))
+                              .Where(a => !this.graph_.Areas[a].HasTag("trivial"))
                               .Skip(nontrivialCount * 15 / 100)
                               .FirstOrDefault();
           int reasonableIndex = reasonable == null
                                     ? areaOrder.Count
                                     : areaOrder.IndexOf(reasonable);
-          if (opt["explain"])
+          if (options_["explain"])
             Console.WriteLine(
-                $"Last reasonable area for Firelink requisites: {reasonable}. Total count {areaOrder.Where(a => !g.Areas[a].HasTag("trivial")).Count()}");
+                $"Last reasonable area for Firelink requisites: {reasonable}. Total count {areaOrder.Where(a => !this.graph_.Areas[a].HasTag("trivial")).Count()}");
 
           Dictionary<string, int> randomIn = new Dictionary<string, int>();
           Dictionary<int, List<string>> byRandomIn =
               new Dictionary<int, List<string>>();
           foreach (string area in areaOrder) {
-            Node node = graph[area];
+            Node node = graphNodes[area];
             int count =
                 node.From.Count(e => !e.IsFixed &&
-                                     (opt["unconnected"] || e.Pair != null));
+                                     (options_["unconnected"] || e.Pair != null));
             // Console.WriteLine($"end time: {area}. {node.From.Count(e => !e.IsFixed && e.Pair != null)}/{node.From.Count} in, {node.To.Count(e => !e.IsFixed && e.Pair != null)}/{node.To.Count} out, trivial {g.Areas[area].HasTag("trivial")}");
             randomIn[area] = count;
             AddMulti(byRandomIn, count, area);
@@ -183,7 +204,7 @@ namespace FogMod {
             if (root != null)
               cands.RemoveAll(c => root.Contains(c) &&
                                    areaIndex[c] < areaIndex[subst]);
-            if (opt["explain"])
+            if (options_["explain"])
               Console.WriteLine(
                   $"Candidates for {subst} ({areaIndex[subst]}): {string.Join(",", cands.Select(c => $"{c}:{areaIndex[c]}"))}");
 
@@ -191,14 +212,14 @@ namespace FogMod {
             // if (excludeSwapTry.ContainsKey(subst)) cands.RemoveAll(c => excludeSwapTry[subst].Contains(c));
             cands.RemoveAll(c => triedSwaps.Contains(
                                 string.Join(",",
-                                            new SortedSet<string> {subst, c})));
-            if (opt["explain"])
+                                            new SortedSet<string> { subst, c})));
+            if (options_["explain"])
               Console.WriteLine(
                   $"Candidates for {subst} without tried: {string.Join(",", cands)}");
 
             cands.RemoveAll(
                 area => check.Records[area].InEdge.All(e => e.Key.IsFixed));
-            if (opt["explain"])
+            if (options_["explain"])
               Console.WriteLine(
                   $"Candidates for {subst} with out edge: {string.Join(",", cands)}");
             if (cands.Count == 0) return false;
@@ -210,11 +231,11 @@ namespace FogMod {
             string cand = reasonableCands.Count > 1 && areaIndex[cands[0]] <= 1
                               ? cands[1]
                               : cands[0];
-            if (opt["explain"]) Console.WriteLine($"Final choice: {cand}");
+            if (options_["explain"]) Console.WriteLine($"Final choice: {cand}");
 
-            g.SwapConnectedAreas(subst, cand);
+            this.graph_.SwapConnectedAreas(subst, cand);
             triedSwaps.Add(
-                string.Join(",", new SortedSet<string> {subst, cand}));
+                string.Join(",", new SortedSet<string> { subst, cand}));
             didSwap = true;
             return true;
           }
@@ -224,7 +245,7 @@ namespace FogMod {
           Dictionary<string, List<string>> getFixedIn(string area) {
             Dictionary<string, List<string>> fixedIn =
                 new Dictionary<string, List<string>>();
-            foreach (Edge fixedEntrance in graph[area]
+            foreach (Edge fixedEntrance in graphNodes[area]
                                            .From.Where(e => e.IsFixed)) {
               List<string> reqs = fixedEntrance.LinkedExpr == null
                                       ? new List<string>()
@@ -236,7 +257,7 @@ namespace FogMod {
             return fixedIn;
           }
 
-          if (opt["latewarp"] || opt["instawarp"]) {
+          if (options_["latewarp"] || options_["instawarp"]) {
             // Guarantee Firelink Shrine placement but not Coiled Sword placement
             // (in instawarp case, this should be a no-op, and can ignore Coiled Sword logic either way)
             tryPlace("firelink", true);
@@ -249,7 +270,7 @@ namespace FogMod {
             if (placedFirelink) {
               accessibleAreas.Add("firelink");
             }
-            List<string> earlyItems = new List<string> {"coiledsword"};
+            List<string> earlyItems = new List<string> { "coiledsword"};
             List<string> addedItems = new List<string>();
             List<string> earlyItemAreas = new List<string>();
             bool foundRoots;
@@ -258,12 +279,12 @@ namespace FogMod {
                 if (!addedItems.Contains(item)) {
                   addedItems.Add(item);
                   earlyItemAreas.AddRange(
-                      g.ItemAreas[item].Except(earlyItemAreas));
+                      this.graph_.ItemAreas[item].Except(earlyItemAreas));
                 }
               }
               foundRoots = false;
               foreach (string area in earlyItemAreas.ToList()) {
-                Node node = graph[area];
+                Node node = graphNodes[area];
                 // If random entrances exist, we can try to get in through swapping, so no need to chase down roots.
                 if (randomIn[area] > 0) continue;
                 // If no fixed way to get in, that's probably bad, but nothing to do
@@ -278,18 +299,18 @@ namespace FogMod {
                   foundRoots = true;
                 }
                 foreach (string moreDep in fixedIn[easyIn]) {
-                  if (g.ItemAreas.ContainsKey(moreDep) &&
+                  if (this.graph_.ItemAreas.ContainsKey(moreDep) &&
                       !earlyItems.Contains(moreDep)) {
                     earlyItems.Add(moreDep);
                     foundRoots = true;
-                  } else if (graph.ContainsKey(moreDep) &&
+                  } else if (graphNodes.ContainsKey(moreDep) &&
                              !earlyItemAreas.Contains(moreDep)) {
                     earlyItemAreas.Add(moreDep);
                     foundRoots = true;
                   }
                 }
               }
-              if (opt["explain"])
+              if (options_["explain"])
                 Console.WriteLine(
                     $"At end of iteration, have items {string.Join(",", earlyItems)} and areas {string.Join(",", earlyItemAreas)}, with adjustable {string.Join(",", earlyItemAreas.Where(a => !accessibleAreas.Contains(a) && randomIn[a] > 0))}");
             } while (foundRoots);
@@ -313,10 +334,10 @@ namespace FogMod {
 
         Edge toFind = null;
         List<string> unvisited = check.Unvisited.ToList();
-        Shuffle(new Random(opt.Seed + tries), unvisited);
+        Shuffle(new Random(options_.Seed + tries), unvisited);
         bool hasCond = true;
         foreach (string area in unvisited) {
-          foreach (Edge edge in graph[area].From) {
+          foreach (Edge edge in graphNodes[area].From) {
             if (!edge.IsFixed && (edge.Pair != null) == pairedOnly) {
               if (edge.LinkedExpr == null) {
                 toFind = edge;
@@ -330,7 +351,7 @@ namespace FogMod {
           if (toFind != null && !hasCond) break;
         }
         if (toFind == null) {
-          if (pairedOnly && opt["warp"]) {
+          if (pairedOnly && options_["warp"]) {
             // Redo but with warp edges instead. Generally only happens with warp-only config.
             pairedOnly = false;
             continue;
@@ -343,11 +364,11 @@ namespace FogMod {
         Edge lastEdge = null;
         int lastCount = 0;
         foreach (NodeRecord rec in check.Records.Values.OrderBy(r => r.Dist)) {
-          if (opt["explain"]) Console.WriteLine($"{rec.Area}: {rec.Dist}");
+          if (options_["explain"]) Console.WriteLine($"{rec.Area}: {rec.Dist}");
           foreach (KeyValuePair<Edge, float> entry in
               rec.InEdge.OrderBy(e => e.Value)) {
             Edge e = entry.Key;
-            if (opt["explain"])
+            if (options_["explain"])
               Console.WriteLine(
                   $"  From {e.From}{(e.IsFixed ? " (world)" : "")}: {entry.Value}");
           }
@@ -359,7 +380,7 @@ namespace FogMod {
                                                           pairedOnly)
                                               .LastOrDefault();
           if (maxEdge.Key != null) {
-            int inCount = graph[rec.Area].From.Count;
+            int inCount = graphNodes[rec.Area].From.Count;
             if (inCount > lastCount) {
               lastEdge = maxEdge.Key;
               lastCount = inCount;
@@ -367,7 +388,7 @@ namespace FogMod {
             KeyValuePair<Edge, float> minEdge =
                 rec.InEdge.OrderBy(e => e.Value).First();
             if (minEdge.Key != maxEdge.Key) {
-              if (opt["explain"])
+              if (options_["explain"])
                 Console.WriteLine(
                     $"  Min {minEdge.Value}, Max editable {maxEdge.Value}");
               // Maybe max victim isn't always best for overall difficulty - or it depends on which edge to swap with is chosen.
@@ -381,35 +402,35 @@ namespace FogMod {
         if (victimEdge == null) {
           // We can't preserve original graph structure really, so just pick arbitrary one to change
           if (lastEdge != null) {
-            if (opt["explain"])
+            if (options_["explain"])
               Console.WriteLine(
                   "!!!!!!!!!!! Picking non-redundant edge, but last reachable");
             victimEdge = lastEdge;
           } else {
             // Or, completely pick one indiscriminately even if it goes somewhere important
-            victimEdge = check.Records.Keys.SelectMany(a => graph[a].To)
+            victimEdge = check.Records.Keys.SelectMany(a => graphNodes[a].To)
                               .Where(e => !e.IsFixed &&
                                           (e.Pair != null) == pairedOnly)
                               .LastOrDefault();
-            if (opt["explain"])
+            if (options_["explain"])
               Console.WriteLine("!!!!!!!!!!! Picking any edge whatsoever");
             if (victimEdge == null)
               throw new Exception(
                   $"No swappable edge found to inaccessible areas. This can happen a lot with low # of randomized entrances.");
           }
         }
-        if (opt["explain"]) {
+        if (options_["explain"]) {
           Console.WriteLine($"Swap unreached: {toFind}");
           Console.WriteLine($"Swap redundant: {victimEdge}");
         }
 
         // Swap thos edges
-        g.SwapConnectedEdges(victimEdge, toFind);
-        pairedOnly = !opt["unconnected"];
+        this.graph_.SwapConnectedEdges(victimEdge, toFind);
+        pairedOnly = !options_["unconnected"];
       }
       if (check == null || check.Unvisited.Count > 0)
         throw new Exception(
-            $"Couldn't solve seed {opt.DisplaySeed} - try a different one");
+            $"Couldn't solve seed {options_.DisplaySeed} - try a different one");
 
       // Check succeeded, time to calculate scale and dump info
       float max = check.Records.Values.Where(r => !r.Area.StartsWith("kiln"))
@@ -439,14 +460,14 @@ namespace FogMod {
                                                 r => r.Area,
                                                 r => getAreaCost(r.Dist));
       Dictionary<string, float> thisDist = getCumCost(distances);
-      Dictionary<string, float> vCost = getCumCost(ann.DefaultCost);
-      List<float> vCosts = ann.DefaultCost.Select(t => t.Value)
+      Dictionary<string, float> vCost = getCumCost(annotationData_.DefaultCost);
+      List<float> vCosts = annotationData_.DefaultCost.Select(t => t.Value)
                               .OrderBy(t => t)
                               .ToList();
       List<float> ratios = new List<float>();
 
       string maybeName(string area)
-        => g.Areas.TryGetValue(area, out Area a) ? (a.Text ?? area) : area;
+        => this.graph_.Areas.TryGetValue(area, out Area a) ? (a.Text ?? area) : area;
 
       // Choose one blacksmith.
       // If any paths have <=4 areas, choose them
@@ -466,17 +487,17 @@ namespace FogMod {
       if (upgradeNodes[0].Visited.Count < 5) {
         firstUpgrade = upgradeNodes[0];
       } else {
-        HashSet<string> commonAreas = new HashSet<string>(g.Areas.Keys);
+        HashSet<string> commonAreas = new HashSet<string>(this.graph_.Areas.Keys);
         foreach (NodeRecord rec in upgradeNodes) {
           commonAreas.IntersectWith(rec.Visited);
         }
         NodeRecord minBoss = upgradeNodes.Find(
             rec => commonAreas.IsSupersetOf(
-                rec.Visited.Where(a => g.Areas[a].HasTag("boss"))));
+                rec.Visited.Where(a => this.graph_.Areas[a].HasTag("boss"))));
         firstUpgrade = minBoss == null ? upgradeNodes[0] : minBoss;
       }
       List<string> preUpgrade = firstUpgrade.Visited;
-      if (!opt["skipprint"]) {
+      if (!options_["skipprint"]) {
         Console.WriteLine(
             $"Areas required before {maybeName(firstUpgrade.Area)}: {string.Join("; ", preUpgrade.Select(maybeName))}");
         Console.WriteLine($"Other areas are not necessary to get there.");
@@ -484,11 +505,11 @@ namespace FogMod {
       }
 
       foreach (string area in upgradeAreas) {
-        if (opt["explain"])
+        if (options_["explain"])
           Console.WriteLine(
               $"Blacksmith {area}: {string.Join(", ", check.Records[area].Visited)}");
       }
-      g.AreaRatios = new Dictionary<string, (float, float)>();
+      this.graph_.AreaRatios = new Dictionary<string, (float, float)>();
       int k = 0;
 
       float getRatioMeasure(float cost, float maxRatio) {
@@ -497,28 +518,28 @@ namespace FogMod {
 
       foreach (NodeRecord rec in check.Records.Values.OrderBy(r => r.Dist)) {
         float desiredCost = k < vCosts.Count ? vCosts[k] : 1;
-        if (!g.Areas[rec.Area].HasTag("optional")) k++;
-        bool isBoss = g.Areas[rec.Area].HasTag("boss");
+        if (!this.graph_.Areas[rec.Area].HasTag("optional")) k++;
+        bool isBoss = this.graph_.Areas[rec.Area].HasTag("boss");
         bool preBlacksmithBoss = preUpgrade.Contains(rec.Area) && isBoss;
         if (preBlacksmithBoss && desiredCost > 0.05) desiredCost = 0.05f;
         float ratio = 1;
         float dmgRatio = 1;
-        if (g.Areas[rec.Area].HasTag("end")) {
+        if (this.graph_.Areas[rec.Area].HasTag("end")) {
           // Keep ratio 1
-        } else if (ann.DefaultCost.TryGetValue(rec.Area, out float defaultCost)
+        } else if (annotationData_.DefaultCost.TryGetValue(rec.Area, out float defaultCost)
         ) {
           // This scaling constant factor is a bit tricky to tune.
           // Originally used 400-1100, based on HP scaling over the course of a game. This seems to better match expected boss HP.
           // Possible ratio range: 0.3 to 3 in DS1
-          ratio = getRatioMeasure(desiredCost, ann.HealthScaling) /
-                  getRatioMeasure(defaultCost, ann.HealthScaling);
+          ratio = getRatioMeasure(desiredCost, annotationData_.HealthScaling) /
+                  getRatioMeasure(defaultCost, annotationData_.HealthScaling);
           // If it's randomized to past 70% of the way, don't make it easier.
           if (ratio < 1 && ((double) k / check.Records.Count) > 0.7) {
             ratio = 1;
           }
           // If it's early enough in vanilla (i.e. before expected access to blacksmith in DS1), don't make it easier either.
           else if (defaultCost <=
-                   (ann.DefaultCost.TryGetValue(
+                   (annotationData_.DefaultCost.TryGetValue(
                         Flags.IsDs1 ? "parish_church" : "settlement",
                         out float val)
                         ? val
@@ -528,21 +549,21 @@ namespace FogMod {
           } else {
             // Damage does not scale as much
             // Possible ratio range: 0.5 to 2 in DS1
-            dmgRatio = getRatioMeasure(desiredCost, ann.DamageScaling) /
-                       getRatioMeasure(defaultCost, ann.DamageScaling);
+            dmgRatio = getRatioMeasure(desiredCost, annotationData_.DamageScaling) /
+                       getRatioMeasure(defaultCost, annotationData_.DamageScaling);
           }
         }
-        g.AreaRatios[rec.Area] = (ratio, dmgRatio);
+        this.graph_.AreaRatios[rec.Area] = (ratio, dmgRatio);
 
-        if (opt["skipprint"]) continue;
+        if (options_["skipprint"]) continue;
         // Print out the connectivity info for spoiler logs
         if (rec.Area == (Flags.IsDs1 ? "anorlondo_os" : "firelink"))
           Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        string areas = opt["debugareas"]
+        string areas = options_["debugareas"]
                            ? $" [{string.Join(",", new SortedSet<string>(rec.Visited))}]"
                            : "";
-        string scaling = opt["scale"] ? $" (scaling: {ratio * 100:0.}%)" : "";
-        string explainCost = opt["explain"] ? $" {desiredCost * 100:0.}%" : "";
+        string scaling = options_["scale"] ? $" (scaling: {ratio * 100:0.}%)" : "";
+        string explainCost = options_["explain"] ? $" {desiredCost * 100:0.}%" : "";
 
         Console.WriteLine($"{maybeName(rec.Area)}{explainCost}" +
                           scaling +
@@ -555,7 +576,7 @@ namespace FogMod {
                                        ? new List<string>()
                                        : e.LinkedExpr.FreeVars()
                                           .SelectMany(
-                                              a => g.ItemAreas.TryGetValue(
+                                              a => graph_.ItemAreas.TryGetValue(
                                                        a,
                                                        out List<string> deps)
                                                        ? deps
@@ -576,55 +597,61 @@ namespace FogMod {
           }
         }
       }
-      if (opt["dumpdist"]) {
+      if (options_["dumpdist"]) {
         foreach (KeyValuePair<string, float> entry in distances) {
-          Area area = g.Areas[entry.Key];
+          Area area = this.graph_.Areas[entry.Key];
           if (area.HasTag("optional")) continue;
           Console.WriteLine(
               $"{entry.Key}: {entry.Value}  # SL {(int) (10 + (Flags.IsDs1 ? 60 : 70) * entry.Value)}");
         }
       }
-      Console.WriteLine($"Finished {opt.DisplaySeed} at try {tries}");
-      if (opt["explain"])
+      Console.WriteLine($"Finished {options_.DisplaySeed} at try {tries}");
+      if (options_["explain"])
         Console.WriteLine(
             $"Pre-Blacksmith areas ({firstUpgrade.Area}): {string.Join(", ", preUpgrade)}");
 
-      if (opt["dumpgraph"]) {
-        Console.WriteLine("Writing ../fog.dot");
-        bool bi = false;
-        TextWriter dot = File.CreateText(@"..\fog.dot");
-        dot.WriteLine($"{(bi ? "di" : "")}graph {{");
-
-        // dot.WriteLine("  nodesep=0.1; ranksep=0.1; ");
-        string escape(object o) {
-          if (o == null) return "";
-          return o.ToString().Replace("\n", "\\l").Replace("\"", "\\\"") +
-                 "\\l";
-        }
-
-        foreach (Node node in graph.Values) {
-          string label = node.Area;
-          label = label == "" ? "(empty)" : label;
-          dot.WriteLine(
-              $"    \"{node.Area}\" [ shape=box,label=\"{escape(label)}\" ];");
-        }
-        HashSet<Connection> oneCons = new HashSet<Connection>();
-        foreach (Node from in graph.Values) {
-          foreach (Edge e in from.To) {
-            Connection con = new Connection(e.From, e.To);
-            if (oneCons.Contains(con)) continue;
-            if (!bi) oneCons.Add(con);
-            // Node to = e.To;
-            string toKey = e.To;
-            string style = "solid";
-            string label = null; // $"{e.LinkedExpr}";
-            dot.WriteLine(
-                $"  \"{from.Area}\" -{(bi ? ">" : "-")} \"{toKey}\" [ style={style},labelloc=t,label=\"{escape(label)}\" ];");
-          }
-        }
-        dot.WriteLine("}");
-        dot.Close();
+      if (options_["dumpgraph"]) {
+        this.DumpGraph_();
       }
+    }
+
+    private void DumpGraph_() {
+      var graphNodes = this.graph_.Nodes;
+
+      Console.WriteLine("Writing ../fog.dot");
+      bool bi = false;
+      TextWriter dot = File.CreateText(@"..\fog.dot");
+      dot.WriteLine($"{(bi ? "di" : "")}graph {{");
+
+      // dot.WriteLine("  nodesep=0.1; ranksep=0.1; ");
+      string escape(object o) {
+        if (o == null) return "";
+        return o.ToString().Replace("\n", "\\l").Replace("\"", "\\\"") +
+               "\\l";
+      }
+
+      foreach (Node node in graphNodes.Values) {
+        string label = node.Area;
+        label = label == "" ? "(empty)" : label;
+        dot.WriteLine(
+            $"    \"{node.Area}\" [ shape=box,label=\"{escape(label)}\" ];");
+      }
+      HashSet<Connection> oneCons = new HashSet<Connection>();
+      foreach (Node from in graphNodes.Values) {
+        foreach (Edge e in from.To) {
+          Connection con = new Connection(e.From, e.To);
+          if (oneCons.Contains(con)) continue;
+          if (!bi) oneCons.Add(con);
+          // Node to = e.To;
+          string toKey = e.To;
+          string style = "solid";
+          string label = null; // $"{e.LinkedExpr}";
+          dot.WriteLine(
+              $"  \"{from.Area}\" -{(bi ? ">" : "-")} \"{toKey}\" [ style={style},labelloc=t,label=\"{escape(label)}\" ];");
+        }
+      }
+      dot.WriteLine("}");
+      dot.Close();
     }
   }
 }
