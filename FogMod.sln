@@ -1,7 +1,13 @@
-
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30611.23
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FogMod", "FogMod.csproj", "{3202278F-0240-4089-BC22-D567F9D3FB24}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ds3FogModTests", "Ds3FogModTests\Ds3FogModTests.csproj", "{6BEFF819-B209-4215-B709-0539510BC9E6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3202278F-0240-4089-BC22-D567F9D3FB24} = {3202278F-0240-4089-BC22-D567F9D3FB24}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,8 +19,15 @@ Global
 		{3202278F-0240-4089-BC22-D567F9D3FB24}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3202278F-0240-4089-BC22-D567F9D3FB24}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3202278F-0240-4089-BC22-D567F9D3FB24}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6BEFF819-B209-4215-B709-0539510BC9E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BEFF819-B209-4215-B709-0539510BC9E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BEFF819-B209-4215-B709-0539510BC9E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BEFF819-B209-4215-B709-0539510BC9E6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6F071CF6-7A98-4B76-A57B-9D47A2E5BEE3}
 	EndGlobalSection
 EndGlobal

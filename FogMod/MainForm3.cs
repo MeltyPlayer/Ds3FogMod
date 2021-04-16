@@ -263,6 +263,10 @@ namespace FogMod {
           string.Join(" ", (IEnumerable<string>) this.options.GetEnabled()) +
           " " +
           (object) this.options.DisplaySeed;
+
+      Console.WriteLine("######");
+      Console.WriteLine(Settings.Default.Options);
+
       Settings.Default.Save();
     }
 

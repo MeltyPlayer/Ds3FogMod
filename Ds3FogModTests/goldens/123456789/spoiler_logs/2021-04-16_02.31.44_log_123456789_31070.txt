@@ -1,0 +1,303 @@
+Seed: 123456789. Options: boss earlywarp lords pacifist pvp scale treeskip v4
+No key items randomized
+
+Areas required before Firelink Shrine: Cemetery of Ash; High Lord Wolnir; Catacombs Wolnir Room; before the bridge into Irithyll
+Other areas are not necessary to get there.
+
+Cemetery of Ash (scaling: 100%)
+Catacombs Wolnir Room (scaling: 52%)
+  Random: From Cemetery of Ash (between Iudex Gundyr and Cemetery of Ash) to Catacombs Wolnir Room (between Wolnir's Room and Catacombs)
+  Preexisting: From High Lord Wolnir to Catacombs Wolnir Room (warp after Wolnir)
+  Preexisting: From before the bridge into Irithyll to Catacombs Wolnir Room (going back to Wolnir)
+High Lord Wolnir (scaling: 60%) <----
+  Preexisting: From Catacombs Wolnir Room to High Lord Wolnir (warp to Wolnir)
+before the bridge into Irithyll (scaling: 61%)
+  Preexisting: From Catacombs Wolnir Room to before the bridge into Irithyll (after Wolnir)
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Firelink Shrine (scaling: 100%)
+  Random: From before the bridge into Irithyll (on the close end of the starting bridge) to Firelink Shrine (between the entrance to Bell Tower and Firelink Shrine)
+  Preexisting: From Firelink Shrine Roof to Firelink Shrine (dropping down past the illusory wall)
+Iudex Gundyr (scaling: 120%) <----
+  Random: From Firelink Shrine (between Firelink Shrine and front) to Iudex Gundyr (between Iudex Gundyr and Cemetery of Ash)
+Firelink Shrine with Coiled Sword (scaling: 100%)
+  Preexisting: From Firelink Shrine to Firelink Shrine with Coiled Sword (embedding Coiled Sword, an item from Iudex Gundyr)
+before Firelink Shrine (scaling: 103%)
+  Preexisting: From Iudex Gundyr to before Firelink Shrine (opening the door)
+  Preexisting: From before Firelink Bell Tower to before Firelink Shrine (dropping down)
+  Preexisting: From Firelink Shrine Roof to before Firelink Shrine (dropping down)
+Ancient Wyvern Arena (scaling: 36%) <----
+  Random: From before Firelink Shrine (between Firelink Shrine and front) to Ancient Wyvern Arena (between Dragonkin Mausoleum and the Ancient Wyvern chain axe serpent)
+  Preexisting: From above Ancient Wyvern Arena to Ancient Wyvern Arena (dropping down)
+Central Archdragon Peak (scaling: 38%)
+  Preexisting: From Ancient Wyvern Arena to Central Archdragon Peak (warp after defeating Ancient Wyvern)
+Consumed King's Gardens (scaling: 53%)
+  Random: From Ancient Wyvern Arena (between Ancient Wyvern and the gate from Archdragon Peak Start) to Consumed King's Gardens (between Oceiros and Consumed King's Gardens)
+before Nameless King (scaling: 38%)
+  Preexisting: From Central Archdragon Peak to before Nameless King (dropping down past the bell)
+Central Archdragon Peak using Path of the Dragon (scaling: 38%)
+  Preexisting: From Central Archdragon Peak to Central Archdragon Peak using Path of the Dragon (using Path of the Dragon)
+door to Ancient Wyvern Arena (scaling: 41%)
+  Preexisting: From Central Archdragon Peak to door to Ancient Wyvern Arena (the door between the Ancient Wyvern chain axe serpent and Dragonkin Mausoleum)
+Dreg Heap Earthen Peak (scaling: 40%)
+  Random: From Central Archdragon Peak (between top of Archdragon shortcut elevator and Dragonkin Mausoleum) to Dreg Heap Earthen Peak (between dropdown before Demon Prince and Dreg Heap)
+  Preexisting: From Dreg Heap Start to Dreg Heap Earthen Peak (taking the plunge)
+Yorshka's Prison Tower in Irithyll (scaling: 62%)
+  Random: From Central Archdragon Peak (between area overlooking Ancient Wyvern Arena and stairs around Dragonkin Mausoleum) to Yorshka's Prison Tower in Irithyll (between Yorshka and the Anor Londo spinning staircase)
+Cathedral of the Deep (scaling: 84%)
+  Random: From Central Archdragon Peak (between area overlooking Ancient Wyvern Arena and Dragonkin Mausoleum) to Cathedral of the Deep (between Rosaria's room and the rest of the Cathedral)
+Twin Princes shortcut elevator top (scaling: 43%)
+  Random: From Central Archdragon Peak (between below Nameless King and below the bell) to Twin Princes shortcut elevator top (at the top of the shortcut elevator right outside Twin Princes)
+Old Demon King (scaling: 80%) <----
+  Random: From Central Archdragon Peak (between below Nameless King and Dragonkin Mausoleum) to Old Demon King (between Old Demon King and Smouldering Lake)
+Shira at Filianore's Rest (scaling: 42%)
+  Random: From Consumed King's Gardens (between above Emma's room and Consumed King's Gardens) to Shira at Filianore's Rest (between Shira's invasion area and Gael's arena)
+above Emma (scaling: 68%)
+  Random: From before Nameless King (between Nameless King arena and the bell area) to above Emma (between Lothric Castle entrance and above Emma's room)
+  Preexisting: From Dancer of the Boreal Valley to above Emma (using Basin of Vows)
+  Preexisting: From above Emma from Lothric Castle bonfire to above Emma (dropping down)
+Yhorm the Giant (scaling: 72%) <----
+  Random: From door to Ancient Wyvern Arena (between Dragonkin Mausoleum and the Ancient Wyvern chain axe serpent) to Yhorm the Giant (between Yhorm and Profaned Capital)
+Central Irithyll (scaling: 79%)
+  Preexisting: From Yorshka's Prison Tower in Irithyll to Central Irithyll (dropping down the tower)
+Twin Princes shortcut elevator bottom (scaling: 70%)
+  Preexisting: From Twin Princes shortcut elevator top to Twin Princes shortcut elevator bottom (using the elevator)
+Emma's Cathedral (scaling: 136%)
+  Preexisting: From above Emma to Emma's Cathedral (dropping down)
+Filianore's Rest Bonfire (scaling: 47%)
+  Random: From above Emma (between above Emma's room and Consumed King's Gardens) to Filianore's Rest Bonfire (between Gael's arena and Filianore's Rest)
+  Preexisting: From after Halflight to Filianore's Rest Bonfire (waking up Filianore)
+Lothric Castle (scaling: 75%)
+  Random: From Twin Princes shortcut elevator bottom (between bottom of Twin Princes shortcut elevator and Lothric Castle) to Lothric Castle (between a ledge above Emma's room and Lothric Castle bonfire)
+Dancer of the Boreal Valley (scaling: 77%) <----
+  Preexisting: From Emma's Cathedral to Dancer of the Boreal Valley (attempting to use Basin of Vows, an item from Emma's Cathedral)
+Road of Sacrifices (scaling: 116%)
+  Random: From Emma's Cathedral (between Emma's Room and High Wall) to Road of Sacrifices (between Crystal Sage and Road of Sacrifices)
+  Preexisting: From Farron Keep to Road of Sacrifices (ascending from Farron Keep)
+pre-Contraption Ariandel (scaling: 78%)
+  Preexisting: From Cathedral of the Deep to pre-Contraption Ariandel (warp to Ariandel)
+post-Contraption Ariandel (scaling: 76%)
+  Random: From Cathedral of the Deep (between Deacons of the Deep and Cathedral) to post-Contraption Ariandel (between the Ariandel Chapel basement and the dropdown to Dunnel)
+  Preexisting: From pre-Contraption Ariandel to post-Contraption Ariandel (using Contraption Key, an item from pre-Contraption Ariandel)
+  Preexisting: From pre-Contraption Ariandel to post-Contraption Ariandel (unlocking the shortcut)
+Oceiros the Consumed King (scaling: 76%) <----
+  Random: From Cathedral of the Deep (between the start of Cathedral and the chapel, on the right doorway) to Oceiros the Consumed King (between Oceiros and Consumed King's Gardens)
+Catacombs of Carthus (scaling: 105%)
+  Random: From Cathedral of the Deep (between the start of Cathedral and the chapel, on the left doorway) to Catacombs of Carthus (between the stairs after Abyss Watchers and Catacombs)
+  Preexisting: From before Smouldering Lake to Catacombs of Carthus (destroying the bridge from below)
+after Dragonslayer Armour (scaling: 77%)
+  Random: From Central Irithyll (between Distant Manor and Irithyll) to after Dragonslayer Armour (between right after Dragonslayer Armour and Dragonslayer Armour)
+before Halflight (scaling: 51%)
+  Random: From Central Irithyll (between the area above Dorhys' Gnawing and the illusory railing) to before Halflight (between Halflight and Ringed City)
+  Preexisting: From Ringed City to before Halflight (opening the door)
+above Ancient Wyvern Arena (scaling: 58%)
+  Random: From Central Irithyll (between Pontiff and Central Irithyll) to above Ancient Wyvern Arena (between area overlooking Ancient Wyvern Arena and Dragonkin Mausoleum)
+after Demon Prince (scaling: 58%)
+  Random: From Lothric Castle (between Lothric Castle entrance and above Emma's room) to after Demon Prince (between transport to Ringed City and Demon Prince arena)
+Curse-Rotted Greatwood (scaling: 153%) <----
+  Random: From Lothric Castle (between Dragonslayer Armour and Lothric Castle) to Curse-Rotted Greatwood (between Cursed-rotted Greatwood and Undead Settlement)
+above Pontiff (scaling: 95%)
+  Random: From after Dragonslayer Armour (between right after Dragonslayer Armour and the start of Grand Archives) to above Pontiff (between above Pontiff and Anor Londo)
+Nameless King (scaling: 66%) <----
+  Random: From above Ancient Wyvern Arena (between area overlooking Ancient Wyvern Arena and stairs around Dragonkin Mausoleum) to Nameless King (between Nameless King arena and the bell area)
+Farron Keep (scaling: 136%)
+  Preexisting: From Road of Sacrifices to Farron Keep (descending into Farron Keep)
+Slave Knight Gael (scaling: 58%) <----
+  Random: From Road of Sacrifices (between the start of Road of Sacrifices and Halfway Fortress) to Slave Knight Gael (between Shira's invasion area and Gael's arena)
+Pontiff Sulyvahn (scaling: 103%) <----
+  Preexisting: From above Pontiff to Pontiff Sulyvahn (taking the elevator shortcut down)
+Crystal Sage (scaling: 140%) <----
+  Random: From pre-Contraption Ariandel (between Gravetender and Depths of Ariandel) to Crystal Sage (between Crystal Sage and Road of Sacrifices)
+after Oceiros (scaling: 92%)
+  Preexisting: From Oceiros the Consumed King to after Oceiros (defeating Oceiros)
+before Smouldering Lake (scaling: 123%)
+  Preexisting: From Catacombs of Carthus to before Smouldering Lake (cutting down the bridge)
+Cathedral of the Deep Start (scaling: 137%)
+  Random: From Catacombs of Carthus (between Wolnir's Room and Catacombs) to Cathedral of the Deep Start (between the start of Cathedral and the chapel, on the left doorway)
+Untended Graves (scaling: 93%)
+  Preexisting: From after Oceiros to Untended Graves (dropping down past the illusory wall)
+Pit of Hollows (scaling: 162%)
+  Preexisting: From Curse-Rotted Greatwood to Pit of Hollows (floor collapsing)
+  Preexisting: From Undead Settlement to Pit of Hollows (examining the Hollow Manservant)
+before Abyss Watchers (scaling: 137%)
+  Preexisting: From Farron Keep to before Abyss Watchers (opening the door)
+above Dorhys in Irithyll (scaling: 106%)
+  Random: From Slave Knight Gael (between Gael's arena and Filianore's Rest) to above Dorhys in Irithyll (between the area above Dorhys' Gnawing and the illusory railing)
+before Twin Princes (scaling: 66%)
+  Random: From Pontiff Sulyvahn (between the hallway immediately after Pontiff and Pontiff's arena) to before Twin Princes (between Twin Princes and Grand Archives)
+Vordt of the Boreal Valley (scaling: 186%) <----
+  Random: From Pontiff Sulyvahn (between Pontiff and Central Irithyll) to Vordt of the Boreal Valley (between Vordt and High Wall)
+Dorhys in Irithyll (scaling: 108%)
+  Preexisting: From above Dorhys in Irithyll to Dorhys in Irithyll (dropping down)
+  Preexisting: From Central Irithyll to Dorhys in Irithyll (between the area with Dorhys' Gnawing and Central Irithyll)
+Champion's Gravetender (scaling: 98%) <----
+  Random: From before Smouldering Lake (between Smouldering Lake and Catacombs) to Champion's Gravetender (between Gravetender and Depths of Ariandel)
+Halflight, Spear of the Church (scaling: 63%) <----
+  Random: From Cathedral of the Deep Start (between the path to Cathedral and Crystal Sage) to Halflight, Spear of the Church (between after Halflight on the left side and Halflight)
+after Halflight (scaling: 62%)
+  Random: From Cathedral of the Deep Start (between the start of Cathedral and the chapel, on the right doorway) to after Halflight (between after Halflight on the left side and Halflight)
+before Demon Prince (scaling: 65%)
+  Random: From Untended Graves (between Champion Gundyr and Untended Graves start) to before Demon Prince (between dropdown before Demon Prince and Dreg Heap)
+Anor Londo (scaling: 105%)
+  Random: From after Halflight (between after Halflight on the right side and Halflight) to Anor Londo (between the hallway immediately after Pontiff and Anor Londo)
+Demon Prince (scaling: 65%) <----
+  Preexisting: From before Demon Prince to Demon Prince (taking the plunge)
+Champion Gundyr (scaling: 97%) <----
+  Random: From pre-Contraption Ariandel (between Sister Friede and Ariandel Chapel) to Champion Gundyr (between Champion Gundyr and Untended Graves start)
+Twin Princes (scaling: 69%) <----
+  Random: From Crystal Sage (between the path to Cathedral and Crystal Sage) to Twin Princes (between Twin Princes and Grand Archives)
+Undead Settlement (scaling: 180%)
+  Preexisting: From Vordt of the Boreal Valley to Undead Settlement (transport after Vordt, an item from Emma's Cathedral)
+  Preexisting: From Undead Settlement Tower to Undead Settlement (dropping down with Siegward)
+Undead Settlement Tower (scaling: 170%)
+  Random: From Halflight, Spear of the Church (between after Halflight on the right side and Halflight) to Undead Settlement Tower (between Undead Settlement and the Giant's Tower)
+Profaned Capital (scaling: 107%)
+  Random: From Halflight, Spear of the Church (between Halflight and Ringed City) to Profaned Capital (between Yhorm and Profaned Capital)
+  Preexisting: From Irithyll Dungeon to Profaned Capital (crossing the bridge)
+Grand Archives Bonfire (scaling: 98%)
+  Random: From Anor Londo (between Yorshka and the Anor Londo spinning staircase) to Grand Archives Bonfire (between right after Dragonslayer Armour and the start of Grand Archives)
+Deacons of the Deep (scaling: 140%) <----
+  Random: From Anor Londo (between above Pontiff and Anor Londo) to Deacons of the Deep (between Deacons of the Deep and Cathedral)
+Irithyll Dungeon (scaling: 112%)
+  Random: From Anor Londo (between Aldrich and Anor Londo) to Irithyll Dungeon (between Distant Manor and Irithyll Dungeon)
+  Preexisting: From Profaned Capital to Irithyll Dungeon (crossing the bridge)
+Dragonslayer Armour (scaling: 102%) <----
+  Random: From Demon Prince (between transport to Ringed City and Demon Prince arena) to Dragonslayer Armour (between Dragonslayer Armour and Lothric Castle)
+after Champion Gundyr (scaling: 97%)
+  Preexisting: From Champion Gundyr to after Champion Gundyr (opening the door)
+Sister Friede (scaling: 100%) <----
+  Random: From Undead Settlement (between Undead Settlement and the Giant's Tower) to Sister Friede (between Sister Friede and Ariandel Chapel)
+Road of Sacrifices start (scaling: 164%)
+  Preexisting: From Undead Settlement Tower to Road of Sacrifices start (past the outrider knight)
+Ringed City (scaling: 68%)
+  Preexisting: From after Demon Prince to Ringed City (transport after Demon Prince, an item from after Demon Prince)
+Irithyll Dungeon with Jailbreaker's Key (scaling: 112%)
+  Preexisting: From Irithyll Dungeon to Irithyll Dungeon with Jailbreaker's Key (using Jailbreaker's Key, an item from Irithyll Dungeon)
+Aldrich, Devourer of Gods (scaling: 126%) <----
+  Random: From Dragonslayer Armour (between right after Dragonslayer Armour and Dragonslayer Armour) to Aldrich, Devourer of Gods (between the right elevator after Aldrich and Aldrich)
+Grand Archives (scaling: 100%)
+  Random: From Road of Sacrifices start (between the start of Road of Sacrifices and Halfway Fortress) to Grand Archives (at the top of the shortcut elevator right outside Twin Princes)
+  Preexisting: From Grand Archives Bonfire to Grand Archives (using the shortcut elevator)
+  Preexisting: From before Twin Princes to Grand Archives (opening the doors)
+  Preexisting: From Grand Archives Bonfire to Grand Archives (using Grand Archives Key, an item from Grand Archives Bonfire after Yhorm and Aldrich)
+below Nameless King (scaling: 100%)
+  Random: From Undead Settlement (between Cursed-rotted Greatwood and Undead Settlement) to below Nameless King (between below Nameless King and Dragonkin Mausoleum)
+Dreg Heap Start (scaling: 100%)
+  Preexisting: From Sister Friede to Dreg Heap Start (warp after Friede fight)
+  Preexisting: From Kiln of the First Flame to Dreg Heap Start (from Kiln to Dreg Heap)
+High Wall (scaling: 286%)
+  Random: From below Nameless King (between below Nameless King and below the bell) to High Wall (between Emma's Room and High Wall)
+  Random: From Ringed City (between the dropdown to Midir and Ringed City) to High Wall (between Vordt and High Wall)
+the bridge into Irithyll (scaling: 173%)
+  Preexisting: From Central Irithyll to the bridge into Irithyll (on the far side of the starting bridge, locked by Small Doll, an item from Deacons of the Deep)
+Archdragon Peak Start (scaling: 103%)
+  Preexisting: From Irithyll Dungeon to Archdragon Peak Start (warp to Archdragon Peak, an item from after Oceiros)
+Irithyll Distant Manor (scaling: 152%)
+  Random: From Aldrich, Devourer of Gods (between Aldrich and Anor Londo) to Irithyll Distant Manor (between Distant Manor and Irithyll)
+Ariandel dropping down to Dunnel (scaling: 135%)
+  Random: From Aldrich, Devourer of Gods (between the left elevator after Aldrich and Aldrich) to Ariandel dropping down to Dunnel (between the Ariandel Chapel basement and the dropdown to Dunnel)
+Smouldering Lake (scaling: 180%)
+  Random: From the bridge into Irithyll (on the close end of the starting bridge) to Smouldering Lake (between Old Demon King and Smouldering Lake)
+gate before Ancient Wyvern (scaling: 104%)
+  Preexisting: From Archdragon Peak Start to gate before Ancient Wyvern (opening the gate)
+before Firelink Bell Tower (scaling: 301%)
+  Random: From Archdragon Peak Start (between shortcut elevator and the start of Archdragon Peak) to before Firelink Bell Tower (between the entrance to Bell Tower and Firelink Shrine)
+before Darkeater Midir (scaling: 100%)
+  Random: From gate before Ancient Wyvern (between Ancient Wyvern and the gate from Archdragon Peak Start) to before Darkeater Midir (between the dropdown to Midir and Ringed City)
+Firelink Shrine Roof (scaling: 305%)
+  Preexisting: From before Firelink Bell Tower to Firelink Shrine Roof (tree skip)
+  Preexisting: From Firelink Bell Tower to Firelink Shrine Roof (dropping down)
+Firelink Bell Tower (scaling: 305%)
+  Preexisting: From before Firelink Bell Tower to Firelink Bell Tower (using Tower Key, an item from Firelink Shrine)
+Rosaria's Room (scaling: 198%)
+  Random: From Irithyll Distant Manor (between Distant Manor and Irithyll Dungeon) to Rosaria's Room (between Rosaria's room and the rest of the Cathedral)
+Darkeater Midir (scaling: 100%) <----
+  Preexisting: From before Darkeater Midir to Darkeater Midir (dropping down)
+High Wall Lift Cell (scaling: 284%)
+  Preexisting: From High Wall to High Wall Lift Cell (using Lift Chamber Key, an item from Firelink Shrine)
+Greirat's Cell (scaling: 284%)
+  Preexisting: From High Wall to Greirat's Cell (using Cell Key, an item from High Wall)
+Irithyll Dungeon Old Cell (scaling: 153%)
+  Preexisting: From Profaned Capital to Irithyll Dungeon Old Cell (using Old Cell Key, an item from Irithyll Dungeon)
+Irithyll Dungeon Jailer's Cells (scaling: 155%)
+  Preexisting: From Irithyll Dungeon to Irithyll Dungeon Jailer's Cells (using Jailer's Key Ring, an item from Profaned Capital)
+left elevator after Aldrich (scaling: 154%)
+  Random: From Lothric Castle (between bottom of Twin Princes shortcut elevator and Lothric Castle) to left elevator after Aldrich (between the left elevator after Aldrich and Aldrich)
+above Aldrich (scaling: 154%)
+  Preexisting: From left elevator after Aldrich to above Aldrich (between above Aldrich and the left elevator)
+  Preexisting: From right elevator after Aldrich to above Aldrich (between the right elevator after Aldrich and above Aldrich)
+immediately after Pontiff Sulyvahn (scaling: 164%)
+  Random: From Smouldering Lake (between Smouldering Lake and Catacombs) to immediately after Pontiff Sulyvahn (between the hallway immediately after Pontiff and Anor Londo)
+Abyss Watchers (scaling: 217%) <----
+  Random: From immediately after Pontiff Sulyvahn (between the hallway immediately after Pontiff and Pontiff's arena) to Abyss Watchers (between Abyss Watchers and Farron Keep)
+right elevator after Aldrich (scaling: 158%)
+  Random: From before Abyss Watchers (between Abyss Watchers and Farron Keep) to right elevator after Aldrich (between the right elevator after Aldrich and Aldrich)
+after Abyss Watchers (scaling: 211%)
+  Preexisting: From Abyss Watchers to after Abyss Watchers (defeating Abyss Watchers)
+above Emma from Lothric Castle bonfire (scaling: 155%)
+  Random: From after Abyss Watchers (between the stairs after Abyss Watchers and Catacombs) to above Emma from Lothric Castle bonfire (between a ledge above Emma's room and Lothric Castle bonfire)
+Grand Archives Bonfire after Yhorm and Aldrich (scaling: 108%)
+  Preexisting: From Grand Archives Bonfire to Grand Archives Bonfire after Yhorm and Aldrich (searching Gotthard's corpse)
+after Champion Gundyr, also defeating Abyss Watchers (scaling: 130%)
+  Preexisting: From after Champion Gundyr to after Champion Gundyr, also defeating Abyss Watchers (item added in map)
+Flameless Shrine (scaling: 106%)
+  Preexisting: From Firelink Shrine to Flameless Shrine (warp from Firelink Shrine after placing all Cinders of a Lord, an item from Abyss Watchers and Aldrich, Devourer of Gods and Yhorm the Giant and Twin Princes)
+Kiln of the First Flame (scaling: 106%)
+  Preexisting: From Flameless Shrine to Kiln of the First Flame (from Flameless Shrine to Kiln)
+Soul of Cinder (scaling: 100%) <----
+  Preexisting: From Kiln of the First Flame to Soul of Cinder (between Soul of Cinder and Kiln Entrance)
+Finished 123456789 at try 7
+
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\Data0.bdt
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\msg\engus\menu_dlc2.msgbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\common.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\common_func.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m30_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m30_01_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m31_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m32_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m33_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m34_01_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m35_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m37_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m38_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m39_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m40_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m41_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m45_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m50_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m51_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m51_01_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m30_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m30_01_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m31_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m32_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m33_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m34_01_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m35_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m37_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m38_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m39_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m40_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m41_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m45_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m50_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m51_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m51_01_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m30_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m30_01_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m31_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m32_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m33_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m34_01_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m35_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m37_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m38_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m39_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m40_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m41_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m45_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m50_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m51_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m51_01_00_00.talkesdbnd.dcx
+Processing extra mod files...
+No extra files found
