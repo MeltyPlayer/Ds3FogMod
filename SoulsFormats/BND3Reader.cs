@@ -7,27 +7,22 @@
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public class BND3Reader : BinderReader, IBND3
-  {
+  public class BND3Reader : BinderReader, IBND3 {
     public int Unk18 { get; set; }
 
     public DCX.Type Compression { get; set; }
 
-    public BND3Reader(string path)
-    {
+    public BND3Reader(string path) {
       this.Read(new BinaryReaderEx(false, (Stream) File.OpenRead(path)));
     }
 
-    public BND3Reader(byte[] bytes)
-    {
+    public BND3Reader(byte[] bytes) {
       this.Read(new BinaryReaderEx(false, (Stream) new MemoryStream(bytes)));
     }
 
-    private void Read(BinaryReaderEx br)
-    {
+    private void Read(BinaryReaderEx br) {
       DCX.Type compression;
       br = SFUtil.GetDecompressedBR(br, out compression);
       this.Compression = compression;

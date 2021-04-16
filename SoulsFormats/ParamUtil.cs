@@ -6,14 +6,10 @@
 
 using System;
 
-namespace SoulsFormats
-{
-  internal static class ParamUtil
-  {
-    public static string GetDefaultFormat(PARAMDEF.DefType type)
-    {
-      switch (type)
-      {
+namespace SoulsFormats {
+  internal static class ParamUtil {
+    public static string GetDefaultFormat(PARAMDEF.DefType type) {
+      switch (type) {
         case PARAMDEF.DefType.s8:
           return "%d";
         case PARAMDEF.DefType.u8:
@@ -35,14 +31,15 @@ namespace SoulsFormats
         case PARAMDEF.DefType.fixstrW:
           return "%d";
         default:
-          throw new NotImplementedException(string.Format("No default format specified for {0}.{1}", (object) "DefType", (object) type));
+          throw new NotImplementedException(
+              string.Format("No default format specified for {0}.{1}",
+                            (object) "DefType",
+                            (object) type));
       }
     }
 
-    public static float GetDefaultMinimum(PARAMDEF.DefType type)
-    {
-      switch (type)
-      {
+    public static float GetDefaultMinimum(PARAMDEF.DefType type) {
+      switch (type) {
         case PARAMDEF.DefType.s8:
           return (float) sbyte.MinValue;
         case PARAMDEF.DefType.u8:
@@ -64,14 +61,15 @@ namespace SoulsFormats
         case PARAMDEF.DefType.fixstrW:
           return -1f;
         default:
-          throw new NotImplementedException(string.Format("No default minimum specified for {0}.{1}", (object) "DefType", (object) type));
+          throw new NotImplementedException(
+              string.Format("No default minimum specified for {0}.{1}",
+                            (object) "DefType",
+                            (object) type));
       }
     }
 
-    public static float GetDefaultMaximum(PARAMDEF.DefType type)
-    {
-      switch (type)
-      {
+    public static float GetDefaultMaximum(PARAMDEF.DefType type) {
+      switch (type) {
         case PARAMDEF.DefType.s8:
           return (float) sbyte.MaxValue;
         case PARAMDEF.DefType.u8:
@@ -93,14 +91,15 @@ namespace SoulsFormats
         case PARAMDEF.DefType.fixstrW:
           return 1E+09f;
         default:
-          throw new NotImplementedException(string.Format("No default maximum specified for {0}.{1}", (object) "DefType", (object) type));
+          throw new NotImplementedException(
+              string.Format("No default maximum specified for {0}.{1}",
+                            (object) "DefType",
+                            (object) type));
       }
     }
 
-    public static float GetDefaultIncrement(PARAMDEF.DefType type)
-    {
-      switch (type)
-      {
+    public static float GetDefaultIncrement(PARAMDEF.DefType type) {
+      switch (type) {
         case PARAMDEF.DefType.s8:
           return 1f;
         case PARAMDEF.DefType.u8:
@@ -122,14 +121,16 @@ namespace SoulsFormats
         case PARAMDEF.DefType.fixstrW:
           return 1f;
         default:
-          throw new NotImplementedException(string.Format("No default increment specified for {0}.{1}", (object) "DefType", (object) type));
+          throw new NotImplementedException(
+              string.Format("No default increment specified for {0}.{1}",
+                            (object) "DefType",
+                            (object) type));
       }
     }
 
-    public static PARAMDEF.EditFlags GetDefaultEditFlags(PARAMDEF.DefType type)
-    {
-      switch (type)
-      {
+    public static PARAMDEF.EditFlags
+        GetDefaultEditFlags(PARAMDEF.DefType type) {
+      switch (type) {
         case PARAMDEF.DefType.s8:
           return PARAMDEF.EditFlags.Wrap;
         case PARAMDEF.DefType.u8:
@@ -151,14 +152,15 @@ namespace SoulsFormats
         case PARAMDEF.DefType.fixstrW:
           return PARAMDEF.EditFlags.Wrap;
         default:
-          throw new NotImplementedException(string.Format("No default edit flags specified for {0}.{1}", (object) "DefType", (object) type));
+          throw new NotImplementedException(
+              string.Format("No default edit flags specified for {0}.{1}",
+                            (object) "DefType",
+                            (object) type));
       }
     }
 
-    public static bool IsArrayType(PARAMDEF.DefType type)
-    {
-      switch (type)
-      {
+    public static bool IsArrayType(PARAMDEF.DefType type) {
+      switch (type) {
         case PARAMDEF.DefType.dummy8:
         case PARAMDEF.DefType.fixstr:
         case PARAMDEF.DefType.fixstrW:
@@ -168,10 +170,8 @@ namespace SoulsFormats
       }
     }
 
-    public static bool IsBitType(PARAMDEF.DefType type)
-    {
-      switch (type)
-      {
+    public static bool IsBitType(PARAMDEF.DefType type) {
+      switch (type) {
         case PARAMDEF.DefType.u8:
         case PARAMDEF.DefType.u16:
         case PARAMDEF.DefType.u32:
@@ -182,10 +182,8 @@ namespace SoulsFormats
       }
     }
 
-    public static int GetValueSize(PARAMDEF.DefType type)
-    {
-      switch (type)
-      {
+    public static int GetValueSize(PARAMDEF.DefType type) {
+      switch (type) {
         case PARAMDEF.DefType.s8:
           return 1;
         case PARAMDEF.DefType.u8:
@@ -207,14 +205,15 @@ namespace SoulsFormats
         case PARAMDEF.DefType.fixstrW:
           return 2;
         default:
-          throw new NotImplementedException(string.Format("No value size specified for {0}.{1}", (object) "DefType", (object) type));
+          throw new NotImplementedException(
+              string.Format("No value size specified for {0}.{1}",
+                            (object) "DefType",
+                            (object) type));
       }
     }
 
-    public static object CastDefaultValue(PARAMDEF.Field field)
-    {
-      switch (field.DisplayType)
-      {
+    public static object CastDefaultValue(PARAMDEF.Field field) {
+      switch (field.DisplayType) {
         case PARAMDEF.DefType.s8:
           return (object) (sbyte) field.Default;
         case PARAMDEF.DefType.u8:
@@ -230,25 +229,29 @@ namespace SoulsFormats
         case PARAMDEF.DefType.f32:
           return (object) field.Default;
         case PARAMDEF.DefType.dummy8:
-          return field.BitSize == -1 ? (object) new byte[field.ArrayLength] : (object) (byte) field.Default;
+          return field.BitSize == -1
+                     ? (object) new byte[field.ArrayLength]
+                     : (object) (byte) field.Default;
         case PARAMDEF.DefType.fixstr:
           return (object) "";
         case PARAMDEF.DefType.fixstrW:
           return (object) "";
         default:
-          throw new NotImplementedException(string.Format("Default not implemented for type {0}", (object) field.DisplayType));
+          throw new NotImplementedException(
+              string.Format("Default not implemented for type {0}",
+                            (object) field.DisplayType));
       }
     }
 
-    public static int GetBitLimit(PARAMDEF.DefType type)
-    {
+    public static int GetBitLimit(PARAMDEF.DefType type) {
       if (type == PARAMDEF.DefType.u8)
         return 8;
       if (type == PARAMDEF.DefType.u16)
         return 16;
       if (type == PARAMDEF.DefType.u32)
         return 32;
-      throw new InvalidOperationException("Bit type may only be u8, u16, or u32.");
+      throw new InvalidOperationException(
+          "Bit type may only be u8, u16, or u32.");
     }
   }
 }

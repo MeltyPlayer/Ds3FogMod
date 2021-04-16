@@ -7,11 +7,9 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public interface IFlverMesh
-  {
+  public interface IFlverMesh {
     byte Dynamic { get; }
 
     int MaterialIndex { get; }

@@ -7,24 +7,20 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public class ENFL : SoulsFile<ENFL>
-  {
+  public class ENFL : SoulsFile<ENFL> {
     public List<ENFL.Struct1> Struct1s;
     public List<ENFL.Struct2> Struct2s;
     public List<string> Strings;
 
-    protected override bool Is(BinaryReaderEx br)
-    {
-      return br.Length >= 4L && br.GetASCII(0L, 4) == nameof (ENFL);
+    protected override bool Is(BinaryReaderEx br) {
+      return br.Length >= 4L && br.GetASCII(0L, 4) == nameof(ENFL);
     }
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       br.BigEndian = false;
-      br.AssertASCII(nameof (ENFL));
+      br.AssertASCII(nameof(ENFL));
       br.AssertInt32(66581);
       int compressedSize = br.ReadInt32();
       br.ReadInt32();
@@ -47,8 +43,7 @@ namespace SoulsFormats
         this.Strings.Add(br.ReadUTF16());
     }
 
-    protected override void Write(BinaryWriterEx bw)
-    {
+    protected override void Write(BinaryWriterEx bw) {
       BinaryWriterEx bw1 = new BinaryWriterEx(false);
       bw1.WriteInt32(0);
       bw1.WriteInt32(this.Struct1s.Count);
@@ -65,7 +60,7 @@ namespace SoulsFormats
         bw1.WriteUTF16(text, true);
       bw1.Pad(16);
       byte[] input = bw1.FinishBytes();
-      bw.WriteASCII(nameof (ENFL), false);
+      bw.WriteASCII(nameof(ENFL), false);
       bw.WriteInt32(66581);
       bw.ReserveInt32("CompressedSize");
       bw.WriteInt32(input.Length);
@@ -73,45 +68,39 @@ namespace SoulsFormats
       bw.FillInt32("CompressedSize", num);
     }
 
-    public class Struct1
-    {
+    public class Struct1 {
       public short Step;
       public short Index;
 
-      internal Struct1(BinaryReaderEx br)
-      {
+      internal Struct1(BinaryReaderEx br) {
         this.Step = br.ReadInt16();
         this.Index = br.ReadInt16();
       }
 
-      internal void Write(BinaryWriterEx bw)
-      {
+      internal void Write(BinaryWriterEx bw) {
         bw.WriteInt16(this.Step);
         bw.WriteInt16(this.Index);
       }
 
-      public override string ToString()
-      {
-        return string.Format("0x{0:X4} 0x{1:X4}", (object) this.Step, (object) this.Index);
+      public override string ToString() {
+        return string.Format("0x{0:X4} 0x{1:X4}",
+                             (object) this.Step,
+                             (object) this.Index);
       }
     }
 
-    public class Struct2
-    {
+    public class Struct2 {
       public long Unk1;
 
-      internal Struct2(BinaryReaderEx br)
-      {
+      internal Struct2(BinaryReaderEx br) {
         this.Unk1 = br.ReadInt64();
       }
 
-      internal void Write(BinaryWriterEx bw)
-      {
+      internal void Write(BinaryWriterEx bw) {
         bw.WriteInt64(this.Unk1);
       }
 
-      public override string ToString()
-      {
+      public override string ToString() {
         return string.Format("0x{0:X16}", (object) this.Unk1);
       }
     }

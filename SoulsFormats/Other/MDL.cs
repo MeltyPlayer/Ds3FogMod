@@ -9,11 +9,9 @@ using System.Drawing;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats.Other
-{
+namespace SoulsFormats.Other {
   [ComVisible(true)]
-  public class MDL : SoulsFile<MDL>
-  {
+  public class MDL : SoulsFile<MDL> {
     public int Unk0C;
     public int Unk10;
     public int Unk14;
@@ -27,13 +25,11 @@ namespace SoulsFormats.Other
     public List<MDL.Material> Materials;
     public List<string> Textures;
 
-    protected override bool Is(BinaryReaderEx br)
-    {
+    protected override bool Is(BinaryReaderEx br) {
       return br.Length >= 4L && br.GetASCII(4L, 4) == "MDL ";
     }
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       br.BigEndian = false;
       br.ReadInt32();
       br.AssertASCII("MDL ");
@@ -95,57 +91,63 @@ namespace SoulsFormats.Other
         this.Textures.Add(br.ReadShiftJIS());
     }
 
-    private static Vector3 Read11_11_10Vector3(BinaryReaderEx br)
-    {
+    private static Vector3 Read11_11_10Vector3(BinaryReaderEx br) {
       int num = br.ReadInt32();
-      return new Vector3((float) (num << 21 >> 21) / 1023f, (float) (num << 10 >> 21) / 1023f, (float) (num >> 22) / 511f);
+      return new Vector3((float) (num << 21 >> 21) / 1023f,
+                         (float) (num << 10 >> 21) / 1023f,
+                         (float) (num >> 22) / 511f);
     }
 
-    public List<MDL.Vertex[]> GetFaces(MDL.Faceset faceset, List<MDL.Vertex> vertices)
-    {
+    public List<MDL.Vertex[]> GetFaces(
+        MDL.Faceset faceset,
+        List<MDL.Vertex> vertices) {
       List<ushort> ushortList = this.Triangulate(faceset, vertices);
       List<MDL.Vertex[]> vertexArrayList = new List<MDL.Vertex[]>();
       for (int index = 0; index < ushortList.Count; index += 3)
-        vertexArrayList.Add(new MDL.Vertex[3]
-        {
-          vertices[(int) ushortList[index]],
-          vertices[(int) ushortList[index + 1]],
-          vertices[(int) ushortList[index + 2]]
+        vertexArrayList.Add(new MDL.Vertex[3] {
+            vertices[(int) ushortList[index]],
+            vertices[(int) ushortList[index + 1]],
+            vertices[(int) ushortList[index + 2]]
         });
       return vertexArrayList;
     }
 
-    public List<ushort> Triangulate(MDL.Faceset faceset, List<MDL.Vertex> vertices)
-    {
+    public List<ushort> Triangulate(
+        MDL.Faceset faceset,
+        List<MDL.Vertex> vertices) {
       bool flag = false;
       List<ushort> ushortList = new List<ushort>();
-      for (int startIndex = faceset.StartIndex; startIndex < faceset.StartIndex + faceset.IndexCount - 2; ++startIndex)
-      {
+      for (int startIndex = faceset.StartIndex;
+           startIndex < faceset.StartIndex + faceset.IndexCount - 2;
+           ++startIndex) {
         ushort index1 = this.Indices[startIndex];
         ushort index2 = this.Indices[startIndex + 1];
         ushort index3 = this.Indices[startIndex + 2];
-        if (index1 == ushort.MaxValue || index2 == ushort.MaxValue || index3 == ushort.MaxValue)
-        {
+        if (index1 == ushort.MaxValue ||
+            index2 == ushort.MaxValue ||
+            index3 == ushort.MaxValue) {
           flag = false;
-        }
-        else
-        {
-          if ((int) index1 != (int) index2 && (int) index1 != (int) index3 && (int) index2 != (int) index3)
-          {
+        } else {
+          if ((int) index1 != (int) index2 &&
+              (int) index1 != (int) index3 &&
+              (int) index2 != (int) index3) {
             MDL.Vertex vertex1 = vertices[(int) index1];
             MDL.Vertex vertex2 = vertices[(int) index2];
             MDL.Vertex vertex3 = vertices[(int) index3];
-            Vector3 vector2 = Vector3.Normalize((vertex1.Normal + vertex2.Normal + vertex3.Normal) / 3f);
-            Vector3 vector1 = Vector3.Normalize(Vector3.Cross(vertex2.Position - vertex1.Position, vertex3.Position - vertex1.Position));
-            flag = (double) Vector3.Dot(vector1, vector2) / ((double) vector1.Length() * (double) vector2.Length()) <= 0.0;
-            if (!flag)
-            {
+            Vector3 vector2 =
+                Vector3.Normalize(
+                    (vertex1.Normal + vertex2.Normal + vertex3.Normal) / 3f);
+            Vector3 vector1 = Vector3.Normalize(
+                Vector3.Cross(vertex2.Position - vertex1.Position,
+                              vertex3.Position - vertex1.Position));
+            flag = (double) Vector3.Dot(vector1, vector2) /
+                   ((double) vector1.Length() * (double) vector2.Length()) <=
+                   0.0;
+            if (!flag) {
               ushortList.Add(index1);
               ushortList.Add(index2);
               ushortList.Add(index3);
-            }
-            else
-            {
+            } else {
               ushortList.Add(index3);
               ushortList.Add(index2);
               ushortList.Add(index1);
@@ -157,8 +159,7 @@ namespace SoulsFormats.Other
       return ushortList;
     }
 
-    public class Bone
-    {
+    public class Bone {
       public Vector3 Translation;
       public Vector3 Rotation;
       public Vector3 Scale;
@@ -175,8 +176,7 @@ namespace SoulsFormats.Other
       public Vector3 BoundingBoxMax;
       public short[] Unk70;
 
-      internal Bone(BinaryReaderEx br)
-      {
+      internal Bone(BinaryReaderEx br) {
         this.Translation = br.ReadVector3();
         this.Rotation = br.ReadVector3();
         this.Scale = br.ReadVector3();
@@ -220,8 +220,7 @@ namespace SoulsFormats.Other
       }
     }
 
-    public class Faceset
-    {
+    public class Faceset {
       public byte MaterialIndex { get; set; }
 
       public byte Unk01 { get; set; }
@@ -234,8 +233,7 @@ namespace SoulsFormats.Other
 
       public int StartIndex { get; set; }
 
-      internal Faceset(BinaryReaderEx br)
-      {
+      internal Faceset(BinaryReaderEx br) {
         this.MaterialIndex = br.ReadByte();
         this.Unk01 = br.ReadByte();
         this.VertexCount = br.ReadInt16();
@@ -245,15 +243,13 @@ namespace SoulsFormats.Other
       }
     }
 
-    public class FacesetC
-    {
+    public class FacesetC {
       public List<MDL.Faceset> Facesets;
       public byte IndexCount;
       public byte Unk03;
       public short[] Indices;
 
-      internal FacesetC(BinaryReaderEx br)
-      {
+      internal FacesetC(BinaryReaderEx br) {
         short num1 = br.ReadInt16();
         this.IndexCount = br.ReadByte();
         this.Unk03 = br.ReadByte();
@@ -267,15 +263,13 @@ namespace SoulsFormats.Other
       }
     }
 
-    public enum VertexFormat
-    {
+    public enum VertexFormat {
       A,
       B,
       C,
     }
 
-    public class Vertex
-    {
+    public class Vertex {
       public Color Color;
       public Vector2[] UVs;
       public short UnkShortA;
@@ -291,13 +285,11 @@ namespace SoulsFormats.Other
 
       public virtual Vector3 Bitangent { get; set; }
 
-      public Vertex()
-      {
+      public Vertex() {
         this.UVs = new Vector2[4];
       }
 
-      internal Vertex(BinaryReaderEx br, MDL.VertexFormat format)
-      {
+      internal Vertex(BinaryReaderEx br, MDL.VertexFormat format) {
         this.Position = br.ReadVector3();
         this.Normal = MDL.Read11_11_10Vector3(br);
         this.Tangent = MDL.Read11_11_10Vector3(br);
@@ -306,8 +298,7 @@ namespace SoulsFormats.Other
         this.UVs = new Vector2[4];
         for (int index = 0; index < 4; ++index)
           this.UVs[index] = br.ReadVector2();
-        if (format >= MDL.VertexFormat.B)
-        {
+        if (format >= MDL.VertexFormat.B) {
           this.UnkShortA = br.ReadInt16();
           this.UnkShortB = br.ReadInt16();
         }
@@ -318,63 +309,33 @@ namespace SoulsFormats.Other
       }
     }
 
-    public class VertexD : MDL.Vertex
-    {
+    public class VertexD : MDL.Vertex {
       public Vector3[] Positions;
       public Vector3[] Normals;
       public Vector3[] Tangents;
       public Vector3[] Bitangents;
 
-      public override Vector3 Position
-      {
-        get
-        {
-          return this.Positions[0];
-        }
-        set
-        {
-          this.Positions[0] = value;
-        }
+      public override Vector3 Position {
+        get { return this.Positions[0]; }
+        set { this.Positions[0] = value; }
       }
 
-      public override Vector3 Normal
-      {
-        get
-        {
-          return this.Normals[0];
-        }
-        set
-        {
-          this.Normals[0] = value;
-        }
+      public override Vector3 Normal {
+        get { return this.Normals[0]; }
+        set { this.Normals[0] = value; }
       }
 
-      public override Vector3 Tangent
-      {
-        get
-        {
-          return this.Tangents[0];
-        }
-        set
-        {
-          this.Tangents[0] = value;
-        }
+      public override Vector3 Tangent {
+        get { return this.Tangents[0]; }
+        set { this.Tangents[0] = value; }
       }
 
-      public override Vector3 Bitangent
-      {
-        get
-        {
-          return this.Bitangents[0];
-        }
-        set
-        {
-          this.Bitangents[0] = value;
-        }
+      public override Vector3 Bitangent {
+        get { return this.Bitangents[0]; }
+        set { this.Bitangents[0] = value; }
       }
 
-      internal VertexD(BinaryReaderEx br)
-      {
+      internal VertexD(BinaryReaderEx br) {
         this.Positions = new Vector3[16];
         for (int index = 0; index < 16; ++index)
           this.Positions[index] = br.ReadVector3();
@@ -398,8 +359,7 @@ namespace SoulsFormats.Other
       }
     }
 
-    public class Struct7
-    {
+    public class Struct7 {
       public float Unk00;
       public float Unk04;
       public float Unk08;
@@ -409,8 +369,7 @@ namespace SoulsFormats.Other
       public int Unk18;
       public int Unk1C;
 
-      internal Struct7(BinaryReaderEx br)
-      {
+      internal Struct7(BinaryReaderEx br) {
         this.Unk00 = br.ReadSingle();
         this.Unk04 = br.ReadSingle();
         this.Unk08 = br.ReadSingle();
@@ -422,8 +381,7 @@ namespace SoulsFormats.Other
       }
     }
 
-    public class Material
-    {
+    public class Material {
       public int Unk04;
       public int Unk08;
       public int Unk0C;
@@ -448,8 +406,7 @@ namespace SoulsFormats.Other
       public float Unk68;
       public int Unk6C;
 
-      internal Material(BinaryReaderEx br)
-      {
+      internal Material(BinaryReaderEx br) {
         br.AssertInt32(new int[1]);
         this.Unk04 = br.ReadInt32();
         this.Unk08 = br.ReadInt32();

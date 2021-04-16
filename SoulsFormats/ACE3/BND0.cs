@@ -7,35 +7,28 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats.ACE3
-{
+namespace SoulsFormats.ACE3 {
   [ComVisible(true)]
-  public class BND0 : SoulsFile<BND0>
-  {
+  public class BND0 : SoulsFile<BND0> {
     public List<BND0.File> Files;
     public bool Lite;
     public byte Flag1;
     public byte Flag2;
 
-    protected override bool Is(BinaryReaderEx br)
-    {
+    protected override bool Is(BinaryReaderEx br) {
       return br.Length >= 4L && br.GetASCII(0L, 4) == "BND\0";
     }
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       br.BigEndian = false;
       br.AssertASCII("BND\0");
       this.Lite = br.GetInt32(12L) == 0;
       int capacity;
-      if (this.Lite)
-      {
+      if (this.Lite) {
         br.ReadInt32();
         capacity = br.ReadInt32();
         br.AssertInt32(new int[1]);
-      }
-      else
-      {
+      } else {
         br.AssertInt32(63487);
         br.AssertInt32(211);
         br.ReadInt32();
@@ -53,18 +46,14 @@ namespace SoulsFormats.ACE3
         this.Files.Add(new BND0.File(br, this.Lite));
     }
 
-    protected override void Write(BinaryWriterEx bw)
-    {
+    protected override void Write(BinaryWriterEx bw) {
       bw.BigEndian = false;
       bw.WriteASCII("BND\0", false);
-      if (this.Lite)
-      {
+      if (this.Lite) {
         bw.ReserveInt32("FileSize");
         bw.WriteInt32(this.Files.Count);
         bw.WriteInt32(0);
-      }
-      else
-      {
+      } else {
         bw.WriteInt32(63487);
         bw.WriteInt32(211);
         bw.ReserveInt32("FileSize");
@@ -79,44 +68,37 @@ namespace SoulsFormats.ACE3
       }
       for (int index = 0; index < this.Files.Count; ++index)
         this.Files[index].Write(bw, this.Lite, index);
-      for (int index = 0; index < this.Files.Count; ++index)
-      {
+      for (int index = 0; index < this.Files.Count; ++index) {
         BND0.File file = this.Files[index];
         bw.Pad(32);
-        bw.FillInt32(string.Format("FileOffset{0}", (object) index), (int) bw.Position);
-        if (this.Lite)
-        {
+        bw.FillInt32(string.Format("FileOffset{0}", (object) index),
+                     (int) bw.Position);
+        if (this.Lite) {
           bw.WriteInt32(file.Bytes.Length + 4);
           bw.WriteBytes(file.Bytes);
-        }
-        else
+        } else
           bw.WriteBytes(file.Bytes);
       }
       bw.FillInt32("FileSize", (int) bw.Position);
     }
 
-    public class File
-    {
+    public class File {
       public int ID;
       public byte[] Bytes;
 
-      internal File(BinaryReaderEx br, bool lite)
-      {
+      internal File(BinaryReaderEx br, bool lite) {
         this.ID = br.ReadInt32();
         int num = br.ReadInt32();
         int count;
-        if (lite)
-        {
+        if (lite) {
           count = br.GetInt32((long) num) - 4;
           num += 4;
-        }
-        else
+        } else
           count = br.ReadInt32();
         this.Bytes = br.GetBytes((long) num, count);
       }
 
-      internal void Write(BinaryWriterEx bw, bool lite, int index)
-      {
+      internal void Write(BinaryWriterEx bw, bool lite, int index) {
         bw.WriteInt32(this.ID);
         bw.ReserveInt32(string.Format("FileOffset{0}", (object) index));
         if (lite)

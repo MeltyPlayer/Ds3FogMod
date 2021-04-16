@@ -7,15 +7,12 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats.KF4
-{
+namespace SoulsFormats.KF4 {
   [ComVisible(true)]
-  public class MAP : SoulsFile<MAP>
-  {
+  public class MAP : SoulsFile<MAP> {
     public List<MAP.Struct4> Struct4s { get; set; }
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       br.ReadInt32();
       br.ReadInt32();
       br.ReadInt32();
@@ -43,12 +40,10 @@ namespace SoulsFormats.KF4
         this.Struct4s.Add(new MAP.Struct4(br));
     }
 
-    public class Struct4
-    {
+    public class Struct4 {
       public OM2 Om2 { get; set; }
 
-      internal Struct4(BinaryReaderEx br)
-      {
+      internal Struct4(BinaryReaderEx br) {
         byte[] bytes = br.ReadBytes(br.GetInt32(br.Position));
         br.ReadBytes(br.GetInt32(br.Position));
         this.Om2 = SoulsFile<OM2>.Read(bytes);

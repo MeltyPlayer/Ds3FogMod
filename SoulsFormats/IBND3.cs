@@ -4,10 +4,8 @@
 // MVID: D28026FD-A9AB-45EB-9CE9-27B9E67A6072
 // Assembly location: M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\FogMod.exe
 
-namespace SoulsFormats
-{
-  internal interface IBND3
-  {
+namespace SoulsFormats {
+  internal interface IBND3 {
     string Version { get; set; }
 
     Binder.Format Format { get; set; }

@@ -8,17 +8,14 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats.KF4
-{
+namespace SoulsFormats.KF4 {
   [ComVisible(true)]
-  public class OM2 : SoulsFile<OM2>
-  {
+  public class OM2 : SoulsFile<OM2> {
     public OM2.Struct1[] Struct1s { get; private set; }
 
     public List<OM2.Struct2> Struct2s { get; set; }
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       br.ReadInt32();
       short num1 = br.ReadInt16();
       int num2 = (int) br.ReadInt16();
@@ -33,8 +30,7 @@ namespace SoulsFormats.KF4
         this.Struct2s.Add(new OM2.Struct2(br));
     }
 
-    public class Struct1
-    {
+    public class Struct1 {
       public float Unk00 { get; set; }
 
       public float Unk04 { get; set; }
@@ -43,8 +39,7 @@ namespace SoulsFormats.KF4
 
       public byte Unk0C { get; set; }
 
-      internal Struct1(BinaryReaderEx br)
-      {
+      internal Struct1(BinaryReaderEx br) {
         this.Unk00 = br.ReadSingle();
         this.Unk04 = br.ReadSingle();
         this.Unk08 = br.ReadSingle();
@@ -55,16 +50,14 @@ namespace SoulsFormats.KF4
       }
     }
 
-    public class Struct2
-    {
+    public class Struct2 {
       public List<OM2.Mesh> Meshes { get; set; }
 
       public byte Unk05 { get; set; }
 
       public byte Struct2Index { get; set; }
 
-      internal Struct2(BinaryReaderEx br)
-      {
+      internal Struct2(BinaryReaderEx br) {
         int num1 = br.ReadInt32();
         short num2 = br.ReadInt16();
         this.Unk05 = br.ReadByte();
@@ -79,12 +72,10 @@ namespace SoulsFormats.KF4
       }
     }
 
-    public class Mesh
-    {
+    public class Mesh {
       public List<OM2.Vertex> Vertices { get; set; }
 
-      internal Mesh(BinaryReaderEx br)
-      {
+      internal Mesh(BinaryReaderEx br) {
         br.Skip(160);
         byte num = br.ReadByte();
         br.Skip(15);
@@ -95,8 +86,7 @@ namespace SoulsFormats.KF4
       }
     }
 
-    public class Vertex
-    {
+    public class Vertex {
       public Vector3 Position { get; set; }
 
       public float Unk0C { get; set; }
@@ -111,8 +101,7 @@ namespace SoulsFormats.KF4
 
       public Vector4 Unk30 { get; set; }
 
-      internal Vertex(BinaryReaderEx br)
-      {
+      internal Vertex(BinaryReaderEx br) {
         this.Position = br.ReadVector3();
         this.Unk0C = br.ReadSingle();
         this.Normal = br.ReadVector3();

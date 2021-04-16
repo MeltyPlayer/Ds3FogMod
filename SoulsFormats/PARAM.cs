@@ -111,8 +111,9 @@ namespace SoulsFormats {
 
       // ISSUE: reference to a compiler-generated field
       bw.BigEndian = this.BigEndian;
+
       void WriteFormat() {
-        bw.WriteByte(this.BigEndian ? byte.MaxValue : (byte)0);
+        bw.WriteByte(this.BigEndian ? byte.MaxValue : (byte) 0);
         bw.WriteByte(this.Format2D);
         bw.WriteByte(this.Format2E);
         bw.WriteByte(this.Format2F);

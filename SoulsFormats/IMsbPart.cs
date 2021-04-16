@@ -7,11 +7,9 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public interface IMsbPart : IMsbEntry
-  {
+  public interface IMsbPart : IMsbEntry {
     string ModelName { get; set; }
 
     Vector3 Position { get; set; }

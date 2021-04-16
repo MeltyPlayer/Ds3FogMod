@@ -7,72 +7,94 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
-  internal static class Oodle26
-  {
+namespace SoulsFormats {
+  internal static class Oodle26 {
     public const int OODLELZ_FAILED = 0;
 
     [DllImport("oo2core_6_win64.dll")]
     private static extern uint OodleLZ_Compress(
-      Oodle26.Compressor compressor,
-      byte[] src_buf,
-      ulong src_len,
-      byte[] dst_buf,
-      Oodle26.CompressionLevel level,
-      Oodle26.CompressOptions options,
-      ulong offs,
-      ulong unused,
-      IntPtr scratch,
-      ulong scratch_size);
+        Oodle26.Compressor compressor,
+        byte[] src_buf,
+        ulong src_len,
+        byte[] dst_buf,
+        Oodle26.CompressionLevel level,
+        Oodle26.CompressOptions options,
+        ulong offs,
+        ulong unused,
+        IntPtr scratch,
+        ulong scratch_size);
 
     [DllImport("oo2core_6_win64.dll")]
     private static extern IntPtr OodleLZ_CompressOptions_GetDefault(
-      Oodle26.Compressor compressor,
-      Oodle26.CompressionLevel compressionLevel);
+        Oodle26.Compressor compressor,
+        Oodle26.CompressionLevel compressionLevel);
 
     [DllImport("oo2core_6_win64.dll")]
     private static extern uint OodleLZ_Decompress(
-      byte[] compBuf,
-      ulong src_len,
-      byte[] decodeTo,
-      ulong dst_size,
-      Oodle26.FuzzSafe fuzzSafe,
-      int crc,
-      int verbose,
-      IntPtr dst_base,
-      ulong e,
-      IntPtr cb,
-      IntPtr cb_ctx,
-      IntPtr scratch,
-      ulong scratch_size,
-      int threadPhase);
+        byte[] compBuf,
+        ulong src_len,
+        byte[] decodeTo,
+        ulong dst_size,
+        Oodle26.FuzzSafe fuzzSafe,
+        int crc,
+        int verbose,
+        IntPtr dst_base,
+        ulong e,
+        IntPtr cb,
+        IntPtr cb_ctx,
+        IntPtr scratch,
+        ulong scratch_size,
+        int threadPhase);
 
     [DllImport("oo2core_6_win64.dll")]
-    private static extern uint OodleLZ_GetCompressedBufferSizeNeeded(ulong src_len);
+    private static extern uint OodleLZ_GetCompressedBufferSizeNeeded(
+        ulong src_len);
 
     public static byte[] Compress(
-      byte[] source,
-      Oodle26.Compressor compressor,
-      Oodle26.CompressionLevel level)
-    {
-      int bufferSizeNeeded = (int) Oodle26.OodleLZ_GetCompressedBufferSizeNeeded((ulong) source.Length);
-      Oodle26.CompressOptions options = Oodle26.CompressOptions.GetDefault(compressor, level);
+        byte[] source,
+        Oodle26.Compressor compressor,
+        Oodle26.CompressionLevel level) {
+      int bufferSizeNeeded =
+          (int) Oodle26.OodleLZ_GetCompressedBufferSizeNeeded(
+              (ulong) source.Length);
+      Oodle26.CompressOptions options =
+          Oodle26.CompressOptions.GetDefault(compressor, level);
       byte[] array = new byte[bufferSizeNeeded];
-      uint num = Oodle26.OodleLZ_Compress(compressor, source, (ulong) source.Length, array, level, options, 0UL, 0UL, IntPtr.Zero, 0UL);
+      uint num = Oodle26.OodleLZ_Compress(compressor,
+                                          source,
+                                          (ulong) source.Length,
+                                          array,
+                                          level,
+                                          options,
+                                          0UL,
+                                          0UL,
+                                          IntPtr.Zero,
+                                          0UL);
       Array.Resize<byte>(ref array, (int) num);
       return array;
     }
 
-    public static byte[] Decompress(byte[] source, ulong uncompressedSize)
-    {
+    public static byte[] Decompress(byte[] source, ulong uncompressedSize) {
       byte[] decodeTo = new byte[uncompressedSize];
-      int num = (int) Oodle26.OodleLZ_Decompress(source, (ulong) source.Length, decodeTo, uncompressedSize, Oodle26.FuzzSafe.Yes, 0, 0, IntPtr.Zero, 0UL, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, 0UL, 0);
+      int num = (int) Oodle26.OodleLZ_Decompress(
+          source,
+          (ulong) source.Length,
+          decodeTo,
+          uncompressedSize,
+          Oodle26.FuzzSafe.Yes,
+          0,
+          0,
+          IntPtr.Zero,
+          0UL,
+          IntPtr.Zero,
+          IntPtr.Zero,
+          IntPtr.Zero,
+          0UL,
+          0);
       return decodeTo;
     }
 
-    public enum Compressor
-    {
+    public enum Compressor {
       LZH,
       LZHLW,
       LZNIB,
@@ -89,8 +111,7 @@ namespace SoulsFormats
       Leviathan,
     }
 
-    public enum CompressionLevel
-    {
+    public enum CompressionLevel {
       None,
       SuperFast,
       VeryFast,
@@ -103,15 +124,13 @@ namespace SoulsFormats
       TooHigh,
     }
 
-    public enum FuzzSafe
-    {
+    public enum FuzzSafe {
       No,
       Yes,
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public class CompressOptions
-    {
+    public class CompressOptions {
       private int Unk00;
       private int Unk04;
       private int Unk08;
@@ -126,10 +145,12 @@ namespace SoulsFormats
       private int Unk2C;
 
       public static Oodle26.CompressOptions GetDefault(
-        Oodle26.Compressor compressor,
-        Oodle26.CompressionLevel compressionLevel)
-      {
-        return Marshal.PtrToStructure<Oodle26.CompressOptions>(Oodle26.OodleLZ_CompressOptions_GetDefault(compressor, compressionLevel));
+          Oodle26.Compressor compressor,
+          Oodle26.CompressionLevel compressionLevel) {
+        return Marshal.PtrToStructure<Oodle26.CompressOptions>(
+            Oodle26.OodleLZ_CompressOptions_GetDefault(
+                compressor,
+                compressionLevel));
       }
     }
   }

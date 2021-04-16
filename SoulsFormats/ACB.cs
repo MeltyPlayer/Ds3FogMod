@@ -8,22 +8,18 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public class ACB : SoulsFile<ACB>
-  {
+  public class ACB : SoulsFile<ACB> {
     public bool BigEndian { get; set; }
 
     public List<ACB.Asset> Assets { get; set; }
 
-    protected override bool Is(BinaryReaderEx br)
-    {
+    protected override bool Is(BinaryReaderEx br) {
       return br.Length >= 4L && br.GetASCII(0L, 4) == "ACB\0";
     }
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       this.BigEndian = (long) br.GetUInt32(12L) > br.Length;
       br.BigEndian = this.BigEndian;
       br.AssertASCII("ACB\0");
@@ -34,12 +30,10 @@ namespace SoulsFormats
       int num5 = br.ReadInt32();
       br.ReadInt32();
       this.Assets = new List<ACB.Asset>(num5);
-      foreach (int readInt32 in br.ReadInt32s(num5))
-      {
+      foreach (int readInt32 in br.ReadInt32s(num5)) {
         br.Position = (long) readInt32;
         ACB.AssetType enum16 = br.GetEnum16<ACB.AssetType>(br.Position + 8L);
-        switch (enum16)
-        {
+        switch (enum16) {
           case ACB.AssetType.PWV:
             this.Assets.Add((ACB.Asset) new ACB.Asset.PWV(br));
             break;
@@ -59,15 +53,16 @@ namespace SoulsFormats
             this.Assets.Add((ACB.Asset) new ACB.Asset.Motion(br));
             break;
           default:
-            throw new NotImplementedException(string.Format("Unsupported asset type: {0}", (object) enum16));
+            throw new NotImplementedException(
+                string.Format("Unsupported asset type: {0}", (object) enum16));
         }
       }
     }
 
-    protected override void Write(BinaryWriterEx bw)
-    {
+    protected override void Write(BinaryWriterEx bw) {
       List<int> offsetIndex = new List<int>();
-      SortedDictionary<int, List<int>> membersOffsetIndex = new SortedDictionary<int, List<int>>();
+      SortedDictionary<int, List<int>> membersOffsetIndex =
+          new SortedDictionary<int, List<int>>();
       bw.BigEndian = this.BigEndian;
       bw.WriteASCII("ACB\0", false);
       bw.WriteByte((byte) 2);
@@ -76,28 +71,27 @@ namespace SoulsFormats
       bw.WriteByte((byte) 0);
       bw.WriteInt32(this.Assets.Count);
       bw.ReserveInt32("OffsetIndexOffset");
-      for (int index = 0; index < this.Assets.Count; ++index)
-      {
+      for (int index = 0; index < this.Assets.Count; ++index) {
         offsetIndex.Add((int) bw.Position);
         bw.ReserveInt32(string.Format("AssetOffset{0}", (object) index));
       }
-      for (int index = 0; index < this.Assets.Count; ++index)
-      {
-        bw.FillInt32(string.Format("AssetOffset{0}", (object) index), (int) bw.Position);
+      for (int index = 0; index < this.Assets.Count; ++index) {
+        bw.FillInt32(string.Format("AssetOffset{0}", (object) index),
+                     (int) bw.Position);
         this.Assets[index].Write(bw, index, offsetIndex, membersOffsetIndex);
       }
-      for (int index = 0; index < this.Assets.Count; ++index)
-      {
+      for (int index = 0; index < this.Assets.Count; ++index) {
         if (this.Assets[index] is ACB.Asset.Model asset)
           asset.WriteMembers(bw, index, offsetIndex, membersOffsetIndex);
       }
       for (int index = 0; index < this.Assets.Count; ++index)
         this.Assets[index].WritePaths(bw, index);
-      for (int entryIndex = 0; entryIndex < this.Assets.Count; ++entryIndex)
-      {
-        if (this.Assets[entryIndex] is ACB.Asset.Model asset && asset.Members != null)
-        {
-          for (int memberIndex = 0; memberIndex < asset.Members.Count; ++memberIndex)
+      for (int entryIndex = 0; entryIndex < this.Assets.Count; ++entryIndex) {
+        if (this.Assets[entryIndex] is ACB.Asset.Model asset &&
+            asset.Members != null) {
+          for (int memberIndex = 0;
+               memberIndex < asset.Members.Count;
+               ++memberIndex)
             asset.Members[memberIndex].WriteText(bw, entryIndex, memberIndex);
         }
       }
@@ -108,8 +102,7 @@ namespace SoulsFormats
         bw.WriteInt32s((IList<int>) intList);
     }
 
-    public enum AssetType : ushort
-    {
+    public enum AssetType : ushort {
       PWV,
       General,
       Model,
@@ -118,22 +111,19 @@ namespace SoulsFormats
       Motion,
     }
 
-    public abstract class Asset
-    {
+    public abstract class Asset {
       public abstract ACB.AssetType Type { get; }
 
       public string AbsolutePath { get; set; }
 
       public string RelativePath { get; set; }
 
-      internal Asset()
-      {
+      internal Asset() {
         this.AbsolutePath = "";
         this.RelativePath = "";
       }
 
-      internal Asset(BinaryReaderEx br)
-      {
+      internal Asset(BinaryReaderEx br) {
         int num1 = br.ReadInt32();
         int num2 = br.ReadInt32();
         int num3 = (int) br.AssertUInt16((ushort) this.Type);
@@ -142,11 +132,10 @@ namespace SoulsFormats
       }
 
       internal virtual void Write(
-        BinaryWriterEx bw,
-        int index,
-        List<int> offsetIndex,
-        SortedDictionary<int, List<int>> membersOffsetIndex)
-      {
+          BinaryWriterEx bw,
+          int index,
+          List<int> offsetIndex,
+          SortedDictionary<int, List<int>> membersOffsetIndex) {
         offsetIndex.Add((int) bw.Position);
         bw.ReserveInt32(string.Format("AbsolutePathOffset{0}", (object) index));
         offsetIndex.Add((int) bw.Position);
@@ -154,93 +143,73 @@ namespace SoulsFormats
         bw.WriteUInt16((ushort) this.Type);
       }
 
-      internal void WritePaths(BinaryWriterEx bw, int index)
-      {
-        bw.FillInt32(string.Format("AbsolutePathOffset{0}", (object) index), (int) bw.Position);
+      internal void WritePaths(BinaryWriterEx bw, int index) {
+        bw.FillInt32(string.Format("AbsolutePathOffset{0}", (object) index),
+                     (int) bw.Position);
         bw.WriteUTF16(this.AbsolutePath, true);
-        bw.FillInt32(string.Format("RelativePathOffset{0}", (object) index), (int) bw.Position);
+        bw.FillInt32(string.Format("RelativePathOffset{0}", (object) index),
+                     (int) bw.Position);
         bw.WriteUTF16(this.RelativePath, true);
       }
 
-      public override string ToString()
-      {
-        return string.Format("{0}: {1} | {2}", (object) this.Type, (object) this.RelativePath, (object) this.AbsolutePath);
+      public override string ToString() {
+        return string.Format("{0}: {1} | {2}",
+                             (object) this.Type,
+                             (object) this.RelativePath,
+                             (object) this.AbsolutePath);
       }
 
-      public class PWV : ACB.Asset
-      {
-        public override ACB.AssetType Type
-        {
-          get
-          {
-            return ACB.AssetType.PWV;
-          }
+      public class PWV : ACB.Asset {
+        public override ACB.AssetType Type {
+          get { return ACB.AssetType.PWV; }
         }
 
-        public PWV()
-        {
-        }
+        public PWV() {}
 
         internal PWV(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           int num = (int) br.AssertInt16(new short[1]);
           br.AssertInt32(new int[1]);
         }
 
         internal override void Write(
-          BinaryWriterEx bw,
-          int index,
-          List<int> offsetIndex,
-          SortedDictionary<int, List<int>> membersOffsetIndex)
-        {
+            BinaryWriterEx bw,
+            int index,
+            List<int> offsetIndex,
+            SortedDictionary<int, List<int>> membersOffsetIndex) {
           base.Write(bw, index, offsetIndex, membersOffsetIndex);
           bw.WriteInt16((short) 0);
           bw.WriteInt32(0);
         }
       }
 
-      public class General : ACB.Asset
-      {
-        public override ACB.AssetType Type
-        {
-          get
-          {
-            return ACB.AssetType.General;
-          }
+      public class General : ACB.Asset {
+        public override ACB.AssetType Type {
+          get { return ACB.AssetType.General; }
         }
 
-        public General()
-        {
-        }
+        public General() {}
 
         internal General(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           int num = (int) br.AssertInt16(new short[1]);
           br.AssertInt32(new int[1]);
         }
 
         internal override void Write(
-          BinaryWriterEx bw,
-          int index,
-          List<int> offsetIndex,
-          SortedDictionary<int, List<int>> membersOffsetIndex)
-        {
+            BinaryWriterEx bw,
+            int index,
+            List<int> offsetIndex,
+            SortedDictionary<int, List<int>> membersOffsetIndex) {
           base.Write(bw, index, offsetIndex, membersOffsetIndex);
           bw.WriteInt16((short) 0);
           bw.WriteInt32(0);
         }
       }
 
-      public class Model : ACB.Asset
-      {
-        public override ACB.AssetType Type
-        {
-          get
-          {
-            return ACB.AssetType.Model;
-          }
+      public class Model : ACB.Asset {
+        public override ACB.AssetType Type {
+          get { return ACB.AssetType.Model; }
         }
 
         public short Unk0A { get; set; }
@@ -285,14 +254,12 @@ namespace SoulsFormats
 
         public bool Unk37 { get; set; }
 
-        public Model()
-        {
+        public Model() {
           this.Reflectible = true;
         }
 
         internal Model(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.Unk0A = br.ReadInt16();
           int num1 = br.ReadInt32();
           this.Unk10 = br.ReadInt32();
@@ -325,11 +292,10 @@ namespace SoulsFormats
         }
 
         internal override void Write(
-          BinaryWriterEx bw,
-          int index,
-          List<int> offsetIndex,
-          SortedDictionary<int, List<int>> membersOffsetIndex)
-        {
+            BinaryWriterEx bw,
+            int index,
+            List<int> offsetIndex,
+            SortedDictionary<int, List<int>> membersOffsetIndex) {
           base.Write(bw, index, offsetIndex, membersOffsetIndex);
           bw.WriteInt16(this.Unk0A);
           membersOffsetIndex[index] = new List<int>();
@@ -362,50 +328,38 @@ namespace SoulsFormats
         }
 
         internal void WriteMembers(
-          BinaryWriterEx bw,
-          int index,
-          List<int> offsetIndex,
-          SortedDictionary<int, List<int>> membersOffsetIndex)
-        {
-          if (this.Members == null)
-          {
+            BinaryWriterEx bw,
+            int index,
+            List<int> offsetIndex,
+            SortedDictionary<int, List<int>> membersOffsetIndex) {
+          if (this.Members == null) {
             bw.FillInt32(string.Format("MembersOffset{0}", (object) index), 0);
-          }
-          else
-          {
-            bw.FillInt32(string.Format("MembersOffset{0}", (object) index), (int) bw.Position);
+          } else {
+            bw.FillInt32(string.Format("MembersOffset{0}", (object) index),
+                         (int) bw.Position);
             this.Members.Write(bw, index, offsetIndex, membersOffsetIndex);
           }
         }
 
-        public class MemberList : List<ACB.Asset.Model.Member>
-        {
+        public class MemberList : List<ACB.Asset.Model.Member> {
           public short Unk00 { get; set; }
 
-          public MemberList()
-          {
-          }
+          public MemberList() {}
 
           public MemberList(int capacity)
-            : base(capacity)
-          {
-          }
+              : base(capacity) {}
 
           public MemberList(IEnumerable<ACB.Asset.Model.Member> collection)
-            : base(collection)
-          {
-          }
+              : base(collection) {}
 
-          internal MemberList(BinaryReaderEx br)
-          {
+          internal MemberList(BinaryReaderEx br) {
             this.Unk00 = br.ReadInt16();
             short num1 = br.ReadInt16();
             int num2 = br.ReadInt32();
             br.StepIn((long) num2);
             this.Capacity = (int) num1;
             int[] numArray = br.ReadInt32s((int) num1);
-            for (int index = 0; index < (int) num1; ++index)
-            {
+            for (int index = 0; index < (int) num1; ++index) {
               br.Position = (long) numArray[index];
               this.Add(new ACB.Asset.Model.Member(br));
             }
@@ -413,131 +367,122 @@ namespace SoulsFormats
           }
 
           internal void Write(
-            BinaryWriterEx bw,
-            int index,
-            List<int> offsetIndex,
-            SortedDictionary<int, List<int>> membersOffsetIndex)
-          {
+              BinaryWriterEx bw,
+              int index,
+              List<int> offsetIndex,
+              SortedDictionary<int, List<int>> membersOffsetIndex) {
             bw.WriteInt16(this.Unk00);
             bw.WriteInt16((short) this.Count);
             membersOffsetIndex[index].Add((int) bw.Position);
-            bw.ReserveInt32(string.Format("MemberOffsetsOffset{0}", (object) index));
-            bw.FillInt32(string.Format("MemberOffsetsOffset{0}", (object) index), (int) bw.Position);
-            for (int index1 = 0; index1 < this.Count; ++index1)
-            {
+            bw.ReserveInt32(
+                string.Format("MemberOffsetsOffset{0}", (object) index));
+            bw.FillInt32(
+                string.Format("MemberOffsetsOffset{0}", (object) index),
+                (int) bw.Position);
+            for (int index1 = 0; index1 < this.Count; ++index1) {
               membersOffsetIndex[index].Add((int) bw.Position);
-              bw.ReserveInt32(string.Format("MemberOffset{0}:{1}", (object) index, (object) index1));
+              bw.ReserveInt32(string.Format("MemberOffset{0}:{1}",
+                                            (object) index,
+                                            (object) index1));
             }
-            for (int memberIndex = 0; memberIndex < this.Count; ++memberIndex)
-            {
-              bw.FillInt32(string.Format("MemberOffset{0}:{1}", (object) index, (object) memberIndex), (int) bw.Position);
+            for (int memberIndex = 0; memberIndex < this.Count; ++memberIndex) {
+              bw.FillInt32(
+                  string.Format("MemberOffset{0}:{1}",
+                                (object) index,
+                                (object) memberIndex),
+                  (int) bw.Position);
               this[memberIndex].Write(bw, index, memberIndex, offsetIndex);
             }
           }
         }
 
-        public class Member
-        {
+        public class Member {
           public string Text { get; set; }
 
           public int Unk04 { get; set; }
 
-          public Member()
-          {
+          public Member() {
             this.Text = "";
           }
 
-          internal Member(BinaryReaderEx br)
-          {
+          internal Member(BinaryReaderEx br) {
             int num = br.ReadInt32();
             this.Unk04 = br.ReadInt32();
             this.Text = br.GetUTF16((long) num);
           }
 
           internal void Write(
-            BinaryWriterEx bw,
-            int entryIndex,
-            int memberIndex,
-            List<int> offsetIndex)
-          {
+              BinaryWriterEx bw,
+              int entryIndex,
+              int memberIndex,
+              List<int> offsetIndex) {
             offsetIndex.Add((int) bw.Position);
-            bw.ReserveInt32(string.Format("MemberTextOffset{0}:{1}", (object) entryIndex, (object) memberIndex));
+            bw.ReserveInt32(string.Format("MemberTextOffset{0}:{1}",
+                                          (object) entryIndex,
+                                          (object) memberIndex));
             bw.WriteInt32(this.Unk04);
           }
 
-          internal void WriteText(BinaryWriterEx bw, int entryIndex, int memberIndex)
-          {
-            bw.FillInt32(string.Format("MemberTextOffset{0}:{1}", (object) entryIndex, (object) memberIndex), (int) bw.Position);
+          internal void WriteText(
+              BinaryWriterEx bw,
+              int entryIndex,
+              int memberIndex) {
+            bw.FillInt32(string.Format("MemberTextOffset{0}:{1}",
+                                       (object) entryIndex,
+                                       (object) memberIndex),
+                         (int) bw.Position);
             bw.WriteUTF16(this.Text, true);
           }
         }
       }
 
-      public class Texture : ACB.Asset
-      {
-        public override ACB.AssetType Type
-        {
-          get
-          {
-            return ACB.AssetType.Texture;
-          }
+      public class Texture : ACB.Asset {
+        public override ACB.AssetType Type {
+          get { return ACB.AssetType.Texture; }
         }
 
-        public Texture()
-        {
-        }
+        public Texture() {}
 
         internal Texture(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           int num = (int) br.AssertInt16(new short[1]);
           br.AssertInt32(new int[1]);
         }
 
         internal override void Write(
-          BinaryWriterEx bw,
-          int index,
-          List<int> offsetIndex,
-          SortedDictionary<int, List<int>> membersOffsetIndex)
-        {
+            BinaryWriterEx bw,
+            int index,
+            List<int> offsetIndex,
+            SortedDictionary<int, List<int>> membersOffsetIndex) {
           base.Write(bw, index, offsetIndex, membersOffsetIndex);
           bw.WriteInt16((short) 0);
           bw.WriteInt32(0);
         }
       }
 
-      public class GITexture : ACB.Asset
-      {
-        public override ACB.AssetType Type
-        {
-          get
-          {
-            return ACB.AssetType.GITexture;
-          }
+      public class GITexture : ACB.Asset {
+        public override ACB.AssetType Type {
+          get { return ACB.AssetType.GITexture; }
         }
 
         public int Unk10 { get; set; }
 
         public int Unk14 { get; set; }
 
-        public GITexture()
-        {
-        }
+        public GITexture() {}
 
         internal GITexture(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           int num = (int) br.AssertInt16(new short[1]);
           br.AssertInt32(new int[1]);
           this.Unk10 = br.ReadInt32();
         }
 
         internal override void Write(
-          BinaryWriterEx bw,
-          int index,
-          List<int> offsetIndex,
-          SortedDictionary<int, List<int>> membersOffsetIndex)
-        {
+            BinaryWriterEx bw,
+            int index,
+            List<int> offsetIndex,
+            SortedDictionary<int, List<int>> membersOffsetIndex) {
           base.Write(bw, index, offsetIndex, membersOffsetIndex);
           bw.WriteInt16((short) 0);
           bw.WriteInt32(0);
@@ -545,33 +490,24 @@ namespace SoulsFormats
         }
       }
 
-      public class Motion : ACB.Asset
-      {
-        public override ACB.AssetType Type
-        {
-          get
-          {
-            return ACB.AssetType.Motion;
-          }
+      public class Motion : ACB.Asset {
+        public override ACB.AssetType Type {
+          get { return ACB.AssetType.Motion; }
         }
 
-        public Motion()
-        {
-        }
+        public Motion() {}
 
         internal Motion(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           int num = (int) br.AssertInt16(new short[1]);
           br.AssertInt32(new int[1]);
         }
 
         internal override void Write(
-          BinaryWriterEx bw,
-          int index,
-          List<int> offsetIndex,
-          SortedDictionary<int, List<int>> membersOffsetIndex)
-        {
+            BinaryWriterEx bw,
+            int index,
+            List<int> offsetIndex,
+            SortedDictionary<int, List<int>> membersOffsetIndex) {
           base.Write(bw, index, offsetIndex, membersOffsetIndex);
           bw.WriteInt16((short) 0);
           bw.WriteInt32(0);

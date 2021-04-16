@@ -7,11 +7,9 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public interface IFlverMaterial
-  {
+  public interface IFlverMaterial {
     string Name { get; }
 
     string MTD { get; }

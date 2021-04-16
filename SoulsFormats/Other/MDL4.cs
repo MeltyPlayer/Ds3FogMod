@@ -10,11 +10,9 @@ using System.Drawing;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats.Other
-{
+namespace SoulsFormats.Other {
   [ComVisible(true)]
-  public class MDL4 : SoulsFile<MDL4>
-  {
+  public class MDL4 : SoulsFile<MDL4> {
     public int Version;
     public int Unk20;
     public Vector3 BoundingBoxMin;
@@ -26,15 +24,13 @@ namespace SoulsFormats.Other
     public List<MDL4.Bone> Bones;
     public List<MDL4.Mesh> Meshes;
 
-    protected override bool Is(BinaryReaderEx br)
-    {
-      return br.Length >= 4L && br.GetASCII(0L, 4) == nameof (MDL4);
+    protected override bool Is(BinaryReaderEx br) {
+      return br.Length >= 4L && br.GetASCII(0L, 4) == nameof(MDL4);
     }
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       br.BigEndian = true;
-      br.AssertASCII(nameof (MDL4));
+      br.AssertASCII(nameof(MDL4));
       this.Version = br.AssertInt32(262145, 262146);
       int dataStart = br.ReadInt32();
       br.ReadInt32();
@@ -62,8 +58,7 @@ namespace SoulsFormats.Other
         this.Meshes.Add(new MDL4.Mesh(br, dataStart, this.Version));
     }
 
-    public class Dummy
-    {
+    public class Dummy {
       public Vector3 Forward;
       public Vector3 Upward;
       public Color Color;
@@ -72,8 +67,7 @@ namespace SoulsFormats.Other
       public short Unk20;
       public short Unk22;
 
-      internal Dummy(BinaryReaderEx br)
-      {
+      internal Dummy(BinaryReaderEx br) {
         this.Forward = br.ReadVector3();
         this.Upward = br.ReadVector3();
         this.Color = br.ReadRGBA();
@@ -87,8 +81,7 @@ namespace SoulsFormats.Other
       }
     }
 
-    public class Material
-    {
+    public class Material {
       public string Name;
       public string Shader;
       public byte Unk3C;
@@ -96,8 +89,7 @@ namespace SoulsFormats.Other
       public byte Unk3E;
       public List<MDL4.Material.Param> Params;
 
-      internal Material(BinaryReaderEx br)
-      {
+      internal Material(BinaryReaderEx br) {
         this.Name = br.ReadFixStr(31);
         this.Shader = br.ReadFixStr(29);
         this.Unk3C = br.ReadByte();
@@ -111,19 +103,16 @@ namespace SoulsFormats.Other
         br.Position = position + 2048L;
       }
 
-      public class Param
-      {
+      public class Param {
         public MDL4.Material.ParamType Type;
         public string Name;
         public object Value;
 
-        internal Param(BinaryReaderEx br)
-        {
+        internal Param(BinaryReaderEx br) {
           long position = br.Position;
           this.Type = br.ReadEnum8<MDL4.Material.ParamType>();
           this.Name = br.ReadFixStr(31);
-          switch (this.Type)
-          {
+          switch (this.Type) {
             case MDL4.Material.ParamType.Int:
               this.Value = (object) br.ReadInt32();
               break;
@@ -137,14 +126,14 @@ namespace SoulsFormats.Other
               this.Value = (object) br.ReadShiftJIS();
               break;
             default:
-              throw new NotImplementedException("Unknown param type: " + (object) this.Type);
+              throw new NotImplementedException(
+                  "Unknown param type: " + (object) this.Type);
           }
           br.Position = position + 64L;
         }
       }
 
-      public enum ParamType : byte
-      {
+      public enum ParamType : byte {
         Int = 0,
         Float = 1,
         Float4 = 4,
@@ -152,8 +141,7 @@ namespace SoulsFormats.Other
       }
     }
 
-    public class Bone
-    {
+    public class Bone {
       public string Name;
       public Vector3 Translation;
       public Vector3 Rotation;
@@ -166,8 +154,7 @@ namespace SoulsFormats.Other
       public short PreviousSiblingIndex;
       public short[] UnkIndices;
 
-      internal Bone(BinaryReaderEx br)
-      {
+      internal Bone(BinaryReaderEx br) {
         this.Name = br.ReadFixStr(32);
         this.Translation = br.ReadVector3();
         this.Rotation = br.ReadVector3();
@@ -185,8 +172,7 @@ namespace SoulsFormats.Other
       }
     }
 
-    public class Mesh
-    {
+    public class Mesh {
       public byte VertexFormat;
       public byte MaterialIndex;
       public bool Unk02;
@@ -197,8 +183,7 @@ namespace SoulsFormats.Other
       public List<MDL4.Vertex> Vertices;
       public byte[][] UnkBlocks;
 
-      internal Mesh(BinaryReaderEx br, int dataStart, int version)
-      {
+      internal Mesh(BinaryReaderEx br, int dataStart, int version) {
         this.VertexFormat = br.AssertByte((byte) 0, (byte) 1, (byte) 2);
         this.MaterialIndex = br.ReadByte();
         this.Unk02 = br.ReadBoolean();
@@ -210,41 +195,36 @@ namespace SoulsFormats.Other
         int num2 = br.ReadInt32();
         int num3 = br.ReadInt32();
         int num4 = br.ReadInt32();
-        if (this.VertexFormat == (byte) 2)
-        {
+        if (this.VertexFormat == (byte) 2) {
           this.UnkBlocks = new byte[16][];
-          for (int index = 0; index < 16; ++index)
-          {
+          for (int index = 0; index < 16; ++index) {
             int count = br.ReadInt32();
             int num5 = br.ReadInt32();
-            this.UnkBlocks[index] = br.GetBytes((long) (dataStart + num5), count);
+            this.UnkBlocks[index] =
+                br.GetBytes((long) (dataStart + num5), count);
           }
         }
-        this.VertexIndices = br.GetUInt16s((long) (dataStart + num2), (int) num1);
+        this.VertexIndices =
+            br.GetUInt16s((long) (dataStart + num2), (int) num1);
         br.StepIn((long) (dataStart + num4));
         int num6 = 0;
-        switch (version)
-        {
+        switch (version) {
           case 262145:
-            if (this.VertexFormat == (byte) 0)
-            {
+            if (this.VertexFormat == (byte) 0) {
               num6 = 64;
               break;
             }
-            if (this.VertexFormat == (byte) 1)
-            {
+            if (this.VertexFormat == (byte) 1) {
               num6 = 84;
               break;
             }
-            if (this.VertexFormat == (byte) 2)
-            {
+            if (this.VertexFormat == (byte) 2) {
               num6 = 60;
               break;
             }
             break;
           case 262146:
-            if (this.VertexFormat == (byte) 0)
-            {
+            if (this.VertexFormat == (byte) 0) {
               num6 = 40;
               break;
             }
@@ -257,45 +237,38 @@ namespace SoulsFormats.Other
         br.StepOut();
       }
 
-      public List<MDL4.Vertex[]> GetFaces()
-      {
+      public List<MDL4.Vertex[]> GetFaces() {
         ushort[] triangleList = this.ToTriangleList();
         List<MDL4.Vertex[]> vertexArrayList = new List<MDL4.Vertex[]>();
         for (int index = 0; index < triangleList.Length; index += 3)
-          vertexArrayList.Add(new MDL4.Vertex[3]
-          {
-            this.Vertices[(int) triangleList[index]],
-            this.Vertices[(int) triangleList[index + 1]],
-            this.Vertices[(int) triangleList[index + 2]]
+          vertexArrayList.Add(new MDL4.Vertex[3] {
+              this.Vertices[(int) triangleList[index]],
+              this.Vertices[(int) triangleList[index + 1]],
+              this.Vertices[(int) triangleList[index + 2]]
           });
         return vertexArrayList;
       }
 
-      public ushort[] ToTriangleList()
-      {
+      public ushort[] ToTriangleList() {
         List<ushort> ushortList = new List<ushort>();
         bool flag = false;
-        for (int index = 0; index < this.VertexIndices.Length - 2; ++index)
-        {
+        for (int index = 0; index < this.VertexIndices.Length - 2; ++index) {
           ushort vertexIndex1 = this.VertexIndices[index];
           ushort vertexIndex2 = this.VertexIndices[index + 1];
           ushort vertexIndex3 = this.VertexIndices[index + 2];
-          if (vertexIndex1 == ushort.MaxValue || vertexIndex2 == ushort.MaxValue || vertexIndex3 == ushort.MaxValue)
-          {
+          if (vertexIndex1 == ushort.MaxValue ||
+              vertexIndex2 == ushort.MaxValue ||
+              vertexIndex3 == ushort.MaxValue) {
             flag = false;
-          }
-          else
-          {
-            if ((int) vertexIndex1 != (int) vertexIndex2 && (int) vertexIndex1 != (int) vertexIndex3 && (int) vertexIndex2 != (int) vertexIndex3)
-            {
-              if (!flag)
-              {
+          } else {
+            if ((int) vertexIndex1 != (int) vertexIndex2 &&
+                (int) vertexIndex1 != (int) vertexIndex3 &&
+                (int) vertexIndex2 != (int) vertexIndex3) {
+              if (!flag) {
                 ushortList.Add(vertexIndex1);
                 ushortList.Add(vertexIndex2);
                 ushortList.Add(vertexIndex3);
-              }
-              else
-              {
+              } else {
                 ushortList.Add(vertexIndex3);
                 ushortList.Add(vertexIndex2);
                 ushortList.Add(vertexIndex1);
@@ -308,8 +281,7 @@ namespace SoulsFormats.Other
       }
     }
 
-    public class Vertex
-    {
+    public class Vertex {
       public Vector3 Position;
       public Vector4 Normal;
       public Vector4 Tangent;
@@ -320,14 +292,11 @@ namespace SoulsFormats.Other
       public float[] BoneWeights;
       public int Unk3C;
 
-      internal Vertex(BinaryReaderEx br, int version, byte format)
-      {
+      internal Vertex(BinaryReaderEx br, int version, byte format) {
         this.UVs = new List<Vector2>();
-        switch (version)
-        {
+        switch (version) {
           case 262145:
-            switch (format)
-            {
+            switch (format) {
               case 0:
                 this.Position = br.ReadVector3();
                 this.Normal = MDL4.Vertex.Read10BitVector4(br);
@@ -380,31 +349,42 @@ namespace SoulsFormats.Other
         }
       }
 
-      private static Vector4 ReadByteVector4(BinaryReaderEx br)
-      {
+      private static Vector4 ReadByteVector4(BinaryReaderEx br) {
         byte num1 = br.ReadByte();
         byte num2 = br.ReadByte();
         byte num3 = br.ReadByte();
-        return new Vector4((float) ((int) br.ReadByte() - (int) sbyte.MaxValue) / (float) sbyte.MaxValue, (float) ((int) num3 - (int) sbyte.MaxValue) / (float) sbyte.MaxValue, (float) ((int) num2 - (int) sbyte.MaxValue) / (float) sbyte.MaxValue, (float) ((int) num1 - (int) sbyte.MaxValue) / (float) sbyte.MaxValue);
+        return new Vector4(
+            (float) ((int) br.ReadByte() - (int) sbyte.MaxValue) /
+            (float) sbyte.MaxValue,
+            (float) ((int) num3 - (int) sbyte.MaxValue) /
+            (float) sbyte.MaxValue,
+            (float) ((int) num2 - (int) sbyte.MaxValue) /
+            (float) sbyte.MaxValue,
+            (float) ((int) num1 - (int) sbyte.MaxValue) /
+            (float) sbyte.MaxValue);
       }
 
-      private static Vector4 ReadSByteVector4(BinaryReaderEx br)
-      {
+      private static Vector4 ReadSByteVector4(BinaryReaderEx br) {
         sbyte num1 = br.ReadSByte();
         sbyte num2 = br.ReadSByte();
         sbyte num3 = br.ReadSByte();
-        return new Vector4((float) br.ReadSByte() / (float) sbyte.MaxValue, (float) num3 / (float) sbyte.MaxValue, (float) num2 / (float) sbyte.MaxValue, (float) num1 / (float) sbyte.MaxValue);
+        return new Vector4((float) br.ReadSByte() / (float) sbyte.MaxValue,
+                           (float) num3 / (float) sbyte.MaxValue,
+                           (float) num2 / (float) sbyte.MaxValue,
+                           (float) num1 / (float) sbyte.MaxValue);
       }
 
-      private static Vector2 ReadShortUV(BinaryReaderEx br)
-      {
-        return new Vector2((float) br.ReadInt16() / 2048f, (float) br.ReadInt16() / 2048f);
+      private static Vector2 ReadShortUV(BinaryReaderEx br) {
+        return new Vector2((float) br.ReadInt16() / 2048f,
+                           (float) br.ReadInt16() / 2048f);
       }
 
-      private static Vector4 Read10BitVector4(BinaryReaderEx br)
-      {
+      private static Vector4 Read10BitVector4(BinaryReaderEx br) {
         int num = br.ReadInt32();
-        return new Vector4((float) (num << 22 >> 22) / 511f, (float) (num << 12 >> 22) / 511f, (float) (num << 2 >> 22) / 511f, (float) (num >> 30));
+        return new Vector4((float) (num << 22 >> 22) / 511f,
+                           (float) (num << 12 >> 22) / 511f,
+                           (float) (num << 2 >> 22) / 511f,
+                           (float) (num >> 30));
       }
     }
   }

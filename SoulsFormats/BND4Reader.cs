@@ -7,11 +7,9 @@
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public class BND4Reader : BinderReader, IBND4
-  {
+  public class BND4Reader : BinderReader, IBND4 {
     public bool Unk04 { get; set; }
 
     public bool Unk05 { get; set; }
@@ -22,18 +20,15 @@ namespace SoulsFormats
 
     public DCX.Type Compression { get; set; }
 
-    public BND4Reader(string path)
-    {
+    public BND4Reader(string path) {
       this.Read(new BinaryReaderEx(false, (Stream) File.OpenRead(path)));
     }
 
-    public BND4Reader(byte[] bytes)
-    {
+    public BND4Reader(byte[] bytes) {
       this.Read(new BinaryReaderEx(false, (Stream) new MemoryStream(bytes)));
     }
 
-    private void Read(BinaryReaderEx br)
-    {
+    private void Read(BinaryReaderEx br) {
       DCX.Type compression;
       br = SFUtil.GetDecompressedBR(br, out compression);
       this.Compression = compression;

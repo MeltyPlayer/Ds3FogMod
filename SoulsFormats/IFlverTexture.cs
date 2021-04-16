@@ -6,11 +6,9 @@
 
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public interface IFlverTexture
-  {
+  public interface IFlverTexture {
     string Type { get; }
 
     string Path { get; }

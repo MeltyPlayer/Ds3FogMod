@@ -6,17 +6,14 @@
 
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats.KF4
-{
+namespace SoulsFormats.KF4 {
   [ComVisible(true)]
-  public class CHR : SoulsFile<CHR>
-  {
+  public class CHR : SoulsFile<CHR> {
     public int Unk00 { get; set; }
 
     public OM2 Om2 { get; set; }
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       this.Unk00 = br.ReadInt32();
       int num = br.ReadInt32();
       br.ReadInt32();

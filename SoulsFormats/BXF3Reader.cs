@@ -7,49 +7,42 @@
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public class BXF3Reader : BinderReader, IBXF3
-  {
-    public BXF3Reader(string bhdPath, string bdtPath)
-    {
-      using (FileStream fileStream1 = File.OpenRead(bhdPath))
-      {
+  public class BXF3Reader : BinderReader, IBXF3 {
+    public BXF3Reader(string bhdPath, string bdtPath) {
+      using (FileStream fileStream1 = File.OpenRead(bhdPath)) {
         FileStream fileStream2 = File.OpenRead(bdtPath);
-        this.Read(new BinaryReaderEx(false, (Stream) fileStream1), new BinaryReaderEx(false, (Stream) fileStream2));
+        this.Read(new BinaryReaderEx(false, (Stream) fileStream1),
+                  new BinaryReaderEx(false, (Stream) fileStream2));
       }
     }
 
-    public BXF3Reader(string bhdPath, byte[] bdtBytes)
-    {
-      using (FileStream fileStream = File.OpenRead(bhdPath))
-      {
+    public BXF3Reader(string bhdPath, byte[] bdtBytes) {
+      using (FileStream fileStream = File.OpenRead(bhdPath)) {
         MemoryStream memoryStream = new MemoryStream(bdtBytes);
-        this.Read(new BinaryReaderEx(false, (Stream) fileStream), new BinaryReaderEx(false, (Stream) memoryStream));
+        this.Read(new BinaryReaderEx(false, (Stream) fileStream),
+                  new BinaryReaderEx(false, (Stream) memoryStream));
       }
     }
 
-    public BXF3Reader(byte[] bhdBytes, string bdtPath)
-    {
-      using (MemoryStream memoryStream = new MemoryStream(bhdBytes))
-      {
+    public BXF3Reader(byte[] bhdBytes, string bdtPath) {
+      using (MemoryStream memoryStream = new MemoryStream(bhdBytes)) {
         FileStream fileStream = File.OpenRead(bdtPath);
-        this.Read(new BinaryReaderEx(false, (Stream) memoryStream), new BinaryReaderEx(false, (Stream) fileStream));
+        this.Read(new BinaryReaderEx(false, (Stream) memoryStream),
+                  new BinaryReaderEx(false, (Stream) fileStream));
       }
     }
 
-    public BXF3Reader(byte[] bhdBytes, byte[] bdtBytes)
-    {
-      using (MemoryStream memoryStream1 = new MemoryStream(bhdBytes))
-      {
+    public BXF3Reader(byte[] bhdBytes, byte[] bdtBytes) {
+      using (MemoryStream memoryStream1 = new MemoryStream(bhdBytes)) {
         MemoryStream memoryStream2 = new MemoryStream(bdtBytes);
-        this.Read(new BinaryReaderEx(false, (Stream) memoryStream1), new BinaryReaderEx(false, (Stream) memoryStream2));
+        this.Read(new BinaryReaderEx(false, (Stream) memoryStream1),
+                  new BinaryReaderEx(false, (Stream) memoryStream2));
       }
     }
 
-    private void Read(BinaryReaderEx brHeader, BinaryReaderEx brData)
-    {
+    private void Read(BinaryReaderEx brHeader, BinaryReaderEx brData) {
       BXF3.ReadBDFHeader(brData);
       this.Files = BXF3.ReadBHFHeader((IBXF3) this, brHeader);
       this.DataBR = brData;

@@ -6,16 +6,13 @@
 
 using System.Collections.Generic;
 
-namespace FogMod
-{
-  public class EventConfig
-  {
+namespace FogMod {
+  public class EventConfig {
     public List<EventConfig.NewEvent> NewEvents { get; set; }
 
     public List<EventConfig.EventSpec> Events { get; set; }
 
-    public class NewEvent
-    {
+    public class NewEvent {
       public int ID { get; set; }
 
       public string Name { get; set; }
@@ -25,13 +22,11 @@ namespace FogMod
       public List<string> Commands { get; set; }
     }
 
-    public class EventSpec : SoulsIds.Events.AbstractEventSpec
-    {
+    public class EventSpec : SoulsIds.Events.AbstractEventSpec {
       public List<EventConfig.EventTemplate> Template { get; set; }
     }
 
-    public class EventTemplate
-    {
+    public class EventTemplate {
       public string Fog { get; set; }
 
       public string FogSfx { get; set; }

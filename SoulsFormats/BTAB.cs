@@ -7,15 +7,12 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public class BTAB : SoulsFile<BTAB>
-  {
+  public class BTAB : SoulsFile<BTAB> {
     public List<BTAB.Entry> Entries;
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       br.BigEndian = false;
       br.AssertInt32(1);
       br.AssertInt32(new int[1]);
@@ -39,8 +36,7 @@ namespace SoulsFormats
         this.Entries.Add(new BTAB.Entry(br, position));
     }
 
-    protected override void Write(BinaryWriterEx bw)
-    {
+    protected override void Write(BinaryWriterEx bw) {
       bw.BigEndian = false;
       bw.WriteInt32(1);
       bw.WriteInt32(0);
@@ -59,32 +55,29 @@ namespace SoulsFormats
       bw.WriteInt32(0);
       long position = bw.Position;
       List<int> intList = new List<int>(this.Entries.Count * 2);
-      foreach (BTAB.Entry entry in this.Entries)
-      {
+      foreach (BTAB.Entry entry in this.Entries) {
         int num1 = (int) (bw.Position - position);
         intList.Add(num1);
         bw.WriteUTF16(entry.MSBPartName, true);
-        if (num1 % 16 != 0)
-        {
+        if (num1 % 16 != 0) {
           for (int index = 0; index < 16 - num1 % 16; ++index)
             bw.WriteByte((byte) 0);
         }
         int num2 = (int) (bw.Position - position);
         intList.Add(num2);
         bw.WriteUTF16(entry.FLVERMaterialName, true);
-        if (num2 % 16 != 0)
-        {
+        if (num2 % 16 != 0) {
           for (int index = 0; index < 16 - num2 % 16; ++index)
             bw.WriteByte((byte) 0);
         }
       }
       bw.FillInt32("NameSize", (int) (bw.Position - position));
       for (int index = 0; index < this.Entries.Count; ++index)
-        this.Entries[index].Write(bw, intList[index * 2], intList[index * 2 + 1]);
+        this.Entries[index]
+            .Write(bw, intList[index * 2], intList[index * 2 + 1]);
     }
 
-    public class Entry
-    {
+    public class Entry {
       public string MSBPartName;
       public string FLVERMaterialName;
       public int Unk1C;
@@ -93,8 +86,7 @@ namespace SoulsFormats
       public float Unk28;
       public float Unk2C;
 
-      internal Entry(BinaryReaderEx br, long nameStart)
-      {
+      internal Entry(BinaryReaderEx br, long nameStart) {
         int num1 = br.ReadInt32();
         this.MSBPartName = br.GetUTF16(nameStart + (long) num1);
         br.AssertInt32(new int[1]);
@@ -109,8 +101,7 @@ namespace SoulsFormats
         br.AssertInt32(new int[1]);
       }
 
-      internal void Write(BinaryWriterEx bw, int nameOffset, int nameOffset2)
-      {
+      internal void Write(BinaryWriterEx bw, int nameOffset, int nameOffset2) {
         bw.WriteInt32(nameOffset);
         bw.WriteInt32(0);
         bw.WriteInt32(nameOffset2);
@@ -123,8 +114,7 @@ namespace SoulsFormats
         bw.WriteInt32(0);
       }
 
-      public override string ToString()
-      {
+      public override string ToString() {
         return this.MSBPartName + " : " + this.FLVERMaterialName;
       }
     }

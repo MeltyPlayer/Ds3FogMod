@@ -9,26 +9,22 @@ using System.Drawing;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public class BTL : SoulsFile<BTL>
-  {
+  public class BTL : SoulsFile<BTL> {
     public int Version { get; set; }
 
     public bool LongOffsets { get; set; }
 
     public List<BTL.Light> Lights { get; set; }
 
-    public BTL()
-    {
+    public BTL() {
       this.Version = 16;
       this.LongOffsets = true;
       this.Lights = new List<BTL.Light>();
     }
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       br.BigEndian = false;
       br.AssertInt32(2);
       this.Version = br.AssertInt32(1, 2, 5, 6, 16);
@@ -49,11 +45,11 @@ namespace SoulsFormats
       br.Skip(count);
       this.Lights = new List<BTL.Light>(capacity);
       for (int index = 0; index < capacity; ++index)
-        this.Lights.Add(new BTL.Light(br, position, this.Version, this.LongOffsets));
+        this.Lights.Add(
+            new BTL.Light(br, position, this.Version, this.LongOffsets));
     }
 
-    protected override void Write(BinaryWriterEx bw)
-    {
+    protected override void Write(BinaryWriterEx bw) {
       bw.BigEndian = false;
       bw.WriteInt32(2);
       bw.WriteInt32(this.Version);
@@ -72,8 +68,7 @@ namespace SoulsFormats
       bw.WriteInt32(0);
       long position = bw.Position;
       List<long> longList = new List<long>(this.Lights.Count);
-      foreach (BTL.Light light in this.Lights)
-      {
+      foreach (BTL.Light light in this.Lights) {
         long num = bw.Position - position;
         longList.Add(num);
         bw.WriteUTF16(light.Name, true);
@@ -82,18 +77,17 @@ namespace SoulsFormats
       }
       bw.FillInt32("NamesLength", (int) (bw.Position - position));
       for (int index = 0; index < this.Lights.Count; ++index)
-        this.Lights[index].Write(bw, longList[index], this.Version, this.LongOffsets);
+        this.Lights[index]
+            .Write(bw, longList[index], this.Version, this.LongOffsets);
     }
 
-    public enum LightType : uint
-    {
+    public enum LightType : uint {
       Point,
       Spot,
       Directional,
     }
 
-    public class Light
-    {
+    public class Light {
       public uint Unk00 { get; set; }
 
       public uint Unk04 { get; set; }
@@ -108,13 +102,11 @@ namespace SoulsFormats
 
       public bool Unk1C { get; set; }
 
-      [SupportsAlpha(false)]
-      public Color DiffuseColor { get; set; }
+      [SupportsAlpha(false)] public Color DiffuseColor { get; set; }
 
       public float DiffusePower { get; set; }
 
-      [SupportsAlpha(false)]
-      public Color SpecularColor { get; set; }
+      [SupportsAlpha(false)] public Color SpecularColor { get; set; }
 
       public bool CastShadows { get; set; }
 
@@ -142,8 +134,7 @@ namespace SoulsFormats
 
       public float Unk68 { get; set; }
 
-      [SupportsAlpha(true)]
-      public Color ShadowColor { get; set; }
+      [SupportsAlpha(true)] public Color ShadowColor { get; set; }
 
       public float Unk70 { get; set; }
 
@@ -193,8 +184,7 @@ namespace SoulsFormats
 
       public float UnkE0 { get; set; }
 
-      public Light()
-      {
+      public Light() {
         this.Name = "";
         this.Unk1C = true;
         this.DiffuseColor = Color.White;
@@ -204,12 +194,11 @@ namespace SoulsFormats
         this.Unk50 = 4;
         this.Radius = 10f;
         this.Unk5C = -1;
-        this.Unk64 = new byte[4]
-        {
-          (byte) 0,
-          (byte) 0,
-          (byte) 0,
-          (byte) 1
+        this.Unk64 = new byte[4] {
+            (byte) 0,
+            (byte) 0,
+            (byte) 0,
+            (byte) 1
         };
         this.ShadowColor = Color.FromArgb(100, 0, 0, 0);
         this.FlickerBrightnessMult = 1f;
@@ -217,19 +206,17 @@ namespace SoulsFormats
         this.Unk84 = new byte[4];
         this.Unk98 = 1f;
         this.NearClip = 1f;
-        this.UnkA0 = new byte[4]
-        {
-          (byte) 1,
-          (byte) 0,
-          (byte) 2,
-          (byte) 1
+        this.UnkA0 = new byte[4] {
+            (byte) 1,
+            (byte) 0,
+            (byte) 2,
+            (byte) 1
         };
         this.Sharpness = 1f;
         this.UnkC0 = new byte[4];
       }
 
-      public BTL.Light Clone()
-      {
+      public BTL.Light Clone() {
         BTL.Light light = (BTL.Light) this.MemberwiseClone();
         light.Unk64 = (byte[]) this.Unk64.Clone();
         light.Unk84 = (byte[]) this.Unk84.Clone();
@@ -238,8 +225,11 @@ namespace SoulsFormats
         return light;
       }
 
-      internal Light(BinaryReaderEx br, long namesStart, int version, bool longOffsets)
-      {
+      internal Light(
+          BinaryReaderEx br,
+          long namesStart,
+          int version,
+          bool longOffsets) {
         this.Unk00 = br.ReadUInt32();
         this.Unk04 = br.ReadUInt32();
         this.Unk08 = br.ReadUInt32();
@@ -249,10 +239,16 @@ namespace SoulsFormats
         this.Type = br.ReadEnum32<BTL.LightType>();
         this.Unk1C = br.ReadBoolean();
         byte[] numArray1 = br.ReadBytes(3);
-        this.DiffuseColor = Color.FromArgb((int) byte.MaxValue, (int) numArray1[0], (int) numArray1[1], (int) numArray1[2]);
+        this.DiffuseColor = Color.FromArgb((int) byte.MaxValue,
+                                           (int) numArray1[0],
+                                           (int) numArray1[1],
+                                           (int) numArray1[2]);
         this.DiffusePower = br.ReadSingle();
         byte[] numArray2 = br.ReadBytes(3);
-        this.SpecularColor = Color.FromArgb((int) byte.MaxValue, (int) numArray2[0], (int) numArray2[1], (int) numArray2[2]);
+        this.SpecularColor = Color.FromArgb((int) byte.MaxValue,
+                                            (int) numArray2[0],
+                                            (int) numArray2[1],
+                                            (int) numArray2[2]);
         this.CastShadows = br.ReadBoolean();
         this.SpecularPower = br.ReadSingle();
         this.ConeAngle = br.ReadSingle();
@@ -268,7 +264,10 @@ namespace SoulsFormats
         this.Unk64 = br.ReadBytes(4);
         this.Unk68 = br.ReadSingle();
         byte[] numArray3 = br.ReadBytes(4);
-        this.ShadowColor = Color.FromArgb((int) numArray3[3], (int) numArray3[0], (int) numArray3[1], (int) numArray3[2]);
+        this.ShadowColor = Color.FromArgb((int) numArray3[3],
+                                          (int) numArray3[0],
+                                          (int) numArray3[1],
+                                          (int) numArray3[2]);
         this.Unk70 = br.ReadSingle();
         this.FlickerIntervalMin = br.ReadSingle();
         this.FlickerIntervalMax = br.ReadSingle();
@@ -281,14 +280,11 @@ namespace SoulsFormats
         br.AssertInt32(new int[1]);
         this.Unk98 = br.ReadSingle();
         this.NearClip = br.ReadSingle();
-        if (version == 2 && !longOffsets)
-        {
+        if (version == 2 && !longOffsets) {
           br.AssertPattern(36, (byte) 0);
           this.UnkA0 = new byte[4];
           this.UnkC0 = new byte[4];
-        }
-        else
-        {
+        } else {
           this.UnkA0 = br.ReadBytes(4);
           this.Sharpness = br.ReadSingle();
           br.AssertInt32(new int[1]);
@@ -311,8 +307,11 @@ namespace SoulsFormats
         br.AssertInt32(new int[1]);
       }
 
-      internal void Write(BinaryWriterEx bw, long nameOffset, int version, bool longOffsets)
-      {
+      internal void Write(
+          BinaryWriterEx bw,
+          long nameOffset,
+          int version,
+          bool longOffsets) {
         bw.WriteUInt32(this.Unk00);
         bw.WriteUInt32(this.Unk04);
         bw.WriteUInt32(this.Unk08);
@@ -384,8 +383,7 @@ namespace SoulsFormats
         bw.WriteInt32(0);
       }
 
-      public override string ToString()
-      {
+      public override string ToString() {
         return this.Name;
       }
     }

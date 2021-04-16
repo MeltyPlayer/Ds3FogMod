@@ -6,11 +6,9 @@
 
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public class BinderFile
-  {
+  public class BinderFile {
     public Binder.FileFlags Flags { get; set; }
 
     public int ID { get; set; }
@@ -22,27 +20,22 @@ namespace SoulsFormats
     public DCX.Type CompressionType { get; set; }
 
     public BinderFile()
-      : this(Binder.FileFlags.Flag1, -1, (string) null, new byte[0])
-    {
-    }
+        : this(Binder.FileFlags.Flag1, -1, (string) null, new byte[0]) {}
 
     public BinderFile(Binder.FileFlags flags, byte[] bytes)
-      : this(flags, -1, (string) null, bytes)
-    {
-    }
+        : this(flags, -1, (string) null, bytes) {}
 
     public BinderFile(Binder.FileFlags flags, int id, byte[] bytes)
-      : this(flags, id, (string) null, bytes)
-    {
-    }
+        : this(flags, id, (string) null, bytes) {}
 
     public BinderFile(Binder.FileFlags flags, string name, byte[] bytes)
-      : this(flags, -1, name, bytes)
-    {
-    }
+        : this(flags, -1, name, bytes) {}
 
-    public BinderFile(Binder.FileFlags flags, int id, string name, byte[] bytes)
-    {
+    public BinderFile(
+        Binder.FileFlags flags,
+        int id,
+        string name,
+        byte[] bytes) {
       this.Flags = flags;
       this.ID = id;
       this.Name = name;
@@ -50,9 +43,13 @@ namespace SoulsFormats
       this.CompressionType = DCX.Type.Zlib;
     }
 
-    public override string ToString()
-    {
-      return string.Format("Flags: 0x{0:X2} | ID: {1} | Name: {2} | Length: {3}", (object) (byte) this.Flags, (object) this.ID, (object) this.Name, (object) this.Bytes.Length);
+    public override string ToString() {
+      return string.Format(
+          "Flags: 0x{0:X2} | ID: {1} | Name: {2} | Length: {3}",
+          (object) (byte) this.Flags,
+          (object) this.ID,
+          (object) this.Name,
+          (object) this.Bytes.Length);
     }
   }
 }

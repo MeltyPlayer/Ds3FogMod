@@ -8,28 +8,23 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public class PMDCL : SoulsFile<PMDCL>
-  {
+  public class PMDCL : SoulsFile<PMDCL> {
     public List<PMDCL.Decal> Decals;
 
-    public PMDCL()
-    {
+    public PMDCL() {
       this.Decals = new List<PMDCL.Decal>();
     }
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       br.BigEndian = false;
       long num = br.ReadInt64();
       br.AssertInt64(32L);
       br.AssertInt64(new long[1]);
       br.AssertInt64(new long[1]);
       this.Decals = new List<PMDCL.Decal>((int) num);
-      for (int index = 0; (long) index < num; ++index)
-      {
+      for (int index = 0; (long) index < num; ++index) {
         long offset = br.ReadInt64();
         br.StepIn(offset);
         this.Decals.Add(new PMDCL.Decal(br));
@@ -37,8 +32,7 @@ namespace SoulsFormats
       }
     }
 
-    protected override void Write(BinaryWriterEx bw)
-    {
+    protected override void Write(BinaryWriterEx bw) {
       bw.BigEndian = false;
       bw.WriteInt64((long) this.Decals.Count);
       bw.WriteInt64(32L);
@@ -47,15 +41,13 @@ namespace SoulsFormats
       for (int index = 0; index < this.Decals.Count; ++index)
         bw.ReserveInt64(string.Format("Decal{0}", (object) index));
       bw.Pad(32);
-      for (int index = 0; index < this.Decals.Count; ++index)
-      {
+      for (int index = 0; index < this.Decals.Count; ++index) {
         bw.FillInt64(string.Format("Decal{0}", (object) index), bw.Position);
         this.Decals[index].Write(bw);
       }
     }
 
-    public class Decal
-    {
+    public class Decal {
       public Vector3 XAngles;
       public Vector3 YAngles;
       public Vector3 ZAngles;
@@ -65,8 +57,7 @@ namespace SoulsFormats
       public short Size1;
       public short Size2;
 
-      public Decal(int decalParamID, Vector3 position)
-      {
+      public Decal(int decalParamID, Vector3 position) {
         this.XAngles = Vector3.Zero;
         this.YAngles = Vector3.Zero;
         this.ZAngles = Vector3.Zero;
@@ -77,8 +68,7 @@ namespace SoulsFormats
         this.Size2 = (short) 10;
       }
 
-      public Decal(PMDCL.Decal clone)
-      {
+      public Decal(PMDCL.Decal clone) {
         this.XAngles = clone.XAngles;
         this.YAngles = clone.YAngles;
         this.ZAngles = clone.ZAngles;
@@ -89,8 +79,7 @@ namespace SoulsFormats
         this.Size2 = clone.Size2;
       }
 
-      internal Decal(BinaryReaderEx br)
-      {
+      internal Decal(BinaryReaderEx br) {
         this.XAngles = br.ReadVector3();
         br.AssertInt32(new int[1]);
         this.YAngles = br.ReadVector3();
@@ -107,8 +96,7 @@ namespace SoulsFormats
         br.AssertInt64(new long[1]);
       }
 
-      internal void Write(BinaryWriterEx bw)
-      {
+      internal void Write(BinaryWriterEx bw) {
         bw.WriteVector3(this.XAngles);
         bw.WriteInt32(0);
         bw.WriteVector3(this.YAngles);

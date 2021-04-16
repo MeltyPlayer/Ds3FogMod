@@ -8,11 +8,9 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public class EDD : SoulsFile<EDD>
-  {
+  public class EDD : SoulsFile<EDD> {
     public bool LongFormat { get; set; }
 
     public List<EDD.FunctionSpec> FunctionSpecs { get; set; }
@@ -25,8 +23,7 @@ namespace SoulsFormats
 
     public int[] UnkB0 { get; private set; }
 
-    public EDD()
-    {
+    public EDD() {
       this.LongFormat = false;
       this.FunctionSpecs = new List<EDD.FunctionSpec>();
       this.CommandSpecs = new List<EDD.CommandSpec>();
@@ -34,8 +31,7 @@ namespace SoulsFormats
       this.UnkB0 = new int[4];
     }
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       br.BigEndian = false;
       this.LongFormat = br.AssertASCII("fSSL", "fsSL") == "fsSL";
       br.VarintLong = this.LongFormat;
@@ -89,8 +85,7 @@ namespace SoulsFormats
       br.AssertVarint(this.LongFormat ? 88L : 52L);
       br.AssertVarint((long) num2);
       List<string> strings = new List<string>();
-      for (int index = 0; index < num2; ++index)
-      {
+      for (int index = 0; index < num2; ++index) {
         long num11 = br.ReadVarint();
         br.ReadVarint();
         string utF16 = br.GetUTF16(position + num11);
@@ -99,57 +94,70 @@ namespace SoulsFormats
       this.FunctionSpecs = new List<EDD.FunctionSpec>();
       for (int index = 0; index < num3; ++index)
         this.FunctionSpecs.Add(new EDD.FunctionSpec(br, strings));
-      Dictionary<long, EDD.ConditionDesc> conditions = new Dictionary<long, EDD.ConditionDesc>();
-      for (int index1 = 0; index1 < num4; ++index1)
-      {
+      Dictionary<long, EDD.ConditionDesc> conditions =
+          new Dictionary<long, EDD.ConditionDesc>();
+      for (int index1 = 0; index1 < num4; ++index1) {
         long index2 = br.Position - position;
         conditions[index2] = new EDD.ConditionDesc(br);
       }
       this.CommandSpecs = new List<EDD.CommandSpec>();
       for (int index = 0; index < num5; ++index)
         this.CommandSpecs.Add(new EDD.CommandSpec(br, strings));
-      Dictionary<long, EDD.CommandDesc> commands = new Dictionary<long, EDD.CommandDesc>();
-      for (int index1 = 0; index1 < num6; ++index1)
-      {
+      Dictionary<long, EDD.CommandDesc> commands =
+          new Dictionary<long, EDD.CommandDesc>();
+      for (int index1 = 0; index1 < num6; ++index1) {
         long index2 = br.Position - position;
         commands[index2] = new EDD.CommandDesc(br, strings);
       }
-      if (this.LongFormat)
-      {
+      if (this.LongFormat) {
         long num11 = br.Position - position;
         if (num11 % 8L > 0L)
           br.Skip(8 - (int) (num11 % 8L));
       }
-      Dictionary<long, EDD.PassCommandDesc> passCommands = new Dictionary<long, EDD.PassCommandDesc>();
-      for (int index1 = 0; index1 < num7; ++index1)
-      {
+      Dictionary<long, EDD.PassCommandDesc> passCommands =
+          new Dictionary<long, EDD.PassCommandDesc>();
+      for (int index1 = 0; index1 < num7; ++index1) {
         long index2 = br.Position - position;
-        passCommands[index2] = new EDD.PassCommandDesc(br, commands, commandSize);
+        passCommands[index2] =
+            new EDD.PassCommandDesc(br, commands, commandSize);
       }
-      Dictionary<long, EDD.StateDesc> states = new Dictionary<long, EDD.StateDesc>();
-      for (int index1 = 0; index1 < num8; ++index1)
-      {
+      Dictionary<long, EDD.StateDesc> states =
+          new Dictionary<long, EDD.StateDesc>();
+      for (int index1 = 0; index1 < num8; ++index1) {
         long index2 = br.Position - position;
-        states[index2] = new EDD.StateDesc(br, strings, position, conditions, conditionSize, commands, commandSize, passCommands, passCommandSize);
+        states[index2] = new EDD.StateDesc(br,
+                                           strings,
+                                           position,
+                                           conditions,
+                                           conditionSize,
+                                           commands,
+                                           commandSize,
+                                           passCommands,
+                                           passCommandSize);
       }
       this.Machines = new List<EDD.MachineDesc>();
       for (int index = 0; index < num9; ++index)
         this.Machines.Add(new EDD.MachineDesc(br, strings, states, stateSize));
-      if (conditions.Count > 0 || commands.Count > 0 || (passCommands.Count > 0 || states.Count > 0))
+      if (conditions.Count > 0 ||
+          commands.Count > 0 ||
+          (passCommands.Count > 0 || states.Count > 0))
         throw new FormatException("Orphaned ESD descriptions found");
     }
 
     private static List<T> GetUniqueOffsetList<T>(
-      long offset,
-      long count,
-      Dictionary<long, T> offsets,
-      int objSize)
-    {
+        long offset,
+        long count,
+        Dictionary<long, T> offsets,
+        int objSize) {
       List<T> objList = new List<T>();
-      for (int index = 0; (long) index < count; ++index)
-      {
+      for (int index = 0; (long) index < count; ++index) {
         if (!offsets.ContainsKey(offset))
-          throw new FormatException(string.Format("Nonexistent or reused {0} at index {1}/{2}, offset {3}", (object) typeof (T), (object) index, (object) count, (object) offset));
+          throw new FormatException(string.Format(
+                                        "Nonexistent or reused {0} at index {1}/{2}, offset {3}",
+                                        (object) typeof(T),
+                                        (object) index,
+                                        (object) count,
+                                        (object) offset));
         objList.Add(offsets[offset]);
         offsets.Remove(offset);
         offset += (long) objSize;
@@ -157,8 +165,7 @@ namespace SoulsFormats
       return objList;
     }
 
-    public class FunctionSpec
-    {
+    public class FunctionSpec {
       public int ID { get; set; }
 
       public string Name { get; set; }
@@ -167,14 +174,12 @@ namespace SoulsFormats
 
       public byte Unk07 { get; set; }
 
-      public FunctionSpec(int id = 0, string name = null)
-      {
+      public FunctionSpec(int id = 0, string name = null) {
         this.ID = id;
         this.Name = name;
       }
 
-      internal FunctionSpec(BinaryReaderEx br, List<string> strings)
-      {
+      internal FunctionSpec(BinaryReaderEx br, List<string> strings) {
         this.ID = br.ReadInt32();
         short num = br.ReadInt16();
         this.Unk06 = br.ReadByte();
@@ -183,35 +188,28 @@ namespace SoulsFormats
       }
     }
 
-    public class ConditionDesc
-    {
-      public ConditionDesc()
-      {
-      }
+    public class ConditionDesc {
+      public ConditionDesc() {}
 
-      internal ConditionDesc(BinaryReaderEx br)
-      {
+      internal ConditionDesc(BinaryReaderEx br) {
         br.AssertVarint(-1L);
         br.AssertVarint(new long[1]);
       }
     }
 
-    public class CommandSpec
-    {
+    public class CommandSpec {
       public long ID { get; set; }
 
       public string Name { get; set; }
 
       public short Unk0E { get; set; }
 
-      public CommandSpec(long id = 0, string name = null)
-      {
+      public CommandSpec(long id = 0, string name = null) {
         this.ID = id;
         this.Name = name;
       }
 
-      internal CommandSpec(BinaryReaderEx br, List<string> strings)
-      {
+      internal CommandSpec(BinaryReaderEx br, List<string> strings) {
         this.ID = br.ReadVarint();
         br.AssertVarint(-1L);
         br.AssertInt32(new int[1]);
@@ -221,17 +219,14 @@ namespace SoulsFormats
       }
     }
 
-    public class CommandDesc
-    {
+    public class CommandDesc {
       public string Name { get; set; }
 
-      public CommandDesc(string name = null)
-      {
+      public CommandDesc(string name = null) {
         this.Name = name;
       }
 
-      internal CommandDesc(BinaryReaderEx br, List<string> strings)
-      {
+      internal CommandDesc(BinaryReaderEx br, List<string> strings) {
         short num1 = br.ReadInt16();
         int num2 = (int) br.AssertByte((byte) 1);
         int num3 = (int) br.AssertByte(byte.MaxValue);
@@ -239,26 +234,26 @@ namespace SoulsFormats
       }
     }
 
-    public class PassCommandDesc
-    {
+    public class PassCommandDesc {
       public List<EDD.CommandDesc> PassCommands { get; set; }
 
-      public PassCommandDesc()
-      {
+      public PassCommandDesc() {
         this.PassCommands = new List<EDD.CommandDesc>();
       }
 
       internal PassCommandDesc(
-        BinaryReaderEx br,
-        Dictionary<long, EDD.CommandDesc> commands,
-        int commandSize)
-      {
-        this.PassCommands = EDD.GetUniqueOffsetList<EDD.CommandDesc>((long) br.ReadInt32(), (long) br.ReadInt32(), commands, commandSize);
+          BinaryReaderEx br,
+          Dictionary<long, EDD.CommandDesc> commands,
+          int commandSize) {
+        this.PassCommands = EDD.GetUniqueOffsetList<EDD.CommandDesc>(
+            (long) br.ReadInt32(),
+            (long) br.ReadInt32(),
+            commands,
+            commandSize);
       }
     }
 
-    public class StateDesc
-    {
+    public class StateDesc {
       public long ID { get; set; }
 
       public string Name { get; set; }
@@ -273,8 +268,7 @@ namespace SoulsFormats
 
       public List<EDD.ConditionDesc> Conditions { get; set; }
 
-      public StateDesc(long id = 0, string name = null)
-      {
+      public StateDesc(long id = 0, string name = null) {
         this.ID = id;
         this.Name = name;
         this.EntryCommands = new List<EDD.CommandDesc>();
@@ -285,16 +279,15 @@ namespace SoulsFormats
       }
 
       internal StateDesc(
-        BinaryReaderEx br,
-        List<string> strings,
-        long dataStart,
-        Dictionary<long, EDD.ConditionDesc> conditions,
-        int conditionSize,
-        Dictionary<long, EDD.CommandDesc> commands,
-        int commandSize,
-        Dictionary<long, EDD.PassCommandDesc> passCommands,
-        int passCommandSize)
-      {
+          BinaryReaderEx br,
+          List<string> strings,
+          long dataStart,
+          Dictionary<long, EDD.ConditionDesc> conditions,
+          int conditionSize,
+          Dictionary<long, EDD.CommandDesc> commands,
+          int commandSize,
+          Dictionary<long, EDD.PassCommandDesc> passCommands,
+          int passCommandSize) {
         this.ID = br.ReadVarint();
         long num = br.ReadVarint();
         br.AssertVarint(1L);
@@ -312,16 +305,40 @@ namespace SoulsFormats
         br.AssertVarint(new long[1]);
         short int16 = br.GetInt16(dataStart + num);
         this.Name = strings[(int) int16];
-        this.EntryCommands = EDD.GetUniqueOffsetList<EDD.CommandDesc>(offset1, count1, commands, commandSize);
-        this.ExitCommands = EDD.GetUniqueOffsetList<EDD.CommandDesc>(offset2, count2, commands, commandSize);
-        this.WhileCommands = EDD.GetUniqueOffsetList<EDD.CommandDesc>(offset3, count3, commands, commandSize);
-        this.PassCommands = EDD.GetUniqueOffsetList<EDD.PassCommandDesc>(offset4, count4, passCommands, passCommandSize);
-        this.Conditions = EDD.GetUniqueOffsetList<EDD.ConditionDesc>(offset5, count5, conditions, conditionSize);
+        this.EntryCommands =
+            EDD.GetUniqueOffsetList<EDD.CommandDesc>(
+                offset1,
+                count1,
+                commands,
+                commandSize);
+        this.ExitCommands =
+            EDD.GetUniqueOffsetList<EDD.CommandDesc>(
+                offset2,
+                count2,
+                commands,
+                commandSize);
+        this.WhileCommands =
+            EDD.GetUniqueOffsetList<EDD.CommandDesc>(
+                offset3,
+                count3,
+                commands,
+                commandSize);
+        this.PassCommands =
+            EDD.GetUniqueOffsetList<EDD.PassCommandDesc>(
+                offset4,
+                count4,
+                passCommands,
+                passCommandSize);
+        this.Conditions =
+            EDD.GetUniqueOffsetList<EDD.ConditionDesc>(
+                offset5,
+                count5,
+                conditions,
+                conditionSize);
       }
     }
 
-    public class MachineDesc
-    {
+    public class MachineDesc {
       public int ID { get; set; }
 
       public string Name { get; set; }
@@ -332,8 +349,7 @@ namespace SoulsFormats
 
       public List<EDD.StateDesc> States { get; set; }
 
-      public MachineDesc(int id = 0, string name = null)
-      {
+      public MachineDesc(int id = 0, string name = null) {
         this.ID = id;
         this.Name = name;
         this.ParamNames = new string[8];
@@ -341,11 +357,10 @@ namespace SoulsFormats
       }
 
       internal MachineDesc(
-        BinaryReaderEx br,
-        List<string> strings,
-        Dictionary<long, EDD.StateDesc> states,
-        int stateSize)
-      {
+          BinaryReaderEx br,
+          List<string> strings,
+          Dictionary<long, EDD.StateDesc> states,
+          int stateSize) {
         this.ID = br.ReadInt32();
         short num = br.ReadInt16();
         this.Unk06 = br.ReadInt16();
@@ -354,11 +369,15 @@ namespace SoulsFormats
         br.AssertVarint(new long[1]);
         br.AssertVarint(-1L);
         br.AssertVarint(new long[1]);
-        this.States = EDD.GetUniqueOffsetList<EDD.StateDesc>(br.ReadVarint(), br.ReadVarint(), states, stateSize);
+        this.States =
+            EDD.GetUniqueOffsetList<EDD.StateDesc>(
+                br.ReadVarint(),
+                br.ReadVarint(),
+                states,
+                stateSize);
         this.Name = strings[(int) num];
         this.ParamNames = new string[8];
-        for (int index = 0; index < 8; ++index)
-        {
+        for (int index = 0; index < 8; ++index) {
           if (numArray[index] >= (short) 0)
             this.ParamNames[index] = strings[(int) numArray[index]];
         }

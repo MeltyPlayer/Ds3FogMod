@@ -7,15 +7,12 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats.Kuon
-{
+namespace SoulsFormats.Kuon {
   [ComVisible(true)]
-  public class DVDBND0 : SoulsFile<DVDBND0>
-  {
+  public class DVDBND0 : SoulsFile<DVDBND0> {
     public List<DVDBND0.File> Files;
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       br.BigEndian = false;
       br.AssertASCII("BND\0");
       br.AssertInt32(202);
@@ -26,14 +23,12 @@ namespace SoulsFormats.Kuon
         this.Files.Add(new DVDBND0.File(br));
     }
 
-    public class File
-    {
+    public class File {
       public int ID;
       public string Name;
       public byte[] Bytes;
 
-      internal File(BinaryReaderEx br)
-      {
+      internal File(BinaryReaderEx br) {
         this.ID = br.ReadInt32();
         int num1 = br.ReadInt32();
         int count = br.ReadInt32();

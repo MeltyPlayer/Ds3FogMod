@@ -8,26 +8,22 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public class GRASS : SoulsFile<GRASS>
-  {
+  public class GRASS : SoulsFile<GRASS> {
     public List<GRASS.Volume> BoundingVolumeHierarchy { get; set; }
 
     public List<GRASS.Vertex> Vertices { get; set; }
 
     public List<GRASS.Face> Faces { get; set; }
 
-    public GRASS()
-    {
+    public GRASS() {
       this.BoundingVolumeHierarchy = new List<GRASS.Volume>();
       this.Vertices = new List<GRASS.Vertex>();
       this.Faces = new List<GRASS.Face>();
     }
 
-    protected override bool Is(BinaryReaderEx br)
-    {
+    protected override bool Is(BinaryReaderEx br) {
       if (br.Length < 40L)
         return false;
       int int32_1 = br.GetInt32(0L);
@@ -36,11 +32,14 @@ namespace SoulsFormats
       int int32_4 = br.GetInt32(16L);
       int int32_5 = br.GetInt32(24L);
       int int32_6 = br.GetInt32(32L);
-      return int32_1 == 1 && int32_2 == 40 && (int32_3 == 20 && int32_4 == 36) && int32_5 == 24 && int32_6 == 24;
+      return int32_1 == 1 &&
+             int32_2 == 40 &&
+             (int32_3 == 20 && int32_4 == 36) &&
+             int32_5 == 24 &&
+             int32_6 == 24;
     }
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       br.BigEndian = false;
       br.AssertInt32(1);
       br.AssertInt32(40);
@@ -62,11 +61,11 @@ namespace SoulsFormats
       for (int index = 0; index < capacity3; ++index)
         this.Faces.Add(new GRASS.Face(br));
       for (int index = 0; index < capacity1; ++index)
-        this.BoundingVolumeHierarchy[index].BoundingBox = new GRASS.BoundingBox(br);
+        this.BoundingVolumeHierarchy[index].BoundingBox =
+            new GRASS.BoundingBox(br);
     }
 
-    protected override void Write(BinaryWriterEx bw)
-    {
+    protected override void Write(BinaryWriterEx bw) {
       bw.BigEndian = false;
       bw.WriteInt32(1);
       bw.WriteInt32(40);
@@ -88,8 +87,7 @@ namespace SoulsFormats
         volume.BoundingBox.Write(bw);
     }
 
-    public class Volume
-    {
+    public class Volume {
       public int StartChildIndex { get; set; }
 
       public int EndChildIndex { get; set; }
@@ -102,12 +100,9 @@ namespace SoulsFormats
 
       public GRASS.BoundingBox BoundingBox { get; set; }
 
-      public Volume()
-      {
-      }
+      public Volume() {}
 
-      internal Volume(BinaryReaderEx br)
-      {
+      internal Volume(BinaryReaderEx br) {
         this.StartChildIndex = br.ReadInt32();
         this.EndChildIndex = br.ReadInt32();
         this.StartFaceIndex = br.ReadInt32();
@@ -115,8 +110,7 @@ namespace SoulsFormats
         this.Unk10 = br.ReadInt32();
       }
 
-      internal void Write(BinaryWriterEx bw)
-      {
+      internal void Write(BinaryWriterEx bw) {
         bw.WriteInt32(this.StartChildIndex);
         bw.WriteInt32(this.EndChildIndex);
         bw.WriteInt32(this.StartFaceIndex);
@@ -125,32 +119,27 @@ namespace SoulsFormats
       }
     }
 
-    public class Vertex
-    {
+    public class Vertex {
       public Vector3 Position { get; set; }
 
       public float[] GrassDensities { get; private set; }
 
-      public Vertex()
-      {
+      public Vertex() {
         this.GrassDensities = new float[6];
       }
 
-      internal Vertex(BinaryReaderEx br)
-      {
+      internal Vertex(BinaryReaderEx br) {
         this.Position = br.ReadVector3();
         this.GrassDensities = br.ReadSingles(6);
       }
 
-      internal void Write(BinaryWriterEx bw)
-      {
+      internal void Write(BinaryWriterEx bw) {
         bw.WriteVector3(this.Position);
         bw.WriteSingles((IList<float>) this.GrassDensities);
       }
     }
 
-    public class Face
-    {
+    public class Face {
       public Vector3 Unk00 { get; set; }
 
       public int VertexIndexA { get; set; }
@@ -159,20 +148,16 @@ namespace SoulsFormats
 
       public int VertexIndexC { get; set; }
 
-      public Face()
-      {
-      }
+      public Face() {}
 
-      internal Face(BinaryReaderEx br)
-      {
+      internal Face(BinaryReaderEx br) {
         this.Unk00 = br.ReadVector3();
         this.VertexIndexA = br.ReadInt32();
         this.VertexIndexB = br.ReadInt32();
         this.VertexIndexC = br.ReadInt32();
       }
 
-      internal void Write(BinaryWriterEx bw)
-      {
+      internal void Write(BinaryWriterEx bw) {
         bw.WriteVector3(this.Unk00);
         bw.WriteInt32(this.VertexIndexA);
         bw.WriteInt32(this.VertexIndexB);
@@ -180,33 +165,30 @@ namespace SoulsFormats
       }
     }
 
-    public struct BoundingBox
-    {
+    public struct BoundingBox {
       public Vector3 Min { get; set; }
 
       public Vector3 Max { get; set; }
 
-      public BoundingBox(Vector3 min, Vector3 max)
-      {
+      public BoundingBox(Vector3 min, Vector3 max) {
         this.Min = min;
         this.Max = max;
       }
 
-      internal BoundingBox(BinaryReaderEx br)
-      {
+      internal BoundingBox(BinaryReaderEx br) {
         this.Min = br.ReadVector3();
         this.Max = br.ReadVector3();
       }
 
-      internal void Write(BinaryWriterEx bw)
-      {
+      internal void Write(BinaryWriterEx bw) {
         bw.WriteVector3(this.Min);
         bw.WriteVector3(this.Max);
       }
 
-      public override string ToString()
-      {
-        return string.Format("{0:F3} - {1:F3}", (object) this.Min, (object) this.Max);
+      public override string ToString() {
+        return string.Format("{0:F3} - {1:F3}",
+                             (object) this.Min,
+                             (object) this.Max);
       }
     }
   }

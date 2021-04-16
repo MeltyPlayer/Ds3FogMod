@@ -8,33 +8,26 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public class EMELD : SoulsFile<EMELD>
-  {
+  public class EMELD : SoulsFile<EMELD> {
     public EMEVD.Game Format { get; set; }
 
     public List<EMELD.Event> Events { get; set; }
 
     public EMELD()
-      : this(EMEVD.Game.DarkSouls1)
-    {
-    }
+        : this(EMEVD.Game.DarkSouls1) {}
 
-    public EMELD(EMEVD.Game format)
-    {
+    public EMELD(EMEVD.Game format) {
       this.Format = format;
       this.Events = new List<EMELD.Event>();
     }
 
-    protected override bool Is(BinaryReaderEx br)
-    {
+    protected override bool Is(BinaryReaderEx br) {
       return br.Length >= 4L && br.GetASCII(0L, 4) == "ELD\0";
     }
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       br.AssertASCII("ELD\0");
       bool flag1 = br.ReadBoolean();
       bool flag2 = br.AssertSByte((sbyte) 0, (sbyte) -1) == (sbyte) -1;
@@ -47,14 +40,14 @@ namespace SoulsFormats
       br.ReadInt32();
       if (!flag1 && !flag2)
         this.Format = EMEVD.Game.DarkSouls1;
-      else if (flag1 && !flag2)
-      {
+      else if (flag1 && !flag2) {
         this.Format = EMEVD.Game.DarkSouls1BE;
-      }
-      else
-      {
+      } else {
         if (!(!flag1 & flag2))
-          throw new NotSupportedException(string.Format("Unknown EMELD format: BigEndian={0} Is64Bit={1}", (object) flag1, (object) flag2));
+          throw new NotSupportedException(
+              string.Format("Unknown EMELD format: BigEndian={0} Is64Bit={1}",
+                            (object) flag1,
+                            (object) flag2));
         this.Format = EMEVD.Game.Bloodborne;
       }
       long num5 = br.ReadVarint();
@@ -65,8 +58,7 @@ namespace SoulsFormats
       br.ReadVarint();
       br.ReadVarint();
       long stringsOffset = br.ReadVarint();
-      if (!flag2)
-      {
+      if (!flag2) {
         br.AssertInt32(new int[1]);
         br.AssertInt32(new int[1]);
       }
@@ -76,8 +68,7 @@ namespace SoulsFormats
         this.Events.Add(new EMELD.Event(br, this.Format, stringsOffset));
     }
 
-    protected override void Write(BinaryWriterEx bw)
-    {
+    protected override void Write(BinaryWriterEx bw) {
       bool flag1 = this.Format == EMEVD.Game.DarkSouls1BE;
       bool flag2 = this.Format >= EMEVD.Game.Bloodborne;
       bw.WriteASCII("ELD\0", false);
@@ -98,8 +89,7 @@ namespace SoulsFormats
       bw.ReserveVarint("Offset3");
       bw.ReserveVarint("StringsLength");
       bw.ReserveVarint("StringsOffset");
-      if (!flag2)
-      {
+      if (!flag2) {
         bw.WriteInt32(0);
         bw.WriteInt32(0);
       }
@@ -118,20 +108,17 @@ namespace SoulsFormats
       bw.FillInt32("FileSize", (int) bw.Position);
     }
 
-    public class Event
-    {
+    public class Event {
       public long ID { get; set; }
 
       public string Name { get; set; }
 
-      public Event(long id, string name)
-      {
+      public Event(long id, string name) {
         this.ID = id;
         this.Name = name;
       }
 
-      internal Event(BinaryReaderEx br, EMEVD.Game format, long stringsOffset)
-      {
+      internal Event(BinaryReaderEx br, EMEVD.Game format, long stringsOffset) {
         this.ID = br.ReadVarint();
         long num = br.ReadVarint();
         if (format < EMEVD.Game.Bloodborne)
@@ -139,8 +126,7 @@ namespace SoulsFormats
         this.Name = br.GetUTF16(stringsOffset + num);
       }
 
-      internal void Write(BinaryWriterEx bw, EMEVD.Game format, int index)
-      {
+      internal void Write(BinaryWriterEx bw, EMEVD.Game format, int index) {
         bw.WriteVarint(this.ID);
         bw.ReserveVarint(string.Format("Event{0}NameOffset", (object) index));
         if (format >= EMEVD.Game.Bloodborne)
@@ -148,9 +134,12 @@ namespace SoulsFormats
         bw.WriteInt32(0);
       }
 
-      internal void WriteName(BinaryWriterEx bw, int index, long stringsOffset)
-      {
-        bw.FillVarint(string.Format("Event{0}NameOffset", (object) index), bw.Position - stringsOffset);
+      internal void WriteName(
+          BinaryWriterEx bw,
+          int index,
+          long stringsOffset) {
+        bw.FillVarint(string.Format("Event{0}NameOffset", (object) index),
+                      bw.Position - stringsOffset);
         bw.WriteUTF16(this.Name, true);
       }
     }

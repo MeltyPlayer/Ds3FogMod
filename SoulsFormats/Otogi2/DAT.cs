@@ -7,18 +7,15 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats.Otogi2
-{
+namespace SoulsFormats.Otogi2 {
   [ComVisible(true)]
-  public class DAT : SoulsFile<DAT>
-  {
+  public class DAT : SoulsFile<DAT> {
     public byte[] Data1;
     public byte[] Data2;
     public byte[] Data3;
     public List<DAT.Texture> Textures;
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       br.ReadInt32();
       int num1 = br.ReadInt32();
       int num2 = br.ReadInt32();
@@ -39,13 +36,11 @@ namespace SoulsFormats.Otogi2
       this.Data3 = br.GetBytes((long) num3, br.GetInt32((long) num3));
     }
 
-    public class Texture
-    {
+    public class Texture {
       public string Name;
       public byte[] Data;
 
-      internal Texture(BinaryReaderEx br)
-      {
+      internal Texture(BinaryReaderEx br) {
         int count = br.ReadInt32();
         int num1 = br.ReadInt32();
         int num2 = br.ReadInt32();

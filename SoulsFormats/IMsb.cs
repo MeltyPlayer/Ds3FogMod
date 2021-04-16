@@ -6,11 +6,9 @@
 
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public interface IMsb
-  {
+  public interface IMsb {
     IMsbParam<IMsbModel> Models { get; }
 
     IMsbParam<IMsbPart> Parts { get; }

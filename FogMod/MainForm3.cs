@@ -5,7 +5,9 @@
 // Assembly location: M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\FogMod.exe
 
 using FogMod.Properties;
+
 using SoulsIds;
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -16,16 +18,18 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace FogMod
-{
-  public class MainForm3 : Form
-  {
-    private static string defaultDir = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\DARK SOULS III\\Game";
-    private static string defaultPath = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\DARK SOULS III\\Game\\randomizer\\Data0.bdt";
-    private RandomizerOptions options = new RandomizerOptions()
-    {
-      Game = GameSpec.FromGame.DS3
+namespace FogMod {
+  public class MainForm3 : Form {
+    private static string defaultDir =
+        "C:\\Program Files (x86)\\Steam\\steamapps\\common\\DARK SOULS III\\Game";
+
+    private static string defaultPath =
+        "C:\\Program Files (x86)\\Steam\\steamapps\\common\\DARK SOULS III\\Game\\randomizer\\Data0.bdt";
+
+    private RandomizerOptions options = new RandomizerOptions() {
+        Game = GameSpec.FromGame.DS3
     };
+
     private bool working;
     private IContainer components;
     private GroupBox groupBox1;
@@ -64,30 +68,27 @@ namespace FogMod
     private Label label9;
     private RadioButton earlywarp;
 
-    public MainForm3()
-    {
+    public MainForm3() {
       this.InitializeComponent();
       this.errorL.Text = "";
       string exe = Settings.Default.Exe;
-      if (!string.IsNullOrWhiteSpace(exe) && exe.ToLowerInvariant().EndsWith("data0.bdt") && File.Exists(exe))
+      if (!string.IsNullOrWhiteSpace(exe) &&
+          exe.ToLowerInvariant().EndsWith("data0.bdt") &&
+          File.Exists(exe))
         this.exe.Text = exe;
       else if (File.Exists(MainForm3.defaultPath))
         this.exe.Text = MainForm3.defaultPath;
       this.options["dryrun"] = false;
       string options = Settings.Default.Options;
-      if (string.IsNullOrWhiteSpace(options))
-      {
+      if (string.IsNullOrWhiteSpace(options)) {
         this.ReadControlFlags((Control) this);
-      }
-      else
-      {
-        List<string> list = ((IEnumerable<string>) options.Split(' ')).ToList<string>();
+      } else {
+        List<string> list =
+            ((IEnumerable<string>) options.Split(' ')).ToList<string>();
         this.SetControlFlags((Control) this, (ICollection<string>) list);
-        foreach (string s in list)
-        {
+        foreach (string s in list) {
           uint result;
-          if (uint.TryParse(s, out result))
-          {
+          if (uint.TryParse(s, out result)) {
             if (result == 0U)
               break;
             this.fixedseed.Text = result.ToString();
@@ -97,20 +98,15 @@ namespace FogMod
       }
     }
 
-    private void UpdateExePath()
-    {
-      if (!(this.exe.Text.Trim() == ""))
-      {
+    private void UpdateExePath() {
+      if (!(this.exe.Text.Trim() == "")) {
         bool flag = true;
-        try
-        {
+        try {
           if (!Directory.Exists(Path.GetDirectoryName(this.exe.Text)))
             flag = false;
           if (Path.GetFileName(this.exe.Text).ToLowerInvariant() != "data0.bdt")
             flag = false;
-        }
-        catch (ArgumentException ex)
-        {
+        } catch (ArgumentException ex) {
           flag = false;
         }
         if (!flag)
@@ -120,76 +116,67 @@ namespace FogMod
       Settings.Default.Save();
     }
 
-    private void OpenExe(object sender, EventArgs e)
-    {
+    private void OpenExe(object sender, EventArgs e) {
       OpenFileDialog openFileDialog = new OpenFileDialog();
       openFileDialog.Title = "Select Data0.bdt of other mod";
       openFileDialog.Filter = "Modded params|Data0.bdt|All files|*.*";
       openFileDialog.RestoreDirectory = true;
-      try
-      {
-        if (Directory.Exists(this.exe.Text))
-        {
+      try {
+        if (Directory.Exists(this.exe.Text)) {
           openFileDialog.InitialDirectory = this.exe.Text;
-        }
-        else
-        {
+        } else {
           string directoryName = Path.GetDirectoryName(this.exe.Text);
           if (Directory.Exists(directoryName))
             openFileDialog.InitialDirectory = directoryName;
           else if (Directory.Exists(MainForm3.defaultDir))
             openFileDialog.InitialDirectory = MainForm3.defaultDir;
         }
-      }
-      catch (ArgumentException ex)
-      {
-      }
+      } catch (ArgumentException ex) {}
       if (openFileDialog.ShowDialog() != DialogResult.OK)
         return;
       this.exe.Text = openFileDialog.FileName;
     }
 
-    private void setStatus(string msg, bool error = false, bool success = false)
-    {
+    private void setStatus(
+        string msg,
+        bool error = false,
+        bool success = false) {
       this.statusL.Text = msg;
-      this.statusStrip1.BackColor = error ? Color.IndianRed : (success ? Color.PaleGreen : SystemColors.Control);
+      this.statusStrip1.BackColor =
+          error
+              ? Color.IndianRed
+              : (success ? Color.PaleGreen : SystemColors.Control);
     }
 
-    private async void Randomize(object sender, EventArgs e)
-    {
+    private async void Randomize(object sender, EventArgs e) {
       MainForm3 mainForm3 = this;
       if (mainForm3.working)
         return;
       mainForm3.ReadControlFlags((Control) mainForm3);
       string gameDir = (string) null;
-      if (!string.IsNullOrWhiteSpace(mainForm3.exe.Text))
-      {
+      if (!string.IsNullOrWhiteSpace(mainForm3.exe.Text)) {
         gameDir = Path.GetDirectoryName(mainForm3.exe.Text);
-        if (!File.Exists(gameDir + "\\Data0.bdt"))
-        {
-          mainForm3.SetError("Error: Data0.bdt not found for the mod to merge. Leave it blank to use Fog Gate Randomizer by itself.");
+        if (!File.Exists(gameDir + "\\Data0.bdt")) {
+          mainForm3.SetError(
+              "Error: Data0.bdt not found for the mod to merge. Leave it blank to use Fog Gate Randomizer by itself.");
           return;
         }
-        if (new DirectoryInfo(gameDir).FullName == Directory.GetCurrentDirectory())
-        {
-          mainForm3.SetError("Error: Data0.bdt is not from a different mod! Leave it blank to use Fog Gate Randomizer by itself.");
+        if (new DirectoryInfo(gameDir).FullName ==
+            Directory.GetCurrentDirectory()) {
+          mainForm3.SetError(
+              "Error: Data0.bdt is not from a different mod! Leave it blank to use Fog Gate Randomizer by itself.");
           return;
         }
       }
-      if (mainForm3.fixedseed.Text.Trim() != "")
-      {
+      if (mainForm3.fixedseed.Text.Trim() != "") {
         uint result;
-        if (uint.TryParse(mainForm3.fixedseed.Text.Trim(), out result))
-        {
+        if (uint.TryParse(mainForm3.fixedseed.Text.Trim(), out result)) {
           mainForm3.options.Seed = (int) result;
-        }
-        else
-        {
+        } else {
           mainForm3.SetError("Invalid fixed seed");
           return;
         }
-      }
-      else
+      } else
         mainForm3.options.Seed = new Random().Next();
       mainForm3.fixedseed.Text = mainForm3.options.Seed.ToString();
       mainForm3.UpdateOptions((object) null, (EventArgs) null);
@@ -201,30 +188,60 @@ namespace FogMod
       RandomizerOptions rand = mainForm3.options.Copy();
       mainForm3.randb.BackColor = Color.LightYellow;
       Randomizer randomizer = new Randomizer();
-      await Task.Factory.StartNew((Action) (() =>
-      {
-        Directory.CreateDirectory("spoiler_logs");
-        string path = string.Format("spoiler_logs\\{0}_log_{1}_{2}.txt", (object) DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss"), (object) rand.Seed, (object) rand.ConfigHash());
-        TextWriter text = (TextWriter) File.CreateText(path);
-        TextWriter newOut = Console.Out;
-        Console.SetOut(text);
-        try
-        {
-          ItemReader.Result result = randomizer.Randomize(rand, GameSpec.FromGame.DS3, gameDir, Directory.GetCurrentDirectory());
-          this.setStatus("Done. Info in " + path + " | Restart your game!" + (result.Randomized ? " | Key item hash: " + result.ItemHash : ""), false, true);
-        }
-        catch (Exception ex)
-        {
-          Console.WriteLine((object) ex);
-          this.SetError("Error encountered: " + ex.Message + "\r\n\r\nIt may work to try again with a different seed. " + (gameDir == null ? "" : "The merged mod might also not be compatible. ") + "See most recent file in spoiler_logs directory for the full error.");
-          this.setStatus("Error! See error message in " + path, true, false);
-        }
-        finally
-        {
-          text.Close();
-          Console.SetOut(newOut);
-        }
-      }));
+      await Task.Factory.StartNew((Action) (() => {
+                                               Directory.CreateDirectory(
+                                                   "spoiler_logs");
+                                               string path = string.Format(
+                                                   "spoiler_logs\\{0}_log_{1}_{2}.txt",
+                                                   (object) DateTime
+                                                            .Now.ToString(
+                                                                "yyyy-MM-dd_HH.mm.ss"),
+                                                   (object) rand.Seed,
+                                                   (object) rand.ConfigHash());
+                                               TextWriter text =
+                                                   (TextWriter) File.CreateText(
+                                                       path);
+                                               TextWriter newOut = Console.Out;
+                                               Console.SetOut(text);
+                                               try {
+                                                 ItemReader.Result result =
+                                                     randomizer.Randomize(
+                                                         rand,
+                                                         GameSpec.FromGame.DS3,
+                                                         gameDir,
+                                                         Directory
+                                                             .GetCurrentDirectory());
+                                                 this.setStatus(
+                                                     "Done. Info in " +
+                                                     path +
+                                                     " | Restart your game!" +
+                                                     (result.Randomized
+                                                          ? " | Key item hash: " +
+                                                            result.ItemHash
+                                                          : ""),
+                                                     false,
+                                                     true);
+                                               } catch (Exception ex) {
+                                                 Console.WriteLine((object) ex);
+                                                 this.SetError(
+                                                     "Error encountered: " +
+                                                     ex.Message +
+                                                     "\r\n\r\nIt may work to try again with a different seed. " +
+                                                     (gameDir == null
+                                                          ? ""
+                                                          : "The merged mod might also not be compatible. "
+                                                     ) +
+                                                     "See most recent file in spoiler_logs directory for the full error.");
+                                                 this.setStatus(
+                                                     "Error! See error message in " +
+                                                     path,
+                                                     true,
+                                                     false);
+                                               } finally {
+                                                 text.Close();
+                                                 Console.SetOut(newOut);
+                                               }
+                                             }));
       mainForm3.randb.Enabled = true;
       mainForm3.randb.Text = prevText;
       mainForm3.randb.BackColor = SystemColors.Control;
@@ -232,27 +249,25 @@ namespace FogMod
       mainForm3.UpdateExePath();
     }
 
-    private void SetError(string text = null)
-    {
+    private void SetError(string text = null) {
       this.errorL.Text = text ?? "";
     }
 
-    private void UpdateFile(object sender, EventArgs e)
-    {
+    private void UpdateFile(object sender, EventArgs e) {
       this.UpdateExePath();
     }
 
-    private void UpdateOptions(object sender, EventArgs e)
-    {
+    private void UpdateOptions(object sender, EventArgs e) {
       this.ReadControlFlags((Control) this);
-      Settings.Default.Options = string.Join(" ", (IEnumerable<string>) this.options.GetEnabled()) + " " + (object) this.options.DisplaySeed;
+      Settings.Default.Options =
+          string.Join(" ", (IEnumerable<string>) this.options.GetEnabled()) +
+          " " +
+          (object) this.options.DisplaySeed;
       Settings.Default.Save();
     }
 
-    private void ReadControlFlags(Control control)
-    {
-      switch (control)
-      {
+    private void ReadControlFlags(Control control) {
+      switch (control) {
         case RadioButton radioButton:
           this.options[control.Name] = radioButton.Checked;
           break;
@@ -261,66 +276,58 @@ namespace FogMod
           break;
         default:
           IEnumerator enumerator = control.Controls.GetEnumerator();
-          try
-          {
+          try {
             while (enumerator.MoveNext())
               this.ReadControlFlags((Control) enumerator.Current);
             break;
-          }
-          finally
-          {
+          } finally {
             if (enumerator is IDisposable disposable)
               disposable.Dispose();
           }
       }
     }
 
-    private void SetControlFlags(Control control, ICollection<string> set)
-    {
+    private void SetControlFlags(Control control, ICollection<string> set) {
       if (!control.Enabled)
         return;
-      switch (control)
-      {
+      switch (control) {
         case RadioButton radioButton:
-          this.options[control.Name] = radioButton.Checked = set.Contains(control.Name);
+          this.options[control.Name] =
+              radioButton.Checked = set.Contains(control.Name);
           break;
         case CheckBox checkBox:
-          this.options[control.Name] = checkBox.Checked = set.Contains(control.Name);
+          this.options[control.Name] =
+              checkBox.Checked = set.Contains(control.Name);
           break;
         default:
           IEnumerator enumerator = control.Controls.GetEnumerator();
-          try
-          {
+          try {
             while (enumerator.MoveNext())
               this.SetControlFlags((Control) enumerator.Current, set);
             break;
-          }
-          finally
-          {
+          } finally {
             if (enumerator is IDisposable disposable)
               disposable.Dispose();
           }
       }
     }
 
-    private void fixedseed_TextChanged(object sender, EventArgs e)
-    {
+    private void fixedseed_TextChanged(object sender, EventArgs e) {
       if (string.IsNullOrWhiteSpace(this.fixedseed.Text))
         this.randb.Text = "Randomize!";
       else
         this.randb.Text = "Run with fixed seed";
     }
 
-    protected override void Dispose(bool disposing)
-    {
+    protected override void Dispose(bool disposing) {
       if (disposing && this.components != null)
         this.components.Dispose();
       base.Dispose(disposing);
     }
 
-    private void InitializeComponent()
-    {
-      ComponentResourceManager componentResourceManager = new ComponentResourceManager(typeof (MainForm3));
+    private void InitializeComponent() {
+      ComponentResourceManager componentResourceManager =
+          new ComponentResourceManager(typeof(MainForm3));
       this.groupBox1 = new GroupBox();
       this.label4 = new Label();
       this.pvp = new CheckBox();
@@ -455,7 +462,8 @@ namespace FogMod
       this.label11.Name = "label11";
       this.label11.Size = new Size(361, 13);
       this.label11.TabIndex = 23;
-      this.label11.Text = "Entering a fog gate you just exited can send you to a different fixed location";
+      this.label11.Text =
+          "Entering a fog gate you just exited can send you to a different fixed location";
       this.unconnected.AutoSize = true;
       this.unconnected.Location = new Point(9, 133);
       this.unconnected.Margin = new Padding(3, 2, 3, 2);
@@ -471,7 +479,8 @@ namespace FogMod
       this.label1.Name = "label1";
       this.label1.Size = new Size(307, 13);
       this.label1.TabIndex = 19;
-      this.label1.Text = "Logic assumes you can jump to Firelink Shrine roof from the tree";
+      this.label1.Text =
+          "Logic assumes you can jump to Firelink Shrine roof from the tree";
       this.scale.AutoSize = true;
       this.scale.Checked = true;
       this.scale.CheckState = CheckState.Checked;
@@ -498,7 +507,8 @@ namespace FogMod
       this.label8.Name = "label8";
       this.label8.Size = new Size(371, 13);
       this.label8.TabIndex = 13;
-      this.label8.Text = "Increase or decrease enemy health and damage based on distance from start";
+      this.label8.Text =
+          "Increase or decrease enemy health and damage based on distance from start";
       this.label6.AutoSize = true;
       this.label6.Font = new Font("Microsoft Sans Serif", 8.25f);
       this.label6.Location = new Point(25, 79);
@@ -532,14 +542,16 @@ namespace FogMod
       this.label7.Name = "label7";
       this.label7.Size = new Size(335, 13);
       this.label7.TabIndex = 15;
-      this.label7.Text = "Access to Soul of Cinder via Firelink Shrine and Kiln is not randomized";
+      this.label7.Text =
+          "Access to Soul of Cinder via Firelink Shrine and Kiln is not randomized";
       this.fixedseed.Font = new Font("Microsoft Sans Serif", 9.75f);
       this.fixedseed.Location = new Point(583, 391);
       this.fixedseed.Margin = new Padding(3, 2, 3, 2);
       this.fixedseed.Name = "fixedseed";
       this.fixedseed.Size = new Size(153, 22);
       this.fixedseed.TabIndex = 15;
-      this.fixedseed.TextChanged += new EventHandler(this.fixedseed_TextChanged);
+      this.fixedseed.TextChanged +=
+          new EventHandler(this.fixedseed_TextChanged);
       this.label10.AutoSize = true;
       this.label10.Font = new Font("Microsoft Sans Serif", 9.75f);
       this.label10.Location = new Point(534, 394);
@@ -580,9 +592,8 @@ namespace FogMod
       this.errorL.Size = new Size(471, 128);
       this.errorL.TabIndex = 9;
       this.errorL.Text = componentResourceManager.GetString("errorL.Text");
-      this.statusStrip1.Items.AddRange(new ToolStripItem[1]
-      {
-        (ToolStripItem) this.statusL
+      this.statusStrip1.Items.AddRange(new ToolStripItem[1] {
+          (ToolStripItem) this.statusL
       });
       this.statusStrip1.Location = new Point(0, 438);
       this.statusStrip1.Name = "statusStrip1";
@@ -627,7 +638,8 @@ namespace FogMod
       this.label13.Name = "label13";
       this.label13.Size = new Size(320, 13);
       this.label13.TabIndex = 13;
-      this.label13.Text = "Firelink Shrine and Coiled Sword are routed in early. Balanced start";
+      this.label13.Text =
+          "Firelink Shrine and Coiled Sword are routed in early. Balanced start";
       this.earlywarp.AutoSize = true;
       this.earlywarp.Checked = true;
       this.earlywarp.Location = new Point(9, 20);
@@ -652,7 +664,8 @@ namespace FogMod
       this.label9.Name = "label9";
       this.label9.Size = new Size(388, 13);
       this.label9.TabIndex = 15;
-      this.label9.Text = "Firelink Shrine, and warping between bonfires, is available immediately. Easy start";
+      this.label9.Text =
+          "Firelink Shrine, and warping between bonfires, is available immediately. Easy start";
       this.latewarp.AutoSize = true;
       this.latewarp.Location = new Point(7, 56);
       this.latewarp.Name = "latewarp";
@@ -667,7 +680,8 @@ namespace FogMod
       this.label12.Name = "label12";
       this.label12.Size = new Size(388, 13);
       this.label12.TabIndex = 17;
-      this.label12.Text = "Firelink is still early, but Coiled Sword is like Lordvessel in Dark Souls. Slower start";
+      this.label12.Text =
+          "Firelink is still early, but Coiled Sword is like Lordvessel in Dark Souls. Slower start";
       this.AutoScaleDimensions = new SizeF(8f, 16f);
       this.AutoScaleMode = AutoScaleMode.Font;
       this.ClientSize = new Size(932, 460);
@@ -687,7 +701,7 @@ namespace FogMod
       this.FormBorderStyle = FormBorderStyle.FixedSingle;
       this.Icon = (Icon) componentResourceManager.GetObject("$this.Icon");
       this.Margin = new Padding(4);
-      this.Name = nameof (MainForm3);
+      this.Name = nameof(MainForm3);
       this.Text = "DS3 Fog Gate Randomizer v0.1";
       this.groupBox1.ResumeLayout(false);
       this.groupBox1.PerformLayout();

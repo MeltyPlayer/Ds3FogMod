@@ -8,11 +8,9 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public class DDS
-  {
+  public class DDS {
     public DDS.DDSD dwFlags;
     public int dwHeight;
     public int dwWidth;
@@ -27,27 +25,34 @@ namespace SoulsFormats
     public int dwCaps4;
     public int dwReserved2;
     public DDS.HEADER_DXT10 header10;
-    public const DDS.DDSD HEADER_FLAGS_TEXTURE = DDS.DDSD.CAPS | DDS.DDSD.HEIGHT | DDS.DDSD.WIDTH | DDS.DDSD.PIXELFORMAT;
-    public const DDS.DDSCAPS2 CUBEMAP_ALLFACES = DDS.DDSCAPS2.CUBEMAP | DDS.DDSCAPS2.CUBEMAP_POSITIVEX | DDS.DDSCAPS2.CUBEMAP_NEGATIVEX | DDS.DDSCAPS2.CUBEMAP_POSITIVEY | DDS.DDSCAPS2.CUBEMAP_NEGATIVEY | DDS.DDSCAPS2.CUBEMAP_POSITIVEZ | DDS.DDSCAPS2.CUBEMAP_NEGATIVEZ;
 
-    public int DataOffset
-    {
-      get
-      {
-        return !(this.ddspf.dwFourCC == "DX10") ? 128 : 148;
-      }
+    public const DDS.DDSD HEADER_FLAGS_TEXTURE =
+        DDS.DDSD.CAPS | DDS.DDSD.HEIGHT | DDS.DDSD.WIDTH | DDS.DDSD.PIXELFORMAT;
+
+    public const DDS.DDSCAPS2 CUBEMAP_ALLFACES =
+        DDS.DDSCAPS2.CUBEMAP |
+        DDS.DDSCAPS2.CUBEMAP_POSITIVEX |
+        DDS.DDSCAPS2.CUBEMAP_NEGATIVEX |
+        DDS.DDSCAPS2.CUBEMAP_POSITIVEY |
+        DDS.DDSCAPS2.CUBEMAP_NEGATIVEY |
+        DDS.DDSCAPS2.CUBEMAP_POSITIVEZ |
+        DDS.DDSCAPS2.CUBEMAP_NEGATIVEZ;
+
+    public int DataOffset {
+      get { return !(this.ddspf.dwFourCC == "DX10") ? 128 : 148; }
     }
 
-    public DDS()
-    {
-      this.dwFlags = DDS.DDSD.CAPS | DDS.DDSD.HEIGHT | DDS.DDSD.WIDTH | DDS.DDSD.PIXELFORMAT;
+    public DDS() {
+      this.dwFlags = DDS.DDSD.CAPS |
+                     DDS.DDSD.HEIGHT |
+                     DDS.DDSD.WIDTH |
+                     DDS.DDSD.PIXELFORMAT;
       this.dwReserved1 = new int[11];
       this.ddspf = new DDS.PIXELFORMAT();
       this.dwCaps = DDS.DDSCAPS.TEXTURE;
     }
 
-    public DDS(byte[] bytes)
-    {
+    public DDS(byte[] bytes) {
       BinaryReaderEx br = new BinaryReaderEx(false, bytes);
       br.AssertASCII("DDS ");
       br.AssertInt32(124);
@@ -70,8 +75,7 @@ namespace SoulsFormats
         this.header10 = (DDS.HEADER_DXT10) null;
     }
 
-    public byte[] Write(byte[] pixelData)
-    {
+    public byte[] Write(byte[] pixelData) {
       BinaryWriterEx bw = new BinaryWriterEx(false);
       bw.WriteASCII("DDS ", false);
       bw.WriteInt32(124);
@@ -94,8 +98,7 @@ namespace SoulsFormats
       return bw.FinishBytes();
     }
 
-    public class PIXELFORMAT
-    {
+    public class PIXELFORMAT {
       public DDS.DDPF dwFlags;
       public string dwFourCC;
       public int dwRGBBitCount;
@@ -104,13 +107,11 @@ namespace SoulsFormats
       public uint dwBBitMask;
       public uint dwABitMask;
 
-      public PIXELFORMAT()
-      {
+      public PIXELFORMAT() {
         this.dwFourCC = "\0\0\0\0";
       }
 
-      internal PIXELFORMAT(BinaryReaderEx br)
-      {
+      internal PIXELFORMAT(BinaryReaderEx br) {
         br.AssertInt32(32);
         this.dwFlags = (DDS.DDPF) br.ReadUInt32();
         this.dwFourCC = br.ReadASCII(4);
@@ -121,11 +122,13 @@ namespace SoulsFormats
         this.dwABitMask = br.ReadUInt32();
       }
 
-      internal void Write(BinaryWriterEx bw)
-      {
+      internal void Write(BinaryWriterEx bw) {
         bw.WriteInt32(32);
         bw.WriteUInt32((uint) this.dwFlags);
-        bw.WriteASCII((this.dwFourCC ?? "").PadRight(4, char.MinValue).Substring(0, 4), false);
+        bw.WriteASCII((this.dwFourCC ?? "")
+                      .PadRight(4, char.MinValue)
+                      .Substring(0, 4),
+                      false);
         bw.WriteInt32(this.dwRGBBitCount);
         bw.WriteUInt32(this.dwRBitMask);
         bw.WriteUInt32(this.dwGBitMask);
@@ -134,24 +137,21 @@ namespace SoulsFormats
       }
     }
 
-    public class HEADER_DXT10
-    {
+    public class HEADER_DXT10 {
       public DDS.DXGI_FORMAT dxgiFormat;
       public DDS.DIMENSION resourceDimension;
       public DDS.RESOURCE_MISC miscFlag;
       public uint arraySize;
       public DDS.ALPHA_MODE miscFlags2;
 
-      public HEADER_DXT10()
-      {
+      public HEADER_DXT10() {
         this.dxgiFormat = DDS.DXGI_FORMAT.UNKNOWN;
         this.resourceDimension = DDS.DIMENSION.TEXTURE2D;
         this.arraySize = 1U;
         this.miscFlags2 = DDS.ALPHA_MODE.UNKNOWN;
       }
 
-      internal HEADER_DXT10(BinaryReaderEx br)
-      {
+      internal HEADER_DXT10(BinaryReaderEx br) {
         this.dxgiFormat = br.ReadEnum32<DDS.DXGI_FORMAT>();
         this.resourceDimension = br.ReadEnum32<DDS.DIMENSION>();
         this.miscFlag = (DDS.RESOURCE_MISC) br.ReadUInt32();
@@ -159,8 +159,7 @@ namespace SoulsFormats
         this.miscFlags2 = br.ReadEnum32<DDS.ALPHA_MODE>();
       }
 
-      internal void Write(BinaryWriterEx bw)
-      {
+      internal void Write(BinaryWriterEx bw) {
         bw.WriteUInt32((uint) this.dxgiFormat);
         bw.WriteUInt32((uint) this.resourceDimension);
         bw.WriteUInt32((uint) this.miscFlag);
@@ -170,65 +169,58 @@ namespace SoulsFormats
     }
 
     [Flags]
-    public enum DDSD : uint
-    {
+    public enum DDSD : uint {
       CAPS = 1,
       HEIGHT = 2,
       WIDTH = 4,
       PITCH = 8,
-      PIXELFORMAT = 4096, // 0x00001000
+      PIXELFORMAT = 4096,   // 0x00001000
       MIPMAPCOUNT = 131072, // 0x00020000
-      LINEARSIZE = 524288, // 0x00080000
-      DEPTH = 8388608, // 0x00800000
+      LINEARSIZE = 524288,  // 0x00080000
+      DEPTH = 8388608,      // 0x00800000
     }
 
     [Flags]
-    public enum DDSCAPS : uint
-    {
+    public enum DDSCAPS : uint {
       COMPLEX = 8,
-      TEXTURE = 4096, // 0x00001000
+      TEXTURE = 4096,   // 0x00001000
       MIPMAP = 4194304, // 0x00400000
     }
 
     [Flags]
-    public enum DDSCAPS2 : uint
-    {
-      CUBEMAP = 512, // 0x00000200
-      CUBEMAP_POSITIVEX = 1024, // 0x00000400
-      CUBEMAP_NEGATIVEX = 2048, // 0x00000800
-      CUBEMAP_POSITIVEY = 4096, // 0x00001000
-      CUBEMAP_NEGATIVEY = 8192, // 0x00002000
+    public enum DDSCAPS2 : uint {
+      CUBEMAP = 512,             // 0x00000200
+      CUBEMAP_POSITIVEX = 1024,  // 0x00000400
+      CUBEMAP_NEGATIVEX = 2048,  // 0x00000800
+      CUBEMAP_POSITIVEY = 4096,  // 0x00001000
+      CUBEMAP_NEGATIVEY = 8192,  // 0x00002000
       CUBEMAP_POSITIVEZ = 16384, // 0x00004000
       CUBEMAP_NEGATIVEZ = 32768, // 0x00008000
-      VOLUME = 2097152, // 0x00200000
+      VOLUME = 2097152,          // 0x00200000
     }
 
     [Flags]
-    public enum DDPF : uint
-    {
+    public enum DDPF : uint {
       ALPHAPIXELS = 1,
       ALPHA = 2,
       FOURCC = 4,
-      RGB = 64, // 0x00000040
-      YUV = 512, // 0x00000200
+      RGB = 64,           // 0x00000040
+      YUV = 512,          // 0x00000200
       LUMINANCE = 131072, // 0x00020000
     }
 
-    public enum DIMENSION : uint
-    {
+    public enum DIMENSION : uint {
       TEXTURE1D = 2,
       TEXTURE2D = 3,
       TEXTURE3D = 4,
     }
 
     [Flags]
-    public enum RESOURCE_MISC : uint
-    {
+    public enum RESOURCE_MISC : uint {
       TEXTURECUBE = 4,
     }
 
-    public enum ALPHA_MODE : uint
-    {
+    public enum ALPHA_MODE : uint {
       UNKNOWN,
       STRAIGHT,
       PREMULTIPLIED,
@@ -236,8 +228,7 @@ namespace SoulsFormats
       CUSTOM,
     }
 
-    public enum DXGI_FORMAT : uint
-    {
+    public enum DXGI_FORMAT : uint {
       UNKNOWN,
       R32G32B32A32_TYPELESS,
       R32G32B32A32_FLOAT,

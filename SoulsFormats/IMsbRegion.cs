@@ -7,11 +7,9 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public interface IMsbRegion : IMsbEntry
-  {
+  public interface IMsbRegion : IMsbEntry {
     Vector3 Position { get; set; }
 
     Vector3 Rotation { get; set; }

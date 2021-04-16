@@ -7,11 +7,9 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public interface IBinder
-  {
+  public interface IBinder {
     Binder.Format Format { get; set; }
 
     string Version { get; set; }

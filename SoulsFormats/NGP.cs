@@ -8,11 +8,9 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public class NGP : SoulsFile<NGP>
-  {
+  public class NGP : SoulsFile<NGP> {
     public bool BigEndian { get; set; }
 
     public NGP.NGPVersion Version { get; set; }
@@ -29,13 +27,11 @@ namespace SoulsFormats
 
     public List<NGP.Mesh> Meshes { get; set; }
 
-    protected override bool Is(BinaryReaderEx br)
-    {
+    protected override bool Is(BinaryReaderEx br) {
       return br.Length >= 4L && br.GetASCII(0L, 4) == "NVG2";
     }
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       br.BigEndian = false;
       this.BigEndian = br.GetInt16(4L) == (short) 256;
       br.BigEndian = this.BigEndian;
@@ -65,21 +61,21 @@ namespace SoulsFormats
       br.Position = num5;
       this.StructCs = new List<int>((IEnumerable<int>) br.ReadInt32s(count1));
       br.Position = num6;
-      this.StructDs = new List<short>((IEnumerable<short>) br.ReadInt16s(count2));
+      this.StructDs =
+          new List<short>((IEnumerable<short>) br.ReadInt16s(count2));
       this.Meshes = new List<NGP.Mesh>(num2);
-      for (int index = 0; index < num2; ++index)
-      {
+      for (int index = 0; index < num2; ++index) {
         br.Position = numArray[index];
         this.Meshes.Add(new NGP.Mesh(br, this.Version));
       }
     }
 
-    protected override void Write(BinaryWriterEx bw)
-    {
+    protected override void Write(BinaryWriterEx bw) {
       void writeMeshes() {
         for (int index = 0; index < this.Meshes.Count; ++index) {
           bw.Pad(bw.VarintSize);
-          bw.FillVarint(string.Format("MeshOffset{0}", (object)index), bw.Position);
+          bw.FillVarint(string.Format("MeshOffset{0}", (object) index),
+                        bw.Position);
           // ISSUE: reference to a compiler-generated field
           this.Meshes[index].Write(bw, this.Version);
         }
@@ -115,8 +111,7 @@ namespace SoulsFormats
       bw.ReserveVarint("OffsetC");
       // ISSUE: reference to a compiler-generated field
       bw.ReserveVarint("OffsetD");
-      for (int index = 0; index < this.Meshes.Count; ++index)
-      {
+      for (int index = 0; index < this.Meshes.Count; ++index) {
         // ISSUE: reference to a compiler-generated field
         bw.ReserveVarint(string.Format("MeshOffset{0}", (object) index));
       }
@@ -128,8 +123,7 @@ namespace SoulsFormats
       // ISSUE: reference to a compiler-generated field
       // ISSUE: reference to a compiler-generated field
       bw.FillVarint("OffsetA", bw.Position);
-      foreach (NGP.StructA structA in this.StructAs)
-      {
+      foreach (NGP.StructA structA in this.StructAs) {
         // ISSUE: reference to a compiler-generated field
         structA.Write(bw);
       }
@@ -139,8 +133,7 @@ namespace SoulsFormats
       // ISSUE: reference to a compiler-generated field
       // ISSUE: reference to a compiler-generated field
       bw.FillVarint("OffsetB", bw.Position);
-      foreach (NGP.StructB structB in this.StructBs)
-      {
+      foreach (NGP.StructB structB in this.StructBs) {
         // ISSUE: reference to a compiler-generated field
         structB.Write(bw);
       }
@@ -165,14 +158,12 @@ namespace SoulsFormats
       writeMeshes();
     }
 
-    public enum NGPVersion : ushort
-    {
+    public enum NGPVersion : ushort {
       Vanilla = 1,
       Scholar = 2,
     }
 
-    public class StructA
-    {
+    public class StructA {
       public Vector3 Unk00 { get; set; }
 
       public float Unk0C { get; set; }
@@ -195,12 +186,9 @@ namespace SoulsFormats
 
       public short Unk22 { get; set; }
 
-      public StructA()
-      {
-      }
+      public StructA() {}
 
-      internal StructA(BinaryReaderEx br)
-      {
+      internal StructA(BinaryReaderEx br) {
         this.Unk00 = br.ReadVector3();
         this.Unk0C = br.ReadSingle();
         this.Unk10 = br.ReadInt32();
@@ -214,8 +202,7 @@ namespace SoulsFormats
         this.Unk22 = br.ReadInt16();
       }
 
-      internal void Write(BinaryWriterEx bw)
-      {
+      internal void Write(BinaryWriterEx bw) {
         bw.WriteVector3(this.Unk00);
         bw.WriteSingle(this.Unk0C);
         bw.WriteInt32(this.Unk10);
@@ -230,35 +217,29 @@ namespace SoulsFormats
       }
     }
 
-    public class StructB
-    {
+    public class StructB {
       public int Unk00 { get; set; }
 
       public int Unk04 { get; set; }
 
       public int Unk08 { get; set; }
 
-      public StructB()
-      {
-      }
+      public StructB() {}
 
-      internal StructB(BinaryReaderEx br)
-      {
+      internal StructB(BinaryReaderEx br) {
         this.Unk00 = br.ReadInt32();
         this.Unk04 = br.ReadInt32();
         this.Unk08 = br.ReadInt32();
       }
 
-      internal void Write(BinaryWriterEx bw)
-      {
+      internal void Write(BinaryWriterEx bw) {
         bw.WriteInt32(this.Unk00);
         bw.WriteInt32(this.Unk04);
         bw.WriteInt32(this.Unk08);
       }
     }
 
-    public class Mesh
-    {
+    public class Mesh {
       public int Unk00 { get; set; }
 
       public int Unk08 { get; set; }
@@ -281,8 +262,7 @@ namespace SoulsFormats
 
       public NGP.Struct5 Struct5Root { get; set; }
 
-      public Mesh()
-      {
+      public Mesh() {
         this.Vertices = new List<Vector3>();
         this.Struct2s = new List<int>();
         this.Faces = new List<NGP.Face>();
@@ -290,8 +270,7 @@ namespace SoulsFormats
         this.Struct5Root = new NGP.Struct5();
       }
 
-      internal Mesh(BinaryReaderEx br, NGP.NGPVersion version)
-      {
+      internal Mesh(BinaryReaderEx br, NGP.NGPVersion version) {
         this.Unk00 = br.ReadInt32();
         br.ReadInt32();
         this.Unk08 = br.ReadInt32();
@@ -321,7 +300,8 @@ namespace SoulsFormats
         for (int index = 0; index < capacity; ++index)
           this.Vertices.Add(br.ReadVector3());
         br.Position = num8;
-        this.Struct2s = new List<int>((IEnumerable<int>) br.ReadInt32s((int) num1));
+        this.Struct2s =
+            new List<int>((IEnumerable<int>) br.ReadInt32s((int) num1));
         br.Position = num9;
         this.Faces = new List<NGP.Face>((int) num1);
         for (int index = 0; index < (int) num1; ++index)
@@ -334,8 +314,7 @@ namespace SoulsFormats
         this.Struct5Root = new NGP.Struct5(br, rootOffset, faceIndexOffset);
       }
 
-      internal void Write(BinaryWriterEx bw, NGP.NGPVersion version)
-      {
+      internal void Write(BinaryWriterEx bw, NGP.NGPVersion version) {
         long position = bw.Position;
         bw.WriteInt32(this.Unk00);
         bw.ReserveInt32("MeshLength");
@@ -390,8 +369,7 @@ namespace SoulsFormats
       }
     }
 
-    public class Face
-    {
+    public class Face {
       public short V1 { get; set; }
 
       public short V2 { get; set; }
@@ -404,12 +382,9 @@ namespace SoulsFormats
 
       public short Unk0A { get; set; }
 
-      public Face()
-      {
-      }
+      public Face() {}
 
-      internal Face(BinaryReaderEx br)
-      {
+      internal Face(BinaryReaderEx br) {
         this.V1 = br.ReadInt16();
         this.V2 = br.ReadInt16();
         this.V3 = br.ReadInt16();
@@ -418,8 +393,7 @@ namespace SoulsFormats
         this.Unk0A = br.ReadInt16();
       }
 
-      internal void Write(BinaryWriterEx bw)
-      {
+      internal void Write(BinaryWriterEx bw) {
         bw.WriteInt16(this.V1);
         bw.WriteInt16(this.V2);
         bw.WriteInt16(this.V3);
@@ -429,8 +403,7 @@ namespace SoulsFormats
       }
     }
 
-    public class Struct4
-    {
+    public class Struct4 {
       public short Unk00 { get; set; }
 
       public short Unk02 { get; set; }
@@ -447,12 +420,9 @@ namespace SoulsFormats
 
       public short Unk0E { get; set; }
 
-      public Struct4()
-      {
-      }
+      public Struct4() {}
 
-      internal Struct4(BinaryReaderEx br)
-      {
+      internal Struct4(BinaryReaderEx br) {
         this.Unk00 = br.ReadInt16();
         this.Unk02 = br.ReadInt16();
         this.Unk04 = br.ReadInt16();
@@ -463,8 +433,7 @@ namespace SoulsFormats
         this.Unk0E = br.ReadInt16();
       }
 
-      internal void Write(BinaryWriterEx bw)
-      {
+      internal void Write(BinaryWriterEx bw) {
         bw.WriteInt16(this.Unk00);
         bw.WriteInt16(this.Unk02);
         bw.WriteInt16(this.Unk04);
@@ -476,8 +445,7 @@ namespace SoulsFormats
       }
     }
 
-    public class Struct5
-    {
+    public class Struct5 {
       public float Unk00 { get; set; }
 
       public NGP.Struct5 Left { get; set; }
@@ -486,80 +454,75 @@ namespace SoulsFormats
 
       public List<short> FaceIndices { get; set; }
 
-      public Struct5()
-      {
-      }
+      public Struct5() {}
 
-      internal Struct5(BinaryReaderEx br, long rootOffset, long faceIndexOffset)
-      {
+      internal Struct5(
+          BinaryReaderEx br,
+          long rootOffset,
+          long faceIndexOffset) {
         this.Unk00 = br.ReadSingle();
         short num1 = br.ReadInt16();
         short num2 = br.ReadInt16();
         short num3 = br.ReadInt16();
         short num4 = br.ReadInt16();
-        if (num1 != (short) -1)
-        {
+        if (num1 != (short) -1) {
           br.Position = rootOffset + (long) ((int) num1 * 12);
           this.Left = new NGP.Struct5(br, rootOffset, faceIndexOffset);
         }
-        if (num2 != (short) -1)
-        {
+        if (num2 != (short) -1) {
           br.Position = rootOffset + (long) ((int) num2 * 12);
           this.Right = new NGP.Struct5(br, rootOffset, faceIndexOffset);
         }
         if (num3 <= (short) 0)
           return;
         br.Position = faceIndexOffset + (long) ((int) num4 * 2);
-        this.FaceIndices = new List<short>((IEnumerable<short>) br.ReadInt16s((int) num3));
+        this.FaceIndices =
+            new List<short>((IEnumerable<short>) br.ReadInt16s((int) num3));
       }
 
-      internal void Write(BinaryWriterEx bw, ref short index)
-      {
+      internal void Write(BinaryWriterEx bw, ref short index) {
         short num = index;
         bw.WriteSingle(this.Unk00);
         bw.ReserveInt16(string.Format("LeftIndex{0}", (object) num));
         bw.ReserveInt16(string.Format("RightIndex{0}", (object) num));
         bw.ReserveInt16(string.Format("FaceIndexCount{0}", (object) num));
         bw.ReserveInt16(string.Format("FaceIndexIndex{0}", (object) num));
-        if (this.Left == null)
-        {
+        if (this.Left == null) {
           bw.FillInt16(string.Format("LeftIndex{0}", (object) num), (short) -1);
-        }
-        else
-        {
+        } else {
           ++index;
           bw.FillInt16(string.Format("LeftIndex{0}", (object) num), index);
           this.Left.Write(bw, ref index);
         }
-        if (this.Right == null)
-        {
-          bw.FillInt16(string.Format("RightIndex{0}", (object) num), (short) -1);
-        }
-        else
-        {
+        if (this.Right == null) {
+          bw.FillInt16(string.Format("RightIndex{0}", (object) num),
+                       (short) -1);
+        } else {
           ++index;
           bw.FillInt16(string.Format("RightIndex{0}", (object) num), index);
           this.Right.Write(bw, ref index);
         }
       }
 
-      internal void WriteFaceIndices(BinaryWriterEx bw, ref short index, ref int faceIndexIndex)
-      {
+      internal void WriteFaceIndices(
+          BinaryWriterEx bw,
+          ref short index,
+          ref int faceIndexIndex) {
         short num = index;
-        if (this.FaceIndices == null)
-        {
-          bw.FillInt16(string.Format("FaceIndexCount{0}", (object) num), (short) 0);
-          bw.FillInt16(string.Format("FaceIndexIndex{0}", (object) num), (short) 0);
-        }
-        else
-        {
-          bw.FillInt16(string.Format("FaceIndexCount{0}", (object) num), (short) this.FaceIndices.Count);
-          bw.FillInt16(string.Format("FaceIndexIndex{0}", (object) num), (short) faceIndexIndex);
+        if (this.FaceIndices == null) {
+          bw.FillInt16(string.Format("FaceIndexCount{0}", (object) num),
+                       (short) 0);
+          bw.FillInt16(string.Format("FaceIndexIndex{0}", (object) num),
+                       (short) 0);
+        } else {
+          bw.FillInt16(string.Format("FaceIndexCount{0}", (object) num),
+                       (short) this.FaceIndices.Count);
+          bw.FillInt16(string.Format("FaceIndexIndex{0}", (object) num),
+                       (short) faceIndexIndex);
           bw.WriteInt16s((IList<short>) this.FaceIndices);
           faceIndexIndex += this.FaceIndices.Count;
         }
-        if (this.Left != null)
-        {
+        if (this.Left != null) {
           ++index;
           this.Left.WriteFaceIndices(bw, ref index, ref faceIndexIndex);
         }

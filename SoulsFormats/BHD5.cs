@@ -11,11 +11,9 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public class BHD5
-  {
+  public class BHD5 {
     public BHD5.Game Format { get; set; }
 
     public bool BigEndian { get; set; }
@@ -26,29 +24,25 @@ namespace SoulsFormats
 
     public List<BHD5.Bucket> Buckets { get; set; }
 
-    public static BHD5 Read(Stream bhdStream, BHD5.Game game)
-    {
+    public static BHD5 Read(Stream bhdStream, BHD5.Game game) {
       return new BHD5(new BinaryReaderEx(false, bhdStream), game);
     }
 
-    public void Write(Stream bhdStream)
-    {
+    public void Write(Stream bhdStream) {
       BinaryWriterEx bw = new BinaryWriterEx(false, bhdStream);
       this.Write(bw);
       bw.Finish();
     }
 
-    public BHD5(BHD5.Game game)
-    {
+    public BHD5(BHD5.Game game) {
       this.Format = game;
       this.Salt = "";
       this.Buckets = new List<BHD5.Bucket>();
     }
 
-    private BHD5(BinaryReaderEx br, BHD5.Game game)
-    {
+    private BHD5(BinaryReaderEx br, BHD5.Game game) {
       this.Format = game;
-      br.AssertASCII(nameof (BHD5));
+      br.AssertASCII(nameof(BHD5));
       this.BigEndian = br.AssertSByte((sbyte) 0, (sbyte) -1) == (sbyte) 0;
       br.BigEndian = this.BigEndian;
       this.Unk05 = br.ReadBoolean();
@@ -58,8 +52,7 @@ namespace SoulsFormats
       br.ReadInt32();
       int capacity = br.ReadInt32();
       int num3 = br.ReadInt32();
-      if (game >= BHD5.Game.DarkSouls2)
-      {
+      if (game >= BHD5.Game.DarkSouls2) {
         int length = br.ReadInt32();
         this.Salt = br.ReadASCII(length);
       }
@@ -69,10 +62,9 @@ namespace SoulsFormats
         this.Buckets.Add(new BHD5.Bucket(br, game));
     }
 
-    private void Write(BinaryWriterEx bw)
-    {
+    private void Write(BinaryWriterEx bw) {
       bw.BigEndian = this.BigEndian;
-      bw.WriteASCII(nameof (BHD5), false);
+      bw.WriteASCII(nameof(BHD5), false);
       bw.WriteSByte(this.BigEndian ? (sbyte) 0 : (sbyte) -1);
       bw.WriteBoolean(this.Unk05);
       bw.WriteByte((byte) 0);
@@ -81,8 +73,7 @@ namespace SoulsFormats
       bw.ReserveInt32("FileSize");
       bw.WriteInt32(this.Buckets.Count);
       bw.ReserveInt32("BucketsOffset");
-      if (this.Format >= BHD5.Game.DarkSouls2)
-      {
+      if (this.Format >= BHD5.Game.DarkSouls2) {
         bw.WriteInt32(this.Salt.Length);
         bw.WriteASCII(this.Salt, false);
       }
@@ -91,30 +82,29 @@ namespace SoulsFormats
         this.Buckets[index].Write(bw, index);
       for (int index = 0; index < this.Buckets.Count; ++index)
         this.Buckets[index].WriteFileHeaders(bw, this.Format, index);
-      for (int bucketIndex = 0; bucketIndex < this.Buckets.Count; ++bucketIndex)
-      {
-        for (int fileIndex = 0; fileIndex < this.Buckets[bucketIndex].Count; ++fileIndex)
-          this.Buckets[bucketIndex][fileIndex].WriteHashAndKey(bw, this.Format, bucketIndex, fileIndex);
+      for (int bucketIndex = 0;
+           bucketIndex < this.Buckets.Count;
+           ++bucketIndex) {
+        for (int fileIndex = 0;
+             fileIndex < this.Buckets[bucketIndex].Count;
+             ++fileIndex)
+          this.Buckets[bucketIndex][fileIndex]
+              .WriteHashAndKey(bw, this.Format, bucketIndex, fileIndex);
       }
       bw.FillInt32("FileSize", (int) bw.Position);
     }
 
-    public enum Game
-    {
+    public enum Game {
       DarkSouls1,
       DarkSouls2,
       DarkSouls3,
       Sekiro,
     }
 
-    public class Bucket : List<BHD5.FileHeader>
-    {
-      public Bucket()
-      {
-      }
+    public class Bucket : List<BHD5.FileHeader> {
+      public Bucket() {}
 
-      internal Bucket(BinaryReaderEx br, BHD5.Game game)
-      {
+      internal Bucket(BinaryReaderEx br, BHD5.Game game) {
         int num1 = br.ReadInt32();
         int num2 = br.ReadInt32();
         this.Capacity = num1;
@@ -124,22 +114,23 @@ namespace SoulsFormats
         br.StepOut();
       }
 
-      internal void Write(BinaryWriterEx bw, int index)
-      {
+      internal void Write(BinaryWriterEx bw, int index) {
         bw.WriteInt32(this.Count);
         bw.ReserveInt32(string.Format("FileHeadersOffset{0}", (object) index));
       }
 
-      internal void WriteFileHeaders(BinaryWriterEx bw, BHD5.Game game, int index)
-      {
-        bw.FillInt32(string.Format("FileHeadersOffset{0}", (object) index), (int) bw.Position);
+      internal void WriteFileHeaders(
+          BinaryWriterEx bw,
+          BHD5.Game game,
+          int index) {
+        bw.FillInt32(string.Format("FileHeadersOffset{0}", (object) index),
+                     (int) bw.Position);
         for (int fileIndex = 0; fileIndex < this.Count; ++fileIndex)
           this[fileIndex].Write(bw, game, index, fileIndex);
       }
     }
 
-    public class FileHeader
-    {
+    public class FileHeader {
       public uint FileNameHash { get; set; }
 
       public int PaddedFileSize { get; set; }
@@ -152,27 +143,21 @@ namespace SoulsFormats
 
       public BHD5.AESKey AESKey { get; set; }
 
-      public FileHeader()
-      {
-      }
+      public FileHeader() {}
 
-      internal FileHeader(BinaryReaderEx br, BHD5.Game game)
-      {
+      internal FileHeader(BinaryReaderEx br, BHD5.Game game) {
         this.FileNameHash = br.ReadUInt32();
         this.PaddedFileSize = br.ReadInt32();
         this.FileOffset = br.ReadInt64();
-        if (game >= BHD5.Game.DarkSouls2)
-        {
+        if (game >= BHD5.Game.DarkSouls2) {
           long offset1 = br.ReadInt64();
           long offset2 = br.ReadInt64();
-          if (offset1 != 0L)
-          {
+          if (offset1 != 0L) {
             br.StepIn(offset1);
             this.SHAHash = new BHD5.SHAHash(br);
             br.StepOut();
           }
-          if (offset2 != 0L)
-          {
+          if (offset2 != 0L) {
             br.StepIn(offset2);
             this.AESKey = new BHD5.AESKey(br);
             br.StepOut();
@@ -184,15 +169,21 @@ namespace SoulsFormats
         this.UnpaddedFileSize = br.ReadInt64();
       }
 
-      internal void Write(BinaryWriterEx bw, BHD5.Game game, int bucketIndex, int fileIndex)
-      {
+      internal void Write(
+          BinaryWriterEx bw,
+          BHD5.Game game,
+          int bucketIndex,
+          int fileIndex) {
         bw.WriteUInt32(this.FileNameHash);
         bw.WriteInt32(this.PaddedFileSize);
         bw.WriteInt64(this.FileOffset);
-        if (game >= BHD5.Game.DarkSouls2)
-        {
-          bw.ReserveInt64(string.Format("SHAHashOffset{0}:{1}", (object) bucketIndex, (object) fileIndex));
-          bw.ReserveInt64(string.Format("AESKeyOffset{0}:{1}", (object) bucketIndex, (object) fileIndex));
+        if (game >= BHD5.Game.DarkSouls2) {
+          bw.ReserveInt64(string.Format("SHAHashOffset{0}:{1}",
+                                        (object) bucketIndex,
+                                        (object) fileIndex));
+          bw.ReserveInt64(string.Format("AESKeyOffset{0}:{1}",
+                                        (object) bucketIndex,
+                                        (object) fileIndex));
         }
         if (game < BHD5.Game.DarkSouls3)
           return;
@@ -200,35 +191,39 @@ namespace SoulsFormats
       }
 
       internal void WriteHashAndKey(
-        BinaryWriterEx bw,
-        BHD5.Game game,
-        int bucketIndex,
-        int fileIndex)
-      {
+          BinaryWriterEx bw,
+          BHD5.Game game,
+          int bucketIndex,
+          int fileIndex) {
         if (game < BHD5.Game.DarkSouls2)
           return;
-        if (this.SHAHash == null)
-        {
-          bw.FillInt64(string.Format("SHAHashOffset{0}:{1}", (object) bucketIndex, (object) fileIndex), 0L);
-        }
-        else
-        {
-          bw.FillInt64(string.Format("SHAHashOffset{0}:{1}", (object) bucketIndex, (object) fileIndex), bw.Position);
+        if (this.SHAHash == null) {
+          bw.FillInt64(string.Format("SHAHashOffset{0}:{1}",
+                                     (object) bucketIndex,
+                                     (object) fileIndex),
+                       0L);
+        } else {
+          bw.FillInt64(string.Format("SHAHashOffset{0}:{1}",
+                                     (object) bucketIndex,
+                                     (object) fileIndex),
+                       bw.Position);
           this.SHAHash.Write(bw);
         }
-        if (this.AESKey == null)
-        {
-          bw.FillInt64(string.Format("AESKeyOffset{0}:{1}", (object) bucketIndex, (object) fileIndex), 0L);
-        }
-        else
-        {
-          bw.FillInt64(string.Format("AESKeyOffset{0}:{1}", (object) bucketIndex, (object) fileIndex), bw.Position);
+        if (this.AESKey == null) {
+          bw.FillInt64(string.Format("AESKeyOffset{0}:{1}",
+                                     (object) bucketIndex,
+                                     (object) fileIndex),
+                       0L);
+        } else {
+          bw.FillInt64(string.Format("AESKeyOffset{0}:{1}",
+                                     (object) bucketIndex,
+                                     (object) fileIndex),
+                       bw.Position);
           this.AESKey.Write(bw);
         }
       }
 
-      public byte[] ReadFile(FileStream bdtStream)
-      {
+      public byte[] ReadFile(FileStream bdtStream) {
         byte[] numArray = new byte[this.PaddedFileSize];
         bdtStream.Position = this.FileOffset;
         bdtStream.Read(numArray, 0, this.PaddedFileSize);
@@ -237,20 +232,17 @@ namespace SoulsFormats
       }
     }
 
-    public class SHAHash
-    {
+    public class SHAHash {
       public byte[] Hash { get; set; }
 
       public List<BHD5.Range> Ranges { get; set; }
 
-      public SHAHash()
-      {
+      public SHAHash() {
         this.Hash = new byte[32];
         this.Ranges = new List<BHD5.Range>();
       }
 
-      internal SHAHash(BinaryReaderEx br)
-      {
+      internal SHAHash(BinaryReaderEx br) {
         this.Hash = br.ReadBytes(32);
         int capacity = br.ReadInt32();
         this.Ranges = new List<BHD5.Range>(capacity);
@@ -258,8 +250,7 @@ namespace SoulsFormats
           this.Ranges.Add(new BHD5.Range(br));
       }
 
-      internal void Write(BinaryWriterEx bw)
-      {
+      internal void Write(BinaryWriterEx bw) {
         if (this.Hash.Length != 32)
           throw new InvalidDataException("SHA hash must be 32 bytes long.");
         bw.WriteBytes(this.Hash);
@@ -269,22 +260,19 @@ namespace SoulsFormats
       }
     }
 
-    public class AESKey
-    {
+    public class AESKey {
       private static AesManaged AES;
 
       public byte[] Key { get; set; }
 
       public List<BHD5.Range> Ranges { get; set; }
 
-      public AESKey()
-      {
+      public AESKey() {
         this.Key = new byte[16];
         this.Ranges = new List<BHD5.Range>();
       }
 
-      internal AESKey(BinaryReaderEx br)
-      {
+      internal AESKey(BinaryReaderEx br) {
         this.Key = br.ReadBytes(16);
         int capacity = br.ReadInt32();
         this.Ranges = new List<BHD5.Range>(capacity);
@@ -292,8 +280,7 @@ namespace SoulsFormats
           this.Ranges.Add(new BHD5.Range(br));
       }
 
-      internal void Write(BinaryWriterEx bw)
-      {
+      internal void Write(BinaryWriterEx bw) {
         if (this.Key.Length != 16)
           throw new InvalidDataException("AES key must be 16 bytes long.");
         bw.WriteBytes(this.Key);
@@ -302,21 +289,27 @@ namespace SoulsFormats
           range.Write(bw);
       }
 
-      public void Decrypt(byte[] bytes)
-      {
-        using (ICryptoTransform decryptor = BHD5.AESKey.AES.CreateDecryptor(this.Key, new byte[16]))
-        {
-          foreach (BHD5.Range range in this.Ranges.Where<BHD5.Range>((Func<BHD5.Range, bool>) (r => r.StartOffset != -1L && r.EndOffset != -1L && r.StartOffset != r.EndOffset)))
-          {
+      public void Decrypt(byte[] bytes) {
+        using (ICryptoTransform decryptor =
+            BHD5.AESKey.AES.CreateDecryptor(this.Key, new byte[16])) {
+          foreach (BHD5.Range range in this.Ranges.Where<BHD5.Range>(
+              (Func<BHD5.Range, bool>)
+              (r => r.StartOffset != -1L &&
+                    r.EndOffset != -1L &&
+                    r.StartOffset !=
+                    r.EndOffset))) {
             int startOffset = (int) range.StartOffset;
             int inputCount = (int) (range.EndOffset - range.StartOffset);
-            decryptor.TransformBlock(bytes, startOffset, inputCount, bytes, startOffset);
+            decryptor.TransformBlock(bytes,
+                                     startOffset,
+                                     inputCount,
+                                     bytes,
+                                     startOffset);
           }
         }
       }
 
-      static AESKey()
-      {
+      static AESKey() {
         AesManaged aesManaged = new AesManaged();
         aesManaged.Mode = CipherMode.ECB;
         aesManaged.Padding = PaddingMode.None;
@@ -325,26 +318,22 @@ namespace SoulsFormats
       }
     }
 
-    public struct Range
-    {
+    public struct Range {
       public long StartOffset { get; set; }
 
       public long EndOffset { get; set; }
 
-      public Range(long startOffset, long endOffset)
-      {
+      public Range(long startOffset, long endOffset) {
         this.StartOffset = startOffset;
         this.EndOffset = endOffset;
       }
 
-      internal Range(BinaryReaderEx br)
-      {
+      internal Range(BinaryReaderEx br) {
         this.StartOffset = br.ReadInt64();
         this.EndOffset = br.ReadInt64();
       }
 
-      internal void Write(BinaryWriterEx bw)
-      {
+      internal void Write(BinaryWriterEx bw) {
         bw.WriteInt64(this.StartOffset);
         bw.WriteInt64(this.EndOffset);
       }

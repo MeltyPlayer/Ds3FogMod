@@ -8,17 +8,14 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats.KF1
-{
+namespace SoulsFormats.KF1 {
   [ComVisible(true)]
-  public class MDO : SoulsFile<MDO>
-  {
+  public class MDO : SoulsFile<MDO> {
     public List<string> Textures;
     public List<MDO.Unk1> Unk1s;
     public List<MDO.Mesh> Meshes;
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       br.BigEndian = false;
       int capacity1 = br.ReadInt32();
       this.Textures = new List<string>(capacity1);
@@ -37,8 +34,7 @@ namespace SoulsFormats.KF1
         this.Meshes.Add(new MDO.Mesh(br));
     }
 
-    public class Unk1
-    {
+    public class Unk1 {
       public float Unk00;
       public float Unk04;
       public float Unk08;
@@ -47,8 +43,7 @@ namespace SoulsFormats.KF1
       public float Unk14;
       public float Unk18;
 
-      internal Unk1(BinaryReaderEx br)
-      {
+      internal Unk1(BinaryReaderEx br) {
         this.Unk00 = br.ReadSingle();
         this.Unk04 = br.ReadSingle();
         this.Unk08 = br.ReadSingle();
@@ -60,16 +55,14 @@ namespace SoulsFormats.KF1
       }
     }
 
-    public class Mesh
-    {
+    public class Mesh {
       public int Unk00;
       public short TextureIndex;
       public short Unk06;
       public ushort[] Indices;
       public List<MDO.Vertex> Vertices;
 
-      internal Mesh(BinaryReaderEx br)
-      {
+      internal Mesh(BinaryReaderEx br) {
         this.Unk00 = br.ReadInt32();
         this.TextureIndex = br.ReadInt16();
         this.Unk06 = br.ReadInt16();
@@ -85,28 +78,24 @@ namespace SoulsFormats.KF1
         br.StepOut();
       }
 
-      public List<MDO.Vertex[]> GetFaces()
-      {
+      public List<MDO.Vertex[]> GetFaces() {
         List<MDO.Vertex[]> vertexArrayList = new List<MDO.Vertex[]>();
         for (int index = 0; index < this.Indices.Length; index += 3)
-          vertexArrayList.Add(new MDO.Vertex[3]
-          {
-            this.Vertices[(int) this.Indices[index]],
-            this.Vertices[(int) this.Indices[index + 1]],
-            this.Vertices[(int) this.Indices[index + 2]]
+          vertexArrayList.Add(new MDO.Vertex[3] {
+              this.Vertices[(int) this.Indices[index]],
+              this.Vertices[(int) this.Indices[index + 1]],
+              this.Vertices[(int) this.Indices[index + 2]]
           });
         return vertexArrayList;
       }
     }
 
-    public class Vertex
-    {
+    public class Vertex {
       public Vector3 Position;
       public Vector3 Normal;
       public Vector2 UV;
 
-      internal Vertex(BinaryReaderEx br)
-      {
+      internal Vertex(BinaryReaderEx br) {
         this.Position = br.ReadVector3();
         this.Normal = br.ReadVector3();
         this.UV = br.ReadVector2();

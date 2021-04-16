@@ -9,11 +9,9 @@ using System.Drawing;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats.Other
-{
+namespace SoulsFormats.Other {
   [ComVisible(true)]
-  public class MDL0 : SoulsFile<MDL0>
-  {
+  public class MDL0 : SoulsFile<MDL0> {
     public int Unk04;
     public int Unk08;
     public List<MDL0.Bone> Bones;
@@ -25,8 +23,7 @@ namespace SoulsFormats.Other
     public List<MDL0.Material> Materials;
     public List<string> Textures;
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       br.ReadInt32();
       this.Unk04 = br.ReadInt32();
       this.Unk08 = br.ReadInt32();
@@ -52,7 +49,8 @@ namespace SoulsFormats.Other
       for (int index = 0; index < capacity1; ++index)
         this.Bones.Add(new MDL0.Bone(br));
       br.Position = (long) num2;
-      this.Indices = new List<ushort>((IEnumerable<ushort>) br.ReadUInt16s(count));
+      this.Indices =
+          new List<ushort>((IEnumerable<ushort>) br.ReadUInt16s(count));
       br.Position = (long) num3;
       this.VerticesA = new List<MDL0.Vertex>(capacity2);
       for (int index = 0; index < capacity2; ++index)
@@ -79,31 +77,35 @@ namespace SoulsFormats.Other
         this.Textures.Add(br.ReadShiftJIS());
     }
 
-    public List<int> Triangulate(MDL0.Mesh mesh, List<MDL0.Vertex> vertices)
-    {
+    public List<int> Triangulate(MDL0.Mesh mesh, List<MDL0.Vertex> vertices) {
       List<int> intList = new List<int>();
       bool flag = false;
-      for (int startIndex = mesh.StartIndex; startIndex < mesh.StartIndex + mesh.IndexCount - 2; ++startIndex)
-      {
+      for (int startIndex = mesh.StartIndex;
+           startIndex < mesh.StartIndex + mesh.IndexCount - 2;
+           ++startIndex) {
         ushort index1 = this.Indices[startIndex];
         ushort index2 = this.Indices[startIndex + 1];
         ushort index3 = this.Indices[startIndex + 2];
-        if ((int) index1 != (int) index2 && (int) index1 != (int) index3 && (int) index2 != (int) index3)
-        {
+        if ((int) index1 != (int) index2 &&
+            (int) index1 != (int) index3 &&
+            (int) index2 != (int) index3) {
           MDL0.Vertex vertex1 = vertices[(int) index1 - mesh.StartVertex];
           MDL0.Vertex vertex2 = vertices[(int) index2 - mesh.StartVertex];
           MDL0.Vertex vertex3 = vertices[(int) index3 - mesh.StartVertex];
-          Vector3 vector2 = Vector3.Normalize((vertex1.Normal + vertex2.Normal + vertex3.Normal) / 3f);
-          Vector3 vector1 = Vector3.Normalize(Vector3.Cross(vertex2.Position - vertex1.Position, vertex3.Position - vertex1.Position));
-          flag = (double) Vector3.Dot(vector1, vector2) / ((double) vector1.Length() * (double) vector2.Length()) < 0.0;
-          if (!flag)
-          {
+          Vector3 vector2 =
+              Vector3.Normalize(
+                  (vertex1.Normal + vertex2.Normal + vertex3.Normal) / 3f);
+          Vector3 vector1 = Vector3.Normalize(
+              Vector3.Cross(vertex2.Position - vertex1.Position,
+                            vertex3.Position - vertex1.Position));
+          flag = (double) Vector3.Dot(vector1, vector2) /
+                 ((double) vector1.Length() * (double) vector2.Length()) <
+                 0.0;
+          if (!flag) {
             intList.Add((int) index1);
             intList.Add((int) index2);
             intList.Add((int) index3);
-          }
-          else
-          {
+          } else {
             intList.Add((int) index3);
             intList.Add((int) index2);
             intList.Add((int) index1);
@@ -114,8 +116,7 @@ namespace SoulsFormats.Other
       return intList;
     }
 
-    public class Bone
-    {
+    public class Bone {
       public Vector3 Translation;
       public Vector3 Rotation;
       public Vector3 Scale;
@@ -128,8 +129,7 @@ namespace SoulsFormats.Other
       public List<MDL0.MeshGroup> MeshesC;
       public int Unk4C;
 
-      internal Bone(BinaryReaderEx br)
-      {
+      internal Bone(BinaryReaderEx br) {
         this.Translation = br.ReadVector3();
         this.Rotation = br.ReadVector3();
         this.Scale = br.ReadVector3();
@@ -162,15 +162,13 @@ namespace SoulsFormats.Other
       }
     }
 
-    public class MeshGroup
-    {
+    public class MeshGroup {
       public List<MDL0.Mesh> Meshes;
       public byte Unk02;
       public byte Unk03;
       public short[] BoneIndices;
 
-      internal MeshGroup(BinaryReaderEx br)
-      {
+      internal MeshGroup(BinaryReaderEx br) {
         short num1 = br.ReadInt16();
         this.Unk02 = br.ReadByte();
         this.Unk03 = br.ReadByte();
@@ -184,8 +182,7 @@ namespace SoulsFormats.Other
       }
     }
 
-    public class Mesh
-    {
+    public class Mesh {
       public byte MaterialIndex;
       public byte Unk01;
       public short VertexCount;
@@ -193,8 +190,7 @@ namespace SoulsFormats.Other
       public int StartVertex;
       public int StartIndex;
 
-      internal Mesh(BinaryReaderEx br)
-      {
+      internal Mesh(BinaryReaderEx br) {
         this.MaterialIndex = br.ReadByte();
         this.Unk01 = br.AssertByte((byte) 0, (byte) 1, (byte) 2);
         this.VertexCount = br.ReadInt16();
@@ -204,15 +200,13 @@ namespace SoulsFormats.Other
       }
     }
 
-    public enum VertexFormat
-    {
+    public enum VertexFormat {
       A,
       B,
       C,
     }
 
-    public class Vertex
-    {
+    public class Vertex {
       public Vector3 Position;
       public Vector3 Normal;
       public Color Color;
@@ -222,23 +216,20 @@ namespace SoulsFormats.Other
       public float UnkFloatA;
       public float UnkFloatB;
 
-      public Vertex(Vector3 position, Vector3 normal)
-      {
+      public Vertex(Vector3 position, Vector3 normal) {
         this.Position = position;
         this.Normal = normal;
         this.UVs = new Vector2[2];
       }
 
-      internal Vertex(BinaryReaderEx br, MDL0.VertexFormat format)
-      {
+      internal Vertex(BinaryReaderEx br, MDL0.VertexFormat format) {
         this.Position = br.ReadVector3();
         this.Normal = MDL0.Vertex.Read11_11_10Vector3(br);
         this.Color = br.ReadRGBA();
         this.UVs = new Vector2[2];
         for (int index = 0; index < 2; ++index)
           this.UVs[index] = br.ReadVector2();
-        if (format >= MDL0.VertexFormat.B)
-        {
+        if (format >= MDL0.VertexFormat.B) {
           this.UnkShortA = br.ReadInt16();
           this.UnkShortB = br.ReadInt16();
         }
@@ -248,21 +239,20 @@ namespace SoulsFormats.Other
         this.UnkFloatB = br.ReadSingle();
       }
 
-      private static Vector3 Read11_11_10Vector3(BinaryReaderEx br)
-      {
+      private static Vector3 Read11_11_10Vector3(BinaryReaderEx br) {
         int num = br.ReadInt32();
-        return new Vector3((float) (num << 21 >> 21) / 1023f, (float) (num << 10 >> 21) / 1023f, (float) (num >> 22) / 511f);
+        return new Vector3((float) (num << 21 >> 21) / 1023f,
+                           (float) (num << 10 >> 21) / 1023f,
+                           (float) (num >> 22) / 511f);
       }
     }
 
-    public class Struct6
-    {
+    public class Struct6 {
       public Vector3 Position;
       public Vector3 Rotation;
       public int BoneIndex;
 
-      internal Struct6(BinaryReaderEx br)
-      {
+      internal Struct6(BinaryReaderEx br) {
         this.Position = br.ReadVector3();
         this.Rotation = br.ReadVector3();
         this.BoneIndex = br.ReadInt32();
@@ -270,8 +260,7 @@ namespace SoulsFormats.Other
       }
     }
 
-    public class Material
-    {
+    public class Material {
       public int Unk04;
       public int Unk08;
       public int Unk0C;
@@ -286,8 +275,7 @@ namespace SoulsFormats.Other
       public float Unk68;
       public int Unk6C;
 
-      internal Material(BinaryReaderEx br)
-      {
+      internal Material(BinaryReaderEx br) {
         br.AssertInt32(new int[1]);
         this.Unk04 = br.ReadInt32();
         this.Unk08 = br.ReadInt32();

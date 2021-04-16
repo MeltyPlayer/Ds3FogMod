@@ -8,11 +8,9 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Xml.Serialization;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public class FXR3 : SoulsFile<FXR3>
-  {
+  public class FXR3 : SoulsFile<FXR3> {
     public FXR3.FXRVersion Version { get; set; }
 
     public int ID { get; set; }
@@ -25,8 +23,7 @@ namespace SoulsFormats
 
     public List<int> Section13s { get; set; }
 
-    public FXR3()
-    {
+    public FXR3() {
       this.Version = FXR3.FXRVersion.DarkSouls3;
       this.Section1Tree = new FXR3.Section1();
       this.Section4Tree = new FXR3.Section4();
@@ -34,8 +31,7 @@ namespace SoulsFormats
       this.Section13s = new List<int>();
     }
 
-    protected override bool Is(BinaryReaderEx br)
-    {
+    protected override bool Is(BinaryReaderEx br) {
       if (br.Length < 8L)
         return false;
       string ascii = br.GetASCII(0L, 4);
@@ -45,8 +41,7 @@ namespace SoulsFormats
       return int16 == (short) 4 || int16 == (short) 5;
     }
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       br.BigEndian = false;
       br.AssertASCII("FXR\0");
       int num1 = (int) br.AssertInt16(new short[1]);
@@ -77,8 +72,7 @@ namespace SoulsFormats
       br.ReadInt32();
       br.AssertInt32(1);
       br.AssertInt32(new int[1]);
-      if (this.Version == FXR3.FXRVersion.Sekiro)
-      {
+      if (this.Version == FXR3.FXRVersion.Sekiro) {
         int num4 = br.ReadInt32();
         int count1 = br.ReadInt32();
         int num5 = br.ReadInt32();
@@ -87,11 +81,11 @@ namespace SoulsFormats
         br.AssertInt32(new int[1]);
         br.AssertInt32(new int[1]);
         br.AssertInt32(new int[1]);
-        this.Section12s = new List<int>((IEnumerable<int>) br.GetInt32s((long) num4, count1));
-        this.Section13s = new List<int>((IEnumerable<int>) br.GetInt32s((long) num5, count2));
-      }
-      else
-      {
+        this.Section12s =
+            new List<int>((IEnumerable<int>) br.GetInt32s((long) num4, count1));
+        this.Section13s =
+            new List<int>((IEnumerable<int>) br.GetInt32s((long) num5, count2));
+      } else {
         this.Section12s = new List<int>();
         this.Section13s = new List<int>();
       }
@@ -101,8 +95,7 @@ namespace SoulsFormats
       this.Section4Tree = new FXR3.Section4(br);
     }
 
-    protected override void Write(BinaryWriterEx bw)
-    {
+    protected override void Write(BinaryWriterEx bw) {
       bw.WriteASCII("FXR\0", false);
       bw.WriteInt16((short) 0);
       bw.WriteUInt16((ushort) this.Version);
@@ -132,8 +125,7 @@ namespace SoulsFormats
       bw.ReserveInt32("Section11Count");
       bw.WriteInt32(1);
       bw.WriteInt32(0);
-      if (this.Version == FXR3.FXRVersion.Sekiro)
-      {
+      if (this.Version == FXR3.FXRVersion.Sekiro) {
         bw.ReserveInt32("Section12Offset");
         bw.WriteInt32(this.Section12s.Count);
         bw.ReserveInt32("Section13Offset");
@@ -170,9 +162,11 @@ namespace SoulsFormats
       bw.Pad(16);
       bw.FillInt32("Section6Offset", (int) bw.Position);
       int section5Count2 = 0;
-      List<FXR3.FFXDrawEntityHost> section6s = new List<FXR3.FFXDrawEntityHost>();
+      List<FXR3.FFXDrawEntityHost> section6s =
+          new List<FXR3.FFXDrawEntityHost>();
       for (int index = 0; index < section4s.Count; ++index)
-        section4s[index].WriteSection6s(bw, index, ref section5Count2, section6s);
+        section4s[index]
+            .WriteSection6s(bw, index, ref section5Count2, section6s);
       bw.FillInt32("Section6Count", section6s.Count);
       bw.Pad(16);
       bw.FillInt32("Section7Offset", (int) bw.Position);
@@ -226,23 +220,19 @@ namespace SoulsFormats
       bw.FillInt32("Section14Offset", (int) bw.Position);
     }
 
-    public enum FXRVersion : ushort
-    {
+    public enum FXRVersion : ushort {
       DarkSouls3 = 4,
       Sekiro = 5,
     }
 
-    public class Section1
-    {
+    public class Section1 {
       public List<FXR3.Section2> Section2s { get; set; }
 
-      public Section1()
-      {
+      public Section1() {
         this.Section2s = new List<FXR3.Section2>();
       }
 
-      internal Section1(BinaryReaderEx br)
-      {
+      internal Section1(BinaryReaderEx br) {
         br.AssertInt32(new int[1]);
         int capacity = br.ReadInt32();
         int num = br.ReadInt32();
@@ -254,33 +244,28 @@ namespace SoulsFormats
         br.StepOut();
       }
 
-      internal void Write(BinaryWriterEx bw)
-      {
+      internal void Write(BinaryWriterEx bw) {
         bw.WriteInt32(0);
         bw.WriteInt32(this.Section2s.Count);
         bw.ReserveInt32("Section1Section2sOffset");
         bw.WriteInt32(0);
       }
 
-      internal void WriteSection2s(BinaryWriterEx bw)
-      {
+      internal void WriteSection2s(BinaryWriterEx bw) {
         bw.FillInt32("Section1Section2sOffset", (int) bw.Position);
         for (int index = 0; index < this.Section2s.Count; ++index)
           this.Section2s[index].Write(bw, index);
       }
     }
 
-    public class Section2
-    {
+    public class Section2 {
       public List<FXR3.Section3> Section3s { get; set; }
 
-      public Section2()
-      {
+      public Section2() {
         this.Section3s = new List<FXR3.Section3>();
       }
 
-      internal Section2(BinaryReaderEx br)
-      {
+      internal Section2(BinaryReaderEx br) {
         br.AssertInt32(new int[1]);
         int capacity = br.ReadInt32();
         int num = br.ReadInt32();
@@ -292,24 +277,27 @@ namespace SoulsFormats
         br.StepOut();
       }
 
-      internal void Write(BinaryWriterEx bw, int index)
-      {
+      internal void Write(BinaryWriterEx bw, int index) {
         bw.WriteInt32(0);
         bw.WriteInt32(this.Section3s.Count);
-        bw.ReserveInt32(string.Format("Section2Section3sOffset[{0}]", (object) index));
+        bw.ReserveInt32(
+            string.Format("Section2Section3sOffset[{0}]", (object) index));
         bw.WriteInt32(0);
       }
 
-      internal void WriteSection3s(BinaryWriterEx bw, int index, List<FXR3.Section3> section3s)
-      {
-        bw.FillInt32(string.Format("Section2Section3sOffset[{0}]", (object) index), (int) bw.Position);
+      internal void WriteSection3s(
+          BinaryWriterEx bw,
+          int index,
+          List<FXR3.Section3> section3s) {
+        bw.FillInt32(
+            string.Format("Section2Section3sOffset[{0}]", (object) index),
+            (int) bw.Position);
         foreach (FXR3.Section3 section3 in this.Section3s)
           section3.Write(bw, section3s);
       }
     }
 
-    public class Section3
-    {
+    public class Section3 {
       public int Unk08 { get; set; }
 
       public int Unk10 { get; set; }
@@ -320,12 +308,9 @@ namespace SoulsFormats
 
       public int Section11Data2 { get; set; }
 
-      public Section3()
-      {
-      }
+      public Section3() {}
 
-      internal Section3(BinaryReaderEx br)
-      {
+      internal Section3(BinaryReaderEx br) {
         int num1 = (int) br.AssertInt16((short) 11);
         int num2 = (int) br.AssertByte(new byte[1]);
         int num3 = (int) br.AssertByte((byte) 1);
@@ -356,8 +341,7 @@ namespace SoulsFormats
         this.Section11Data2 = br.GetInt32((long) num5);
       }
 
-      internal void Write(BinaryWriterEx bw, List<FXR3.Section3> section3s)
-      {
+      internal void Write(BinaryWriterEx bw, List<FXR3.Section3> section3s) {
         int count = section3s.Count;
         bw.WriteInt16((short) 11);
         bw.WriteByte((byte) 0);
@@ -369,7 +353,8 @@ namespace SoulsFormats
         bw.WriteInt32(0);
         bw.WriteInt32(1);
         bw.WriteInt32(0);
-        bw.ReserveInt32(string.Format("Section3Section11Offset1[{0}]", (object) count));
+        bw.ReserveInt32(
+            string.Format("Section3Section11Offset1[{0}]", (object) count));
         bw.WriteInt32(0);
         bw.WriteInt32(0);
         bw.WriteInt32(0);
@@ -379,7 +364,8 @@ namespace SoulsFormats
         bw.WriteInt32(0);
         bw.WriteInt32(1);
         bw.WriteInt32(0);
-        bw.ReserveInt32(string.Format("Section3Section11Offset2[{0}]", (object) count));
+        bw.ReserveInt32(
+            string.Format("Section3Section11Offset2[{0}]", (object) count));
         bw.WriteInt32(0);
         bw.WriteInt32(0);
         bw.WriteInt32(0);
@@ -388,20 +374,24 @@ namespace SoulsFormats
         section3s.Add(this);
       }
 
-      internal void WriteSection11s(BinaryWriterEx bw, int index, ref int section11Count)
-      {
-        bw.FillInt32(string.Format("Section3Section11Offset1[{0}]", (object) index), (int) bw.Position);
+      internal void WriteSection11s(
+          BinaryWriterEx bw,
+          int index,
+          ref int section11Count) {
+        bw.FillInt32(
+            string.Format("Section3Section11Offset1[{0}]", (object) index),
+            (int) bw.Position);
         bw.WriteInt32(this.Section11Data1);
-        bw.FillInt32(string.Format("Section3Section11Offset2[{0}]", (object) index), (int) bw.Position);
+        bw.FillInt32(
+            string.Format("Section3Section11Offset2[{0}]", (object) index),
+            (int) bw.Position);
         bw.WriteInt32(this.Section11Data2);
         section11Count += 2;
       }
     }
 
-    public class Section4
-    {
-      [XmlAttribute]
-      public short Unk00 { get; set; }
+    public class Section4 {
+      [XmlAttribute] public short Unk00 { get; set; }
 
       public List<FXR3.Section4> Section4s { get; set; }
 
@@ -409,15 +399,13 @@ namespace SoulsFormats
 
       public List<FXR3.FFXDrawEntityHost> Section6s { get; set; }
 
-      public Section4()
-      {
+      public Section4() {
         this.Section4s = new List<FXR3.Section4>();
         this.Section5s = new List<FXR3.Section5>();
         this.Section6s = new List<FXR3.FFXDrawEntityHost>();
       }
 
-      internal Section4(BinaryReaderEx br)
-      {
+      internal Section4(BinaryReaderEx br) {
         this.Unk00 = br.ReadInt16();
         int num1 = (int) br.AssertByte(new byte[1]);
         int num2 = (int) br.AssertByte((byte) 1);
@@ -449,8 +437,7 @@ namespace SoulsFormats
         br.StepOut();
       }
 
-      internal void Write(BinaryWriterEx bw, List<FXR3.Section4> section4s)
-      {
+      internal void Write(BinaryWriterEx bw, List<FXR3.Section4> section4s) {
         int count = section4s.Count;
         bw.WriteInt16(this.Unk00);
         bw.WriteByte((byte) 0);
@@ -460,25 +447,30 @@ namespace SoulsFormats
         bw.WriteInt32(this.Section6s.Count);
         bw.WriteInt32(this.Section4s.Count);
         bw.WriteInt32(0);
-        bw.ReserveInt32(string.Format("Section4Section5sOffset[{0}]", (object) count));
+        bw.ReserveInt32(
+            string.Format("Section4Section5sOffset[{0}]", (object) count));
         bw.WriteInt32(0);
-        bw.ReserveInt32(string.Format("Section4Section6sOffset[{0}]", (object) count));
+        bw.ReserveInt32(
+            string.Format("Section4Section6sOffset[{0}]", (object) count));
         bw.WriteInt32(0);
-        bw.ReserveInt32(string.Format("Section4Section4sOffset[{0}]", (object) count));
+        bw.ReserveInt32(
+            string.Format("Section4Section4sOffset[{0}]", (object) count));
         bw.WriteInt32(0);
         section4s.Add(this);
       }
 
-      internal void WriteSection4s(BinaryWriterEx bw, List<FXR3.Section4> section4s)
-      {
+      internal void WriteSection4s(
+          BinaryWriterEx bw,
+          List<FXR3.Section4> section4s) {
         int num = section4s.IndexOf(this);
-        if (this.Section4s.Count == 0)
-        {
-          bw.FillInt32(string.Format("Section4Section4sOffset[{0}]", (object) num), 0);
-        }
-        else
-        {
-          bw.FillInt32(string.Format("Section4Section4sOffset[{0}]", (object) num), (int) bw.Position);
+        if (this.Section4s.Count == 0) {
+          bw.FillInt32(
+              string.Format("Section4Section4sOffset[{0}]", (object) num),
+              0);
+        } else {
+          bw.FillInt32(
+              string.Format("Section4Section4sOffset[{0}]", (object) num),
+              (int) bw.Position);
           foreach (FXR3.Section4 section4 in this.Section4s)
             section4.Write(bw, section4s);
           foreach (FXR3.Section4 section4 in this.Section4s)
@@ -486,15 +478,18 @@ namespace SoulsFormats
         }
       }
 
-      internal void WriteSection5s(BinaryWriterEx bw, int index, ref int section5Count)
-      {
-        if (this.Section5s.Count == 0)
-        {
-          bw.FillInt32(string.Format("Section4Section5sOffset[{0}]", (object) index), 0);
-        }
-        else
-        {
-          bw.FillInt32(string.Format("Section4Section5sOffset[{0}]", (object) index), (int) bw.Position);
+      internal void WriteSection5s(
+          BinaryWriterEx bw,
+          int index,
+          ref int section5Count) {
+        if (this.Section5s.Count == 0) {
+          bw.FillInt32(
+              string.Format("Section4Section5sOffset[{0}]", (object) index),
+              0);
+        } else {
+          bw.FillInt32(
+              string.Format("Section4Section5sOffset[{0}]", (object) index),
+              (int) bw.Position);
           for (int index1 = 0; index1 < this.Section5s.Count; ++index1)
             this.Section5s[index1].Write(bw, section5Count + index1);
           section5Count += this.Section5s.Count;
@@ -502,34 +497,32 @@ namespace SoulsFormats
       }
 
       internal void WriteSection6s(
-        BinaryWriterEx bw,
-        int index,
-        ref int section5Count,
-        List<FXR3.FFXDrawEntityHost> section6s)
-      {
-        bw.FillInt32(string.Format("Section4Section6sOffset[{0}]", (object) index), (int) bw.Position);
+          BinaryWriterEx bw,
+          int index,
+          ref int section5Count,
+          List<FXR3.FFXDrawEntityHost> section6s) {
+        bw.FillInt32(
+            string.Format("Section4Section6sOffset[{0}]", (object) index),
+            (int) bw.Position);
         foreach (FXR3.FFXDrawEntityHost section6 in this.Section6s)
           section6.Write(bw, section6s);
         for (int index1 = 0; index1 < this.Section5s.Count; ++index1)
-          this.Section5s[index1].WriteSection6s(bw, section5Count + index1, section6s);
+          this.Section5s[index1]
+              .WriteSection6s(bw, section5Count + index1, section6s);
         section5Count += this.Section5s.Count;
       }
     }
 
-    public class Section5
-    {
-      [XmlAttribute]
-      public short Unk00 { get; set; }
+    public class Section5 {
+      [XmlAttribute] public short Unk00 { get; set; }
 
       public List<FXR3.FFXDrawEntityHost> Section6s { get; set; }
 
-      public Section5()
-      {
+      public Section5() {
         this.Section6s = new List<FXR3.FFXDrawEntityHost>();
       }
 
-      internal Section5(BinaryReaderEx br)
-      {
+      internal Section5(BinaryReaderEx br) {
         this.Unk00 = br.ReadInt16();
         int num1 = (int) br.AssertByte(new byte[1]);
         int num2 = (int) br.AssertByte((byte) 1);
@@ -547,8 +540,7 @@ namespace SoulsFormats
         br.StepOut();
       }
 
-      internal void Write(BinaryWriterEx bw, int index)
-      {
+      internal void Write(BinaryWriterEx bw, int index) {
         bw.WriteInt16(this.Unk00);
         bw.WriteByte((byte) 0);
         bw.WriteByte((byte) 1);
@@ -557,25 +549,25 @@ namespace SoulsFormats
         bw.WriteInt32(this.Section6s.Count);
         bw.WriteInt32(0);
         bw.WriteInt32(0);
-        bw.ReserveInt32(string.Format("Section5Section6sOffset[{0}]", (object) index));
+        bw.ReserveInt32(
+            string.Format("Section5Section6sOffset[{0}]", (object) index));
         bw.WriteInt32(0);
       }
 
       internal void WriteSection6s(
-        BinaryWriterEx bw,
-        int index,
-        List<FXR3.FFXDrawEntityHost> section6s)
-      {
-        bw.FillInt32(string.Format("Section5Section6sOffset[{0}]", (object) index), (int) bw.Position);
+          BinaryWriterEx bw,
+          int index,
+          List<FXR3.FFXDrawEntityHost> section6s) {
+        bw.FillInt32(
+            string.Format("Section5Section6sOffset[{0}]", (object) index),
+            (int) bw.Position);
         foreach (FXR3.FFXDrawEntityHost section6 in this.Section6s)
           section6.Write(bw, section6s);
       }
     }
 
-    public class FFXDrawEntityHost
-    {
-      [XmlAttribute]
-      public short Unk00 { get; set; }
+    public class FFXDrawEntityHost {
+      [XmlAttribute] public short Unk00 { get; set; }
 
       public bool Unk02 { get; set; }
 
@@ -593,8 +585,7 @@ namespace SoulsFormats
 
       public List<int> Section11s2 { get; set; }
 
-      public FFXDrawEntityHost()
-      {
+      public FFXDrawEntityHost() {
         this.Properties1 = new List<FXR3.FFXProperty>();
         this.Properties2 = new List<FXR3.FFXProperty>();
         this.Section10s = new List<FXR3.Section10>();
@@ -602,8 +593,7 @@ namespace SoulsFormats
         this.Section11s2 = new List<int>();
       }
 
-      internal FFXDrawEntityHost(BinaryReaderEx br)
-      {
+      internal FFXDrawEntityHost(BinaryReaderEx br) {
         this.Unk00 = br.ReadInt16();
         this.Unk02 = br.ReadBoolean();
         this.Unk03 = br.ReadBoolean();
@@ -636,13 +626,16 @@ namespace SoulsFormats
           this.Section10s.Add(new FXR3.Section10(br));
         br.StepOut();
         br.StepIn((long) num1);
-        this.Section11s1 = new List<int>((IEnumerable<int>) br.ReadInt32s(count1));
-        this.Section11s2 = new List<int>((IEnumerable<int>) br.ReadInt32s(count2));
+        this.Section11s1 =
+            new List<int>((IEnumerable<int>) br.ReadInt32s(count1));
+        this.Section11s2 =
+            new List<int>((IEnumerable<int>) br.ReadInt32s(count2));
         br.StepOut();
       }
 
-      internal void Write(BinaryWriterEx bw, List<FXR3.FFXDrawEntityHost> section6s)
-      {
+      internal void Write(
+          BinaryWriterEx bw,
+          List<FXR3.FFXDrawEntityHost> section6s) {
         int count = section6s.Count;
         bw.WriteInt16(this.Unk00);
         bw.WriteBoolean(this.Unk02);
@@ -654,42 +647,56 @@ namespace SoulsFormats
         bw.WriteInt32(this.Section11s2.Count);
         bw.WriteInt32(0);
         bw.WriteInt32(this.Properties2.Count);
-        bw.ReserveInt32(string.Format("Section6Section11sOffset[{0}]", (object) count));
+        bw.ReserveInt32(
+            string.Format("Section6Section11sOffset[{0}]", (object) count));
         bw.WriteInt32(0);
-        bw.ReserveInt32(string.Format("Section6Section10sOffset[{0}]", (object) count));
+        bw.ReserveInt32(
+            string.Format("Section6Section10sOffset[{0}]", (object) count));
         bw.WriteInt32(0);
-        bw.ReserveInt32(string.Format("Section6Section7sOffset[{0}]", (object) count));
+        bw.ReserveInt32(
+            string.Format("Section6Section7sOffset[{0}]", (object) count));
         bw.WriteInt32(0);
         bw.WriteInt32(0);
         bw.WriteInt32(0);
         section6s.Add(this);
       }
 
-      internal void WriteSection7s(BinaryWriterEx bw, int index, List<FXR3.FFXProperty> section7s)
-      {
-        bw.FillInt32(string.Format("Section6Section7sOffset[{0}]", (object) index), (int) bw.Position);
+      internal void WriteSection7s(
+          BinaryWriterEx bw,
+          int index,
+          List<FXR3.FFXProperty> section7s) {
+        bw.FillInt32(
+            string.Format("Section6Section7sOffset[{0}]", (object) index),
+            (int) bw.Position);
         foreach (FXR3.FFXProperty ffxProperty in this.Properties1)
           ffxProperty.Write(bw, section7s);
         foreach (FXR3.FFXProperty ffxProperty in this.Properties2)
           ffxProperty.Write(bw, section7s);
       }
 
-      internal void WriteSection10s(BinaryWriterEx bw, int index, List<FXR3.Section10> section10s)
-      {
-        bw.FillInt32(string.Format("Section6Section10sOffset[{0}]", (object) index), (int) bw.Position);
+      internal void WriteSection10s(
+          BinaryWriterEx bw,
+          int index,
+          List<FXR3.Section10> section10s) {
+        bw.FillInt32(
+            string.Format("Section6Section10sOffset[{0}]", (object) index),
+            (int) bw.Position);
         foreach (FXR3.Section10 section10 in this.Section10s)
           section10.Write(bw, section10s);
       }
 
-      internal void WriteSection11s(BinaryWriterEx bw, int index, ref int section11Count)
-      {
-        if (this.Section11s1.Count == 0 && this.Section11s2.Count == 0)
-        {
-          bw.FillInt32(string.Format("Section6Section11sOffset[{0}]", (object) index), 0);
-        }
-        else
-        {
-          bw.FillInt32(string.Format("Section6Section11sOffset[{0}]", (object) index), (int) bw.Position);
+      internal void WriteSection11s(
+          BinaryWriterEx bw,
+          int index,
+          ref int section11Count) {
+        if (this.Section11s1.Count == 0 && this.Section11s2.Count == 0) {
+          bw.FillInt32(
+              string.Format("Section6Section11sOffset[{0}]", (object) index),
+              0);
+        } else {
+          bw.FillInt32(
+              string.Format("Section6Section11sOffset[{0}]", (object) index),
+              (int) bw.Position);
           bw.WriteInt32s((IList<int>) this.Section11s1);
           bw.WriteInt32s((IList<int>) this.Section11s2);
           section11Count += this.Section11s1.Count + this.Section11s2.Count;
@@ -697,10 +704,8 @@ namespace SoulsFormats
       }
     }
 
-    public class FFXProperty
-    {
-      [XmlAttribute]
-      public short Unk00 { get; set; }
+    public class FFXProperty {
+      [XmlAttribute] public short Unk00 { get; set; }
 
       public int Unk04 { get; set; }
 
@@ -708,14 +713,12 @@ namespace SoulsFormats
 
       public List<int> Section11s { get; set; }
 
-      public FFXProperty()
-      {
+      public FFXProperty() {
         this.Section8s = new List<FXR3.Section8>();
         this.Section11s = new List<int>();
       }
 
-      internal FFXProperty(BinaryReaderEx br)
-      {
+      internal FFXProperty(BinaryReaderEx br) {
         this.Unk00 = br.ReadInt16();
         int num1 = (int) br.AssertByte(new byte[1]);
         int num2 = (int) br.AssertByte((byte) 1);
@@ -733,11 +736,11 @@ namespace SoulsFormats
         for (int index = 0; index < capacity; ++index)
           this.Section8s.Add(new FXR3.Section8(br));
         br.StepOut();
-        this.Section11s = new List<int>((IEnumerable<int>) br.GetInt32s((long) num3, count));
+        this.Section11s =
+            new List<int>((IEnumerable<int>) br.GetInt32s((long) num3, count));
       }
 
-      internal void Write(BinaryWriterEx bw, List<FXR3.FFXProperty> section7s)
-      {
+      internal void Write(BinaryWriterEx bw, List<FXR3.FFXProperty> section7s) {
         int count = section7s.Count;
         bw.WriteInt16(this.Unk00);
         bw.WriteByte((byte) 0);
@@ -745,41 +748,48 @@ namespace SoulsFormats
         bw.WriteInt32(this.Unk04);
         bw.WriteInt32(this.Section11s.Count);
         bw.WriteInt32(0);
-        bw.ReserveInt32(string.Format("Section7Section11sOffset[{0}]", (object) count));
+        bw.ReserveInt32(
+            string.Format("Section7Section11sOffset[{0}]", (object) count));
         bw.WriteInt32(0);
-        bw.ReserveInt32(string.Format("Section7Section8sOffset[{0}]", (object) count));
+        bw.ReserveInt32(
+            string.Format("Section7Section8sOffset[{0}]", (object) count));
         bw.WriteInt32(0);
         bw.WriteInt32(this.Section8s.Count);
         bw.WriteInt32(0);
         section7s.Add(this);
       }
 
-      internal void WriteSection8s(BinaryWriterEx bw, int index, List<FXR3.Section8> section8s)
-      {
-        bw.FillInt32(string.Format("Section7Section8sOffset[{0}]", (object) index), (int) bw.Position);
+      internal void WriteSection8s(
+          BinaryWriterEx bw,
+          int index,
+          List<FXR3.Section8> section8s) {
+        bw.FillInt32(
+            string.Format("Section7Section8sOffset[{0}]", (object) index),
+            (int) bw.Position);
         foreach (FXR3.Section8 section8 in this.Section8s)
           section8.Write(bw, section8s);
       }
 
-      internal void WriteSection11s(BinaryWriterEx bw, int index, ref int section11Count)
-      {
-        if (this.Section11s.Count == 0)
-        {
-          bw.FillInt32(string.Format("Section7Section11sOffset[{0}]", (object) index), 0);
-        }
-        else
-        {
-          bw.FillInt32(string.Format("Section7Section11sOffset[{0}]", (object) index), (int) bw.Position);
+      internal void WriteSection11s(
+          BinaryWriterEx bw,
+          int index,
+          ref int section11Count) {
+        if (this.Section11s.Count == 0) {
+          bw.FillInt32(
+              string.Format("Section7Section11sOffset[{0}]", (object) index),
+              0);
+        } else {
+          bw.FillInt32(
+              string.Format("Section7Section11sOffset[{0}]", (object) index),
+              (int) bw.Position);
           bw.WriteInt32s((IList<int>) this.Section11s);
           section11Count += this.Section11s.Count;
         }
       }
     }
 
-    public class Section8
-    {
-      [XmlAttribute]
-      public short Unk00 { get; set; }
+    public class Section8 {
+      [XmlAttribute] public short Unk00 { get; set; }
 
       public int Unk04 { get; set; }
 
@@ -787,14 +797,12 @@ namespace SoulsFormats
 
       public List<int> Section11s { get; set; }
 
-      public Section8()
-      {
+      public Section8() {
         this.Section9s = new List<FXR3.Section9>();
         this.Section11s = new List<int>();
       }
 
-      internal Section8(BinaryReaderEx br)
-      {
+      internal Section8(BinaryReaderEx br) {
         this.Unk00 = br.ReadInt16();
         int num1 = (int) br.AssertByte(new byte[1]);
         int num2 = (int) br.AssertByte((byte) 1);
@@ -810,11 +818,11 @@ namespace SoulsFormats
         for (int index = 0; index < capacity; ++index)
           this.Section9s.Add(new FXR3.Section9(br));
         br.StepOut();
-        this.Section11s = new List<int>((IEnumerable<int>) br.GetInt32s((long) num3, count));
+        this.Section11s =
+            new List<int>((IEnumerable<int>) br.GetInt32s((long) num3, count));
       }
 
-      internal void Write(BinaryWriterEx bw, List<FXR3.Section8> section8s)
-      {
+      internal void Write(BinaryWriterEx bw, List<FXR3.Section8> section8s) {
         int count = section8s.Count;
         bw.WriteInt16(this.Unk00);
         bw.WriteByte((byte) 0);
@@ -822,41 +830,48 @@ namespace SoulsFormats
         bw.WriteInt32(this.Unk04);
         bw.WriteInt32(this.Section11s.Count);
         bw.WriteInt32(this.Section9s.Count);
-        bw.ReserveInt32(string.Format("Section8Section11sOffset[{0}]", (object) count));
+        bw.ReserveInt32(
+            string.Format("Section8Section11sOffset[{0}]", (object) count));
         bw.WriteInt32(0);
-        bw.ReserveInt32(string.Format("Section8Section9sOffset[{0}]", (object) count));
+        bw.ReserveInt32(
+            string.Format("Section8Section9sOffset[{0}]", (object) count));
         bw.WriteInt32(0);
         section8s.Add(this);
       }
 
-      internal void WriteSection9s(BinaryWriterEx bw, int index, List<FXR3.Section9> section9s)
-      {
-        bw.FillInt32(string.Format("Section8Section9sOffset[{0}]", (object) index), (int) bw.Position);
+      internal void WriteSection9s(
+          BinaryWriterEx bw,
+          int index,
+          List<FXR3.Section9> section9s) {
+        bw.FillInt32(
+            string.Format("Section8Section9sOffset[{0}]", (object) index),
+            (int) bw.Position);
         foreach (FXR3.Section9 section9 in this.Section9s)
           section9.Write(bw, section9s);
       }
 
-      internal void WriteSection11s(BinaryWriterEx bw, int index, ref int section11Count)
-      {
-        bw.FillInt32(string.Format("Section8Section11sOffset[{0}]", (object) index), (int) bw.Position);
+      internal void WriteSection11s(
+          BinaryWriterEx bw,
+          int index,
+          ref int section11Count) {
+        bw.FillInt32(
+            string.Format("Section8Section11sOffset[{0}]", (object) index),
+            (int) bw.Position);
         bw.WriteInt32s((IList<int>) this.Section11s);
         section11Count += this.Section11s.Count;
       }
     }
 
-    public class Section9
-    {
+    public class Section9 {
       public int Unk04 { get; set; }
 
       public List<int> Section11s { get; set; }
 
-      public Section9()
-      {
+      public Section9() {
         this.Section11s = new List<int>();
       }
 
-      internal Section9(BinaryReaderEx br)
-      {
+      internal Section9(BinaryReaderEx br) {
         int num1 = (int) br.AssertInt16((short) 48);
         int num2 = (int) br.AssertByte(new byte[1]);
         int num3 = (int) br.AssertByte((byte) 1);
@@ -865,11 +880,11 @@ namespace SoulsFormats
         br.AssertInt32(new int[1]);
         int num4 = br.ReadInt32();
         br.AssertInt32(new int[1]);
-        this.Section11s = new List<int>((IEnumerable<int>) br.GetInt32s((long) num4, count));
+        this.Section11s =
+            new List<int>((IEnumerable<int>) br.GetInt32s((long) num4, count));
       }
 
-      internal void Write(BinaryWriterEx bw, List<FXR3.Section9> section9s)
-      {
+      internal void Write(BinaryWriterEx bw, List<FXR3.Section9> section9s) {
         int count = section9s.Count;
         bw.WriteInt16((short) 48);
         bw.WriteByte((byte) 0);
@@ -877,50 +892,57 @@ namespace SoulsFormats
         bw.WriteInt32(this.Unk04);
         bw.WriteInt32(this.Section11s.Count);
         bw.WriteInt32(0);
-        bw.ReserveInt32(string.Format("Section9Section11sOffset[{0}]", (object) count));
+        bw.ReserveInt32(
+            string.Format("Section9Section11sOffset[{0}]", (object) count));
         bw.WriteInt32(0);
         section9s.Add(this);
       }
 
-      internal void WriteSection11s(BinaryWriterEx bw, int index, ref int section11Count)
-      {
-        bw.FillInt32(string.Format("Section9Section11sOffset[{0}]", (object) index), (int) bw.Position);
+      internal void WriteSection11s(
+          BinaryWriterEx bw,
+          int index,
+          ref int section11Count) {
+        bw.FillInt32(
+            string.Format("Section9Section11sOffset[{0}]", (object) index),
+            (int) bw.Position);
         bw.WriteInt32s((IList<int>) this.Section11s);
         section11Count += this.Section11s.Count;
       }
     }
 
-    public class Section10
-    {
+    public class Section10 {
       public List<int> Section11s { get; set; }
 
-      public Section10()
-      {
+      public Section10() {
         this.Section11s = new List<int>();
       }
 
-      internal Section10(BinaryReaderEx br)
-      {
+      internal Section10(BinaryReaderEx br) {
         int num = br.ReadInt32();
         br.AssertInt32(new int[1]);
         int count = br.ReadInt32();
         br.AssertInt32(new int[1]);
-        this.Section11s = new List<int>((IEnumerable<int>) br.GetInt32s((long) num, count));
+        this.Section11s =
+            new List<int>((IEnumerable<int>) br.GetInt32s((long) num, count));
       }
 
-      internal void Write(BinaryWriterEx bw, List<FXR3.Section10> section10s)
-      {
+      internal void Write(BinaryWriterEx bw, List<FXR3.Section10> section10s) {
         int count = section10s.Count;
-        bw.ReserveInt32(string.Format("Section10Section11sOffset[{0}]", (object) count));
+        bw.ReserveInt32(string.Format("Section10Section11sOffset[{0}]",
+                                      (object) count));
         bw.WriteInt32(0);
         bw.WriteInt32(this.Section11s.Count);
         bw.WriteInt32(0);
         section10s.Add(this);
       }
 
-      internal void WriteSection11s(BinaryWriterEx bw, int index, ref int section11Count)
-      {
-        bw.FillInt32(string.Format("Section10Section11sOffset[{0}]", (object) index), (int) bw.Position);
+      internal void WriteSection11s(
+          BinaryWriterEx bw,
+          int index,
+          ref int section11Count) {
+        bw.FillInt32(
+            string.Format("Section10Section11sOffset[{0}]", (object) index),
+            (int) bw.Position);
         bw.WriteInt32s((IList<int>) this.Section11s);
         section11Count += this.Section11s.Count;
       }

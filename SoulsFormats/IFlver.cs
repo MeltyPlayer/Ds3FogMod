@@ -7,11 +7,9 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public interface IFlver
-  {
+  public interface IFlver {
     IReadOnlyList<FLVER.Bone> Bones { get; }
 
     IReadOnlyList<FLVER.Dummy> Dummies { get; }

@@ -7,42 +7,37 @@
 using System;
 using System.Xml;
 
-namespace SoulsFormats.XmlExtensions
-{
-  internal static class XmlWriterExtensions
-  {
+namespace SoulsFormats.XmlExtensions {
+  internal static class XmlWriterExtensions {
     public static void WriteDefaultElement<T>(
-      this XmlWriter xw,
-      string localName,
-      T value,
-      T defaultValue)
-      where T : IEquatable<T>
-    {
+        this XmlWriter xw,
+        string localName,
+        T value,
+        T defaultValue)
+        where T : IEquatable<T> {
       if (object.Equals((object) value, (object) defaultValue))
         return;
       xw.WriteElementString(localName, value.ToString());
     }
 
     public static void WriteDefaultElement(
-      this XmlWriter xw,
-      string localName,
-      float value,
-      float defaultValue,
-      IFormatProvider provider)
-    {
+        this XmlWriter xw,
+        string localName,
+        float value,
+        float defaultValue,
+        IFormatProvider provider) {
       if ((double) value == (double) defaultValue)
         return;
       xw.WriteElementString(localName, value.ToString(provider));
     }
 
     public static void WriteDefaultElement(
-      this XmlWriter xw,
-      string localName,
-      float value,
-      float defaultValue,
-      string format,
-      IFormatProvider provider)
-    {
+        this XmlWriter xw,
+        string localName,
+        float value,
+        float defaultValue,
+        string format,
+        IFormatProvider provider) {
       if ((double) value == (double) defaultValue)
         return;
       xw.WriteElementString(localName, value.ToString(format, provider));

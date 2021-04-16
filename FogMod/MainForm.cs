@@ -5,7 +5,9 @@
 // Assembly location: M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\FogMod.exe
 
 using FogMod.Properties;
+
 using SoulsIds;
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -16,45 +18,47 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace FogMod
-{
-  public class MainForm : Form
-  {
-    private static string defaultPath = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\DARK SOULS REMASTERED\\DarkSoulsRemastered.exe";
-    private static string defaultPath2 = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Dark Souls Prepare to Die Edition\\DATA\\DARKSOULS.exe";
-    private static List<string> defaultLang = new List<string>()
-    {
-      "ENGLISH"
+namespace FogMod {
+  public class MainForm : Form {
+    private static string defaultPath =
+        "C:\\Program Files (x86)\\Steam\\steamapps\\common\\DARK SOULS REMASTERED\\DarkSoulsRemastered.exe";
+
+    private static string defaultPath2 =
+        "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Dark Souls Prepare to Die Edition\\DATA\\DARKSOULS.exe";
+
+    private static List<string> defaultLang = new List<string>() {
+        "ENGLISH"
     };
-    private static List<string> ptdeLang = new List<string>()
-    {
-      "ENGLISH",
-      "FRENCH",
-      "GERMAN",
-      "ITALIAN",
-      "JAPANESE",
-      "KOREAN",
-      "POLISH",
-      "RUSSIAN",
-      "SPANISH",
-      "TCHINESE"
+
+    private static List<string> ptdeLang = new List<string>() {
+        "ENGLISH",
+        "FRENCH",
+        "GERMAN",
+        "ITALIAN",
+        "JAPANESE",
+        "KOREAN",
+        "POLISH",
+        "RUSSIAN",
+        "SPANISH",
+        "TCHINESE"
     };
-    private static List<string> ds1rLang = new List<string>()
-    {
-      "ENGLISH",
-      "FRENCH",
-      "GERMAN",
-      "ITALIAN",
-      "JAPANESE",
-      "KOREAN",
-      "NSPANISH",
-      "POLISH",
-      "PORTUGUESE",
-      "RUSSIAN",
-      "SCHINESE",
-      "SPANISH",
-      "TCHINESE"
+
+    private static List<string> ds1rLang = new List<string>() {
+        "ENGLISH",
+        "FRENCH",
+        "GERMAN",
+        "ITALIAN",
+        "JAPANESE",
+        "KOREAN",
+        "NSPANISH",
+        "POLISH",
+        "PORTUGUESE",
+        "RUSSIAN",
+        "SCHINESE",
+        "SPANISH",
+        "TCHINESE"
     };
+
     private RandomizerOptions options = new RandomizerOptions();
     private GameSpec.FromGame game;
     private string languageToSet;
@@ -102,8 +106,7 @@ namespace FogMod
     private Label label13;
     private Label label14;
 
-    public MainForm()
-    {
+    public MainForm() {
       if (!string.IsNullOrWhiteSpace(Settings.Default.Language))
         this.languageToSet = Settings.Default.Language;
       this.InitializeComponent();
@@ -119,15 +122,14 @@ namespace FogMod
       if (string.IsNullOrWhiteSpace(options))
         this.ReadControlFlags((Control) this);
       else
-        this.SetControlFlags((Control) this, (ICollection<string>) options.Split(' '));
+        this.SetControlFlags((Control) this,
+                             (ICollection<string>) options.Split(' '));
     }
 
-    private void UpdateExePath()
-    {
+    private void UpdateExePath() {
       bool flag = true;
       string path1 = (string) null;
-      try
-      {
+      try {
         path1 = Path.GetDirectoryName(this.exe.Text);
         if (this.exe.Text.Trim() == "" || !Directory.Exists(path1))
           flag = false;
@@ -138,157 +140,165 @@ namespace FogMod
           this.game = GameSpec.FromGame.DS1;
         else
           flag = false;
-      }
-      catch (ArgumentException ex)
-      {
+      } catch (ArgumentException ex) {
         flag = false;
       }
-      if (!flag)
-      {
+      if (!flag) {
         this.game = GameSpec.FromGame.UNKNOWN;
         this.restoreButton.Enabled = false;
         this.restoreL.Text = "";
         this.language.DataSource = (object) MainForm.defaultLang;
         this.language.Enabled = false;
-      }
-      else
-      {
+      } else {
         Settings.Default.Exe = this.exe.Text;
         Settings.Default.Save();
-        List<string> stringList = this.game == GameSpec.FromGame.DS1R ? MainForm.ds1rLang : MainForm.ptdeLang;
+        List<string> stringList = this.game == GameSpec.FromGame.DS1R
+                                      ? MainForm.ds1rLang
+                                      : MainForm.ptdeLang;
         this.language.DataSource = (object) stringList;
         this.language.Enabled = true;
-        if (this.languageToSet != null && stringList.Contains(this.languageToSet))
-        {
+        if (this.languageToSet != null &&
+            stringList.Contains(this.languageToSet)) {
           this.language.SelectedIndex = stringList.IndexOf(this.languageToSet);
           this.languageToSet = (string) null;
         }
         List<string> allBaseFiles = GameDataWriter.GetAllBaseFiles(this.game);
-        if (allBaseFiles.Count == 0)
-        {
+        if (allBaseFiles.Count == 0) {
           this.randb.Enabled = false;
-          this.setStatus(string.Format("Error: FogMod dist\\{0} subdirectory is missing", (object) this.game), true);
+          this.setStatus(string.Format(
+                             "Error: FogMod dist\\{0} subdirectory is missing",
+                             (object) this.game),
+                         true);
         }
         List<string> source = new List<string>();
-        foreach (string str in allBaseFiles)
-        {
+        foreach (string str in allBaseFiles) {
           string path2 = path1 + "\\" + str + ".bak";
           if (File.Exists(path2))
-            source.Add(File.GetLastWriteTime(path2).ToString("yyyy-MM-dd HH:mm:ss"));
+            source.Add(File.GetLastWriteTime(path2)
+                           .ToString("yyyy-MM-dd HH:mm:ss"));
         }
-        if (source.Count == 0)
-        {
+        if (source.Count == 0) {
           this.restoreL.Text = "Backups will be created with randomization";
           this.restoreButton.Enabled = false;
-        }
-        else
-        {
-          this.restoreL.Text = (allBaseFiles.Count == source.Count ? "Backups" : "Partial backups") + " from " + source.Max<string>();
+        } else {
+          this.restoreL.Text =
+              (allBaseFiles.Count == source.Count
+                   ? "Backups"
+                   : "Partial backups") +
+              " from " +
+              source.Max<string>();
           this.restoreButton.Enabled = true;
         }
       }
     }
 
-    private void OpenExe(object sender, EventArgs e)
-    {
+    private void OpenExe(object sender, EventArgs e) {
       OpenFileDialog openFileDialog = new OpenFileDialog();
       openFileDialog.Title = "Select Dark Souls install location";
-      openFileDialog.Filter = "Dark Souls exe|DarkSoulsRemastered.exe;DARKSOULS.exe";
+      openFileDialog.Filter =
+          "Dark Souls exe|DarkSoulsRemastered.exe;DARKSOULS.exe";
       openFileDialog.RestoreDirectory = true;
-      try
-      {
-        if (Directory.Exists(this.exe.Text))
-        {
+      try {
+        if (Directory.Exists(this.exe.Text)) {
           openFileDialog.InitialDirectory = this.exe.Text;
-        }
-        else
-        {
+        } else {
           string directoryName = Path.GetDirectoryName(this.exe.Text);
           if (Directory.Exists(directoryName))
             openFileDialog.InitialDirectory = directoryName;
         }
-      }
-      catch (ArgumentException ex)
-      {
-      }
+      } catch (ArgumentException ex) {}
       if (openFileDialog.ShowDialog() != DialogResult.OK)
         return;
       this.exe.Text = openFileDialog.FileName;
     }
 
-    private void setStatus(string msg, bool error = false)
-    {
+    private void setStatus(string msg, bool error = false) {
       this.statusL.Text = msg;
-      this.statusStrip1.BackColor = error ? Color.IndianRed : SystemColors.Control;
+      this.statusStrip1.BackColor =
+          error ? Color.IndianRed : SystemColors.Control;
     }
 
-    private async void Randomize(object sender, EventArgs e)
-    {
+    private async void Randomize(object sender, EventArgs e) {
       MainForm mainForm = this;
       if (mainForm.working)
         return;
       mainForm.ReadControlFlags((Control) mainForm);
       RandomizerOptions rand = mainForm.options.Copy();
       rand.Language = (string) mainForm.language.SelectedValue ?? "ENGLISH";
-      if (!File.Exists(mainForm.exe.Text) || mainForm.game == GameSpec.FromGame.UNKNOWN)
-      {
+      if (!File.Exists(mainForm.exe.Text) ||
+          mainForm.game == GameSpec.FromGame.UNKNOWN) {
         mainForm.setStatus("Game exe not set", true);
-      }
-      else
-      {
+      } else {
         string gameDir = Path.GetDirectoryName(mainForm.exe.Text);
         if (!File.Exists(gameDir + "\\map\\MapStudio\\m10_02_00_00.msb"))
-          mainForm.setStatus("Did not find unpacked installation at game path", true);
-        else if (rand["start"] && !rand["boss"] && !rand["world"])
-        {
-          mainForm.setStatus("Cannot start outside of Asylum if no Asylum fog gates are randomized", true);
-        }
-        else
-        {
-          if (mainForm.fixedseed.Text.Trim() != "")
-          {
+          mainForm.setStatus("Did not find unpacked installation at game path",
+                             true);
+        else if (rand["start"] && !rand["boss"] && !rand["world"]) {
+          mainForm.setStatus(
+              "Cannot start outside of Asylum if no Asylum fog gates are randomized",
+              true);
+        } else {
+          if (mainForm.fixedseed.Text.Trim() != "") {
             uint result;
-            if (uint.TryParse(mainForm.fixedseed.Text.Trim(), out result))
-            {
+            if (uint.TryParse(mainForm.fixedseed.Text.Trim(), out result)) {
               rand.Seed = (int) result;
-            }
-            else
-            {
+            } else {
               mainForm.setStatus("Invalid fixed seed", true);
               return;
             }
-          }
-          else
+          } else
             rand.Seed = new Random().Next();
           mainForm.working = true;
-          mainForm.randomizeL.Text = string.Format("Seed: {0}", (object) rand.Seed);
+          mainForm.randomizeL.Text =
+              string.Format("Seed: {0}", (object) rand.Seed);
           mainForm.randb.Text = "Randomizing...";
           mainForm.setStatus("Randomizing...", false);
           mainForm.randb.BackColor = Color.LightYellow;
           Randomizer randomizer = new Randomizer();
-          await Task.Factory.StartNew((Action) (() =>
-          {
-            Directory.CreateDirectory("runs");
-            string path = string.Format("runs\\{0}_log_{1}_{2}.txt", (object) DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss"), (object) rand.Seed, (object) rand.ConfigHash());
-            TextWriter text = (TextWriter) File.CreateText(path);
-            TextWriter newOut = Console.Out;
-            Console.SetOut(text);
-            try
-            {
-              ItemReader.Result result = randomizer.Randomize(rand, this.game, gameDir, gameDir);
-              this.setStatus("Done. Info in " + path + (result.Randomized ? " | Key item hash: " + result.ItemHash : ""), false);
-            }
-            catch (Exception ex)
-            {
-              Console.WriteLine((object) ex);
-              this.setStatus("Error! See error message in " + path, true);
-            }
-            finally
-            {
-              text.Close();
-              Console.SetOut(newOut);
-            }
-          }));
+          await Task.Factory.StartNew((Action) (() => {
+                                                   Directory.CreateDirectory(
+                                                       "runs");
+                                                   string path = string.Format(
+                                                       "runs\\{0}_log_{1}_{2}.txt",
+                                                       (object) DateTime
+                                                                .Now.ToString(
+                                                                    "yyyy-MM-dd_HH.mm.ss"),
+                                                       (object) rand.Seed,
+                                                       (object) rand
+                                                           .ConfigHash());
+                                                   TextWriter text =
+                                                       (TextWriter) File
+                                                           .CreateText(path);
+                                                   TextWriter newOut =
+                                                       Console.Out;
+                                                   Console.SetOut(text);
+                                                   try {
+                                                     ItemReader.Result result =
+                                                         randomizer.Randomize(
+                                                             rand,
+                                                             this.game,
+                                                             gameDir,
+                                                             gameDir);
+                                                     this.setStatus(
+                                                         "Done. Info in " +
+                                                         path +
+                                                         (result.Randomized
+                                                              ? " | Key item hash: " +
+                                                                result.ItemHash
+                                                              : ""),
+                                                         false);
+                                                   } catch (Exception ex) {
+                                                     Console.WriteLine(
+                                                         (object) ex);
+                                                     this.setStatus(
+                                                         "Error! See error message in " +
+                                                         path,
+                                                         true);
+                                                   } finally {
+                                                     text.Close();
+                                                     Console.SetOut(newOut);
+                                                   }
+                                                 }));
           mainForm.randb.Enabled = true;
           mainForm.randb.Text = "Randomize!";
           mainForm.randb.BackColor = SystemColors.Control;
@@ -298,48 +308,50 @@ namespace FogMod
       }
     }
 
-    private void UpdateFile(object sender, EventArgs e)
-    {
+    private void UpdateFile(object sender, EventArgs e) {
       this.UpdateExePath();
     }
 
-    private void UpdateOptions(object sender, EventArgs e)
-    {
+    private void UpdateOptions(object sender, EventArgs e) {
       this.ReadControlFlags((Control) this);
-      Settings.Default.Options = string.Join(" ", (IEnumerable<string>) this.options.GetEnabled());
+      Settings.Default.Options =
+          string.Join(" ", (IEnumerable<string>) this.options.GetEnabled());
       Settings.Default.Save();
     }
 
-    private void UpdateLanguage(object sender, EventArgs e)
-    {
+    private void UpdateLanguage(object sender, EventArgs e) {
       Settings.Default.Language = (string) this.language.SelectedValue;
       Settings.Default.Save();
     }
 
-    private void Restore(object sender, EventArgs e)
-    {
+    private void Restore(object sender, EventArgs e) {
       if (this.working)
         return;
       string directoryName = Path.GetDirectoryName(this.exe.Text);
-      if (this.exe.Text.Trim() == "" || !Directory.Exists(directoryName) || this.game == GameSpec.FromGame.UNKNOWN)
+      if (this.exe.Text.Trim() == "" ||
+          !Directory.Exists(directoryName) ||
+          this.game == GameSpec.FromGame.UNKNOWN)
         return;
       List<string> allBaseFiles = GameDataWriter.GetAllBaseFiles(this.game);
       List<string> stringList = new List<string>();
-      foreach (string str1 in allBaseFiles)
-      {
+      foreach (string str1 in allBaseFiles) {
         string str2 = directoryName + "\\" + str1;
         if (File.Exists(str2 + ".bak"))
           stringList.Add(str2);
       }
-      string str3 = this.game == GameSpec.FromGame.DS1R ? "\n\nTo completely ensure restoration of vanilla files, also use Properties -> Local Files -> Verify Integrity Of Game Files in Steam." : "";
-      if (MessageBox.Show(string.Join("\n", (IEnumerable<string>) stringList) + str3, "Restore these files?", MessageBoxButtons.YesNo) != DialogResult.Yes)
+      string str3 = this.game == GameSpec.FromGame.DS1R
+                        ? "\n\nTo completely ensure restoration of vanilla files, also use Properties -> Local Files -> Verify Integrity Of Game Files in Steam."
+                        : "";
+      if (MessageBox.Show(
+              string.Join("\n", (IEnumerable<string>) stringList) + str3,
+              "Restore these files?",
+              MessageBoxButtons.YesNo) !=
+          DialogResult.Yes)
         return;
-      foreach (string str1 in allBaseFiles)
-      {
+      foreach (string str1 in allBaseFiles) {
         string str2 = directoryName + "\\" + str1;
         string str4 = str2 + ".bak";
-        if (File.Exists(str4))
-        {
+        if (File.Exists(str4)) {
           if (File.Exists(str2))
             File.Delete(str2);
           File.Move(str4, str2);
@@ -348,10 +360,8 @@ namespace FogMod
       this.UpdateExePath();
     }
 
-    private void ReadControlFlags(Control control)
-    {
-      switch (control)
-      {
+    private void ReadControlFlags(Control control) {
+      switch (control) {
         case RadioButton radioButton:
           this.options[control.Name] = radioButton.Checked;
           break;
@@ -360,56 +370,49 @@ namespace FogMod
           break;
         default:
           IEnumerator enumerator = control.Controls.GetEnumerator();
-          try
-          {
+          try {
             while (enumerator.MoveNext())
               this.ReadControlFlags((Control) enumerator.Current);
             break;
-          }
-          finally
-          {
+          } finally {
             if (enumerator is IDisposable disposable)
               disposable.Dispose();
           }
       }
     }
 
-    private void SetControlFlags(Control control, ICollection<string> set)
-    {
-      switch (control)
-      {
+    private void SetControlFlags(Control control, ICollection<string> set) {
+      switch (control) {
         case RadioButton radioButton:
-          this.options[control.Name] = radioButton.Checked = set.Contains(control.Name);
+          this.options[control.Name] =
+              radioButton.Checked = set.Contains(control.Name);
           break;
         case CheckBox checkBox:
-          this.options[control.Name] = checkBox.Checked = set.Contains(control.Name);
+          this.options[control.Name] =
+              checkBox.Checked = set.Contains(control.Name);
           break;
         default:
           IEnumerator enumerator = control.Controls.GetEnumerator();
-          try
-          {
+          try {
             while (enumerator.MoveNext())
               this.SetControlFlags((Control) enumerator.Current, set);
             break;
-          }
-          finally
-          {
+          } finally {
             if (enumerator is IDisposable disposable)
               disposable.Dispose();
           }
       }
     }
 
-    protected override void Dispose(bool disposing)
-    {
+    protected override void Dispose(bool disposing) {
       if (disposing && this.components != null)
         this.components.Dispose();
       base.Dispose(disposing);
     }
 
-    private void InitializeComponent()
-    {
-      ComponentResourceManager componentResourceManager = new ComponentResourceManager(typeof (MainForm));
+    private void InitializeComponent() {
+      ComponentResourceManager componentResourceManager =
+          new ComponentResourceManager(typeof(MainForm));
       this.groupBox1 = new GroupBox();
       this.label3 = new Label();
       this.minor = new CheckBox();
@@ -482,7 +485,8 @@ namespace FogMod
       this.label3.Name = "label3";
       this.label3.Size = new Size(367, 13);
       this.label3.TabIndex = 9;
-      this.label3.Text = "Enable and randomize invasion fog gates usually separating off smaller areas";
+      this.label3.Text =
+          "Enable and randomize invasion fog gates usually separating off smaller areas";
       this.minor.AutoSize = true;
       this.minor.Location = new Point(7, 173);
       this.minor.Margin = new Padding(3, 2, 3, 2);
@@ -498,7 +502,8 @@ namespace FogMod
       this.label4.Name = "label4";
       this.label4.Size = new Size(310, 13);
       this.label4.TabIndex = 7;
-      this.label4.Text = "Enable and randomize invasion fog gates separating major areas";
+      this.label4.Text =
+          "Enable and randomize invasion fog gates separating major areas";
       this.major.AutoSize = true;
       this.major.Location = new Point(7, 136);
       this.major.Margin = new Padding(3, 2, 3, 2);
@@ -514,7 +519,8 @@ namespace FogMod
       this.label5.Name = "label5";
       this.label5.Size = new Size(328, 13);
       this.label5.TabIndex = 11;
-      this.label5.Text = "Randomize golden fog gates, in which case they are never dispelled";
+      this.label5.Text =
+          "Randomize golden fog gates, in which case they are never dispelled";
       this.lordvessel.AutoSize = true;
       this.lordvessel.Location = new Point(8, 209);
       this.lordvessel.Margin = new Padding(3, 2, 3, 2);
@@ -530,7 +536,8 @@ namespace FogMod
       this.label2.Name = "label2";
       this.label2.Size = new Size(274, 13);
       this.label2.TabIndex = 5;
-      this.label2.Text = "Randomize warp destinations, like to/from Painted World";
+      this.label2.Text =
+          "Randomize warp destinations, like to/from Painted World";
       this.warp.AutoSize = true;
       this.warp.Checked = true;
       this.warp.CheckState = CheckState.Checked;
@@ -607,7 +614,8 @@ namespace FogMod
       this.label12.Name = "label12";
       this.label12.Size = new Size(335, 13);
       this.label12.TabIndex = 25;
-      this.label12.Text = "Immediately warp away from Asylum, returning later through a fog gate";
+      this.label12.Text =
+          "Immediately warp away from Asylum, returning later through a fog gate";
       this.start.AutoSize = true;
       this.start.Location = new Point(7, 244);
       this.start.Margin = new Padding(3, 2, 3, 2);
@@ -622,7 +630,8 @@ namespace FogMod
       this.label11.Name = "label11";
       this.label11.Size = new Size(365, 13);
       this.label11.TabIndex = 23;
-      this.label11.Text = "If enabled, entering a fog gate you just exited can send you somewhere else";
+      this.label11.Text =
+          "If enabled, entering a fog gate you just exited can send you somewhere else";
       this.unconnected.AutoSize = true;
       this.unconnected.Location = new Point(7, 208);
       this.unconnected.Margin = new Padding(3, 2, 3, 2);
@@ -637,7 +646,8 @@ namespace FogMod
       this.label9.Name = "label9";
       this.label9.Size = new Size(280, 13);
       this.label9.TabIndex = 21;
-      this.label9.Text = "BoC floor no longer crumbles. Not related to randomization";
+      this.label9.Text =
+          "BoC floor no longer crumbles. Not related to randomization";
       this.bboc.AutoSize = true;
       this.bboc.Location = new Point(7, 172);
       this.bboc.Margin = new Padding(3, 2, 3, 2);
@@ -653,7 +663,8 @@ namespace FogMod
       this.label1.Name = "label1";
       this.label1.Size = new Size(357, 13);
       this.label1.TabIndex = 19;
-      this.label1.Text = "Various glitches may be required, similar to Race Mode+ in item randomizer";
+      this.label1.Text =
+          "Various glitches may be required, similar to Race Mode+ in item randomizer";
       this.scale.AutoSize = true;
       this.scale.Checked = true;
       this.scale.CheckState = CheckState.Checked;
@@ -680,7 +691,8 @@ namespace FogMod
       this.label8.Name = "label8";
       this.label8.Size = new Size(371, 13);
       this.label8.TabIndex = 13;
-      this.label8.Text = "Increase or decrease enemy health and damage based on distance from start";
+      this.label8.Text =
+          "Increase or decrease enemy health and damage based on distance from start";
       this.label6.AutoSize = true;
       this.label6.Font = new Font("Microsoft Sans Serif", 8.25f);
       this.label6.Location = new Point(23, 119);
@@ -771,9 +783,8 @@ namespace FogMod
       this.restoreL.Size = new Size(466, 27);
       this.restoreL.TabIndex = 9;
       this.restoreL.TextAlign = ContentAlignment.MiddleRight;
-      this.statusStrip1.Items.AddRange(new ToolStripItem[1]
-      {
-        (ToolStripItem) this.statusL
+      this.statusStrip1.Items.AddRange(new ToolStripItem[1] {
+          (ToolStripItem) this.statusL
       });
       this.statusStrip1.Location = new Point(0, 428);
       this.statusStrip1.Name = "statusStrip1";
@@ -799,7 +810,8 @@ namespace FogMod
       this.language.Name = "language";
       this.language.Size = new Size(153, 24);
       this.language.TabIndex = 12;
-      this.language.SelectedIndexChanged += new EventHandler(this.UpdateLanguage);
+      this.language.SelectedIndexChanged +=
+          new EventHandler(this.UpdateLanguage);
       this.label13.AutoSize = true;
       this.label13.Font = new Font("Microsoft Sans Serif", 9.75f);
       this.label13.Location = new Point(19, 354);
@@ -813,7 +825,8 @@ namespace FogMod
       this.label14.Name = "label14";
       this.label14.Size = new Size(382, 32);
       this.label14.TabIndex = 14;
-      this.label14.Text = "Runs usually take 4-8 hours to complete depending on options. \r\nSee documentation to learn more!";
+      this.label14.Text =
+          "Runs usually take 4-8 hours to complete depending on options. \r\nSee documentation to learn more!";
       this.AutoScaleDimensions = new SizeF(8f, 16f);
       this.AutoScaleMode = AutoScaleMode.Font;
       this.ClientSize = new Size(932, 450);
@@ -835,7 +848,7 @@ namespace FogMod
       this.FormBorderStyle = FormBorderStyle.FixedSingle;
       this.Icon = (Icon) componentResourceManager.GetObject("$this.Icon");
       this.Margin = new Padding(4);
-      this.Name = nameof (MainForm);
+      this.Name = nameof(MainForm);
       this.Text = "DS1 Fog Gate Randomizer v0.3";
       this.groupBox1.ResumeLayout(false);
       this.groupBox1.PerformLayout();

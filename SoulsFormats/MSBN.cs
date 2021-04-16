@@ -9,73 +9,58 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public class MSBN : SoulsFile<MSBN>
-  {
+  public class MSBN : SoulsFile<MSBN> {
     public MSBN.ModelSection Models;
     public MSBN.PartsSection Parts;
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       br.BigEndian = false;
       MSBN.Entries entries = new MSBN.Entries();
       int num1 = (int) br.Position;
-      do
-      {
+      do {
         br.Position = (long) num1;
         int unk1 = br.ReadInt32();
         int num2 = br.ReadInt32();
         int offsets = br.ReadInt32() - 1;
         string ascii = br.GetASCII((long) num2);
-        if (!(ascii == "MODEL_PARAM_ST"))
-        {
-          if (ascii == "PARTS_PARAM_ST")
-          {
+        if (!(ascii == "MODEL_PARAM_ST")) {
+          if (ascii == "PARTS_PARAM_ST") {
             this.Parts = new MSBN.PartsSection(br, unk1);
             entries.Parts = this.Parts.Read(br, offsets);
-          }
-          else
+          } else
             br.Skip(offsets * 4);
-        }
-        else
-        {
+        } else {
           this.Models = new MSBN.ModelSection(br, unk1);
           entries.Models = this.Models.Read(br, offsets);
         }
         num1 = br.ReadInt32();
-      }
-      while (num1 != 0);
+      } while (num1 != 0);
       MSB.DisambiguateNames<MSBN.Model>(entries.Models);
       MSB.DisambiguateNames<MSBN.Part>(entries.Parts);
       this.Parts.GetNames(this, entries);
     }
 
-    internal struct Entries
-    {
+    internal struct Entries {
       public List<MSBN.Model> Models;
       public List<MSBN.Part> Parts;
     }
 
-    public abstract class Section<T>
-    {
+    public abstract class Section<T> {
       public int Unk1;
 
       internal abstract string Type { get; }
 
-      internal Section(BinaryReaderEx br, int unk1)
-      {
+      internal Section(BinaryReaderEx br, int unk1) {
         this.Unk1 = unk1;
       }
 
       public abstract List<T> GetEntries();
 
-      internal List<T> Read(BinaryReaderEx br, int offsets)
-      {
+      internal List<T> Read(BinaryReaderEx br, int offsets) {
         List<T> objList = new List<T>(offsets);
-        for (int index = 0; index < offsets; ++index)
-        {
+        for (int index = 0; index < offsets; ++index) {
           int num = br.ReadInt32();
           br.StepIn((long) num);
           objList.Add(this.ReadEntry(br));
@@ -86,8 +71,7 @@ namespace SoulsFormats
 
       internal abstract T ReadEntry(BinaryReaderEx br);
 
-      internal void Write(BinaryWriterEx bw, List<T> entries)
-      {
+      internal void Write(BinaryWriterEx bw, List<T> entries) {
         bw.WriteInt32(this.Unk1);
         bw.ReserveInt32("TypeOffset");
         bw.WriteInt32(entries.Count + 1);
@@ -102,19 +86,19 @@ namespace SoulsFormats
 
       internal abstract void WriteEntries(BinaryWriterEx bw, List<T> entries);
 
-      public override string ToString()
-      {
-        return string.Format("{0}:{1}[{2}]", (object) this.Type, (object) this.Unk1, (object) this.GetEntries().Count);
+      public override string ToString() {
+        return string.Format("{0}:{1}[{2}]",
+                             (object) this.Type,
+                             (object) this.Unk1,
+                             (object) this.GetEntries().Count);
       }
     }
 
-    public abstract class Entry : IMsbEntry
-    {
+    public abstract class Entry : IMsbEntry {
       public abstract string Name { get; set; }
     }
 
-    public class ModelSection : MSBN.Section<MSBN.Model>
-    {
+    public class ModelSection : MSBN.Section<MSBN.Model> {
       public List<MSBN.Model> MapPieces;
       public List<MSBN.Model> Objects;
       public List<MSBN.Model> Enemies;
@@ -126,17 +110,12 @@ namespace SoulsFormats
       public List<MSBN.Model> DummyEnemies;
       public List<MSBN.Model> Others;
 
-      internal override string Type
-      {
-        get
-        {
-          return "MODEL_PARAM_ST";
-        }
+      internal override string Type {
+        get { return "MODEL_PARAM_ST"; }
       }
 
       internal ModelSection(BinaryReaderEx br, int unk1)
-        : base(br, unk1)
-      {
+          : base(br, unk1) {
         this.MapPieces = new List<MSBN.Model>();
         this.Objects = new List<MSBN.Model>();
         this.Enemies = new List<MSBN.Model>();
@@ -149,28 +128,24 @@ namespace SoulsFormats
         this.Others = new List<MSBN.Model>();
       }
 
-      public override List<MSBN.Model> GetEntries()
-      {
-        return SFUtil.ConcatAll<MSBN.Model>(new IEnumerable<MSBN.Model>[10]
-        {
-          (IEnumerable<MSBN.Model>) this.MapPieces,
-          (IEnumerable<MSBN.Model>) this.Objects,
-          (IEnumerable<MSBN.Model>) this.Enemies,
-          (IEnumerable<MSBN.Model>) this.Items,
-          (IEnumerable<MSBN.Model>) this.Players,
-          (IEnumerable<MSBN.Model>) this.Collisions,
-          (IEnumerable<MSBN.Model>) this.Navmeshes,
-          (IEnumerable<MSBN.Model>) this.DummyObjects,
-          (IEnumerable<MSBN.Model>) this.DummyEnemies,
-          (IEnumerable<MSBN.Model>) this.Others
+      public override List<MSBN.Model> GetEntries() {
+        return SFUtil.ConcatAll<MSBN.Model>(new IEnumerable<MSBN.Model>[10] {
+            (IEnumerable<MSBN.Model>) this.MapPieces,
+            (IEnumerable<MSBN.Model>) this.Objects,
+            (IEnumerable<MSBN.Model>) this.Enemies,
+            (IEnumerable<MSBN.Model>) this.Items,
+            (IEnumerable<MSBN.Model>) this.Players,
+            (IEnumerable<MSBN.Model>) this.Collisions,
+            (IEnumerable<MSBN.Model>) this.Navmeshes,
+            (IEnumerable<MSBN.Model>) this.DummyObjects,
+            (IEnumerable<MSBN.Model>) this.DummyEnemies,
+            (IEnumerable<MSBN.Model>) this.Others
         });
       }
 
-      internal override MSBN.Model ReadEntry(BinaryReaderEx br)
-      {
+      internal override MSBN.Model ReadEntry(BinaryReaderEx br) {
         MSBN.ModelType enum32 = br.GetEnum32<MSBN.ModelType>(br.Position + 4L);
-        switch (enum32)
-        {
+        switch (enum32) {
           case MSBN.ModelType.Collision:
             MSBN.Model model1 = new MSBN.Model(br);
             this.Collisions.Add(model1);
@@ -212,18 +187,19 @@ namespace SoulsFormats
             this.Others.Add(model10);
             return model10;
           default:
-            throw new NotImplementedException(string.Format("Unsupported model type: {0}", (object) enum32));
+            throw new NotImplementedException(
+                string.Format("Unsupported model type: {0}", (object) enum32));
         }
       }
 
-      internal override void WriteEntries(BinaryWriterEx bw, List<MSBN.Model> entries)
-      {
+      internal override void WriteEntries(
+          BinaryWriterEx bw,
+          List<MSBN.Model> entries) {
         throw new NotImplementedException();
       }
     }
 
-    internal enum ModelType : uint
-    {
+    internal enum ModelType : uint {
       Collision = 0,
       MapPiece = 1,
       Object = 2,
@@ -236,28 +212,26 @@ namespace SoulsFormats
       Other = 4294967295, // 0xFFFFFFFF
     }
 
-    public class Model : MSBN.Entry
-    {
+    public class Model : MSBN.Entry {
       internal MSBN.ModelType Type { get; private set; }
 
       public override string Name { get; set; }
 
-      internal Model(BinaryReaderEx br)
-      {
+      internal Model(BinaryReaderEx br) {
         long position = br.Position;
         int num = br.ReadInt32();
         this.Type = br.ReadEnum32<MSBN.ModelType>();
         this.Name = br.GetShiftJIS(position + (long) num);
       }
 
-      public override string ToString()
-      {
-        return string.Format("{0} : {1}", (object) this.Type, (object) this.Name);
+      public override string ToString() {
+        return string.Format("{0} : {1}",
+                             (object) this.Type,
+                             (object) this.Name);
       }
     }
 
-    public class PartsSection : MSBN.Section<MSBN.Part>
-    {
+    public class PartsSection : MSBN.Section<MSBN.Part> {
       public List<MSBN.Part> MapPieces;
       public List<MSBN.Part> Objects;
       public List<MSBN.Part> Enemies;
@@ -270,17 +244,12 @@ namespace SoulsFormats
       public List<MSBN.Part> DummyEnemies;
       public List<MSBN.Part> ConnectCollisions;
 
-      internal override string Type
-      {
-        get
-        {
-          return "PARTS_PARAM_ST";
-        }
+      internal override string Type {
+        get { return "PARTS_PARAM_ST"; }
       }
 
       internal PartsSection(BinaryReaderEx br, int unk1)
-        : base(br, unk1)
-      {
+          : base(br, unk1) {
         this.MapPieces = new List<MSBN.Part>();
         this.Objects = new List<MSBN.Part>();
         this.Enemies = new List<MSBN.Part>();
@@ -294,29 +263,25 @@ namespace SoulsFormats
         this.ConnectCollisions = new List<MSBN.Part>();
       }
 
-      public override List<MSBN.Part> GetEntries()
-      {
-        return SFUtil.ConcatAll<MSBN.Part>(new IEnumerable<MSBN.Part>[11]
-        {
-          (IEnumerable<MSBN.Part>) this.MapPieces,
-          (IEnumerable<MSBN.Part>) this.Objects,
-          (IEnumerable<MSBN.Part>) this.Enemies,
-          (IEnumerable<MSBN.Part>) this.Items,
-          (IEnumerable<MSBN.Part>) this.Players,
-          (IEnumerable<MSBN.Part>) this.Collisions,
-          (IEnumerable<MSBN.Part>) this.Protobosses,
-          (IEnumerable<MSBN.Part>) this.Navmeshes,
-          (IEnumerable<MSBN.Part>) this.DummyObjects,
-          (IEnumerable<MSBN.Part>) this.DummyEnemies,
-          (IEnumerable<MSBN.Part>) this.ConnectCollisions
+      public override List<MSBN.Part> GetEntries() {
+        return SFUtil.ConcatAll<MSBN.Part>(new IEnumerable<MSBN.Part>[11] {
+            (IEnumerable<MSBN.Part>) this.MapPieces,
+            (IEnumerable<MSBN.Part>) this.Objects,
+            (IEnumerable<MSBN.Part>) this.Enemies,
+            (IEnumerable<MSBN.Part>) this.Items,
+            (IEnumerable<MSBN.Part>) this.Players,
+            (IEnumerable<MSBN.Part>) this.Collisions,
+            (IEnumerable<MSBN.Part>) this.Protobosses,
+            (IEnumerable<MSBN.Part>) this.Navmeshes,
+            (IEnumerable<MSBN.Part>) this.DummyObjects,
+            (IEnumerable<MSBN.Part>) this.DummyEnemies,
+            (IEnumerable<MSBN.Part>) this.ConnectCollisions
         });
       }
 
-      internal override MSBN.Part ReadEntry(BinaryReaderEx br)
-      {
+      internal override MSBN.Part ReadEntry(BinaryReaderEx br) {
         MSBN.PartsType enum32 = br.GetEnum32<MSBN.PartsType>(br.Position + 4L);
-        switch (enum32)
-        {
+        switch (enum32) {
           case MSBN.PartsType.Collision:
             MSBN.Part part1 = new MSBN.Part(br);
             this.Collisions.Add(part1);
@@ -362,30 +327,29 @@ namespace SoulsFormats
             this.ConnectCollisions.Add(part11);
             return part11;
           default:
-            throw new NotImplementedException(string.Format("Unsupported part type: {0}", (object) enum32));
+            throw new NotImplementedException(
+                string.Format("Unsupported part type: {0}", (object) enum32));
         }
       }
 
-      internal override void WriteEntries(BinaryWriterEx bw, List<MSBN.Part> entries)
-      {
+      internal override void WriteEntries(
+          BinaryWriterEx bw,
+          List<MSBN.Part> entries) {
         throw new NotImplementedException();
       }
 
-      internal void GetNames(MSBN msb, MSBN.Entries entries)
-      {
+      internal void GetNames(MSBN msb, MSBN.Entries entries) {
         foreach (MSBN.Part part in entries.Parts)
           part.GetNames(msb, entries);
       }
 
-      internal void GetIndices(MSBN msb, MSBN.Entries entries)
-      {
+      internal void GetIndices(MSBN msb, MSBN.Entries entries) {
         foreach (MSBN.Part part in entries.Parts)
           part.GetIndices(msb, entries);
       }
     }
 
-    internal enum PartsType : uint
-    {
+    internal enum PartsType : uint {
       Collision,
       MapPiece,
       Object,
@@ -400,8 +364,7 @@ namespace SoulsFormats
       ConnectCollision,
     }
 
-    public class Part : MSBN.Entry
-    {
+    public class Part : MSBN.Entry {
       private int modelIndex;
       public string ModelName;
       public Vector3 Position;
@@ -412,8 +375,7 @@ namespace SoulsFormats
 
       public override string Name { get; set; }
 
-      internal Part(BinaryReaderEx br)
-      {
+      internal Part(BinaryReaderEx br) {
         long position = br.Position;
         int num = br.ReadInt32();
         this.Type = br.ReadEnum32<MSBN.PartsType>();
@@ -426,19 +388,20 @@ namespace SoulsFormats
         this.Name = br.GetShiftJIS(position + (long) num);
       }
 
-      internal virtual void GetNames(MSBN msb, MSBN.Entries entries)
-      {
-        this.ModelName = MSB.FindName<MSBN.Model>(entries.Models, this.modelIndex);
+      internal virtual void GetNames(MSBN msb, MSBN.Entries entries) {
+        this.ModelName =
+            MSB.FindName<MSBN.Model>(entries.Models, this.modelIndex);
       }
 
-      internal virtual void GetIndices(MSBN msb, MSBN.Entries entries)
-      {
-        this.modelIndex = MSB.FindIndex<MSBN.Model>(entries.Models, this.ModelName);
+      internal virtual void GetIndices(MSBN msb, MSBN.Entries entries) {
+        this.modelIndex =
+            MSB.FindIndex<MSBN.Model>(entries.Models, this.ModelName);
       }
 
-      public override string ToString()
-      {
-        return string.Format("{0} : {1}", (object) this.Type, (object) this.Name);
+      public override string ToString() {
+        return string.Format("{0} : {1}",
+                             (object) this.Type,
+                             (object) this.Name);
       }
     }
   }

@@ -7,11 +7,9 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public interface IMsbParam<T> where T : IMsbEntry
-  {
+  public interface IMsbParam<T> where T : IMsbEntry {
     IReadOnlyList<T> GetEntries();
   }
 }

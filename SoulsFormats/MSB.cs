@@ -8,56 +8,49 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace SoulsFormats
-{
-  internal static class MSB
-  {
-    public static void DisambiguateNames<T>(List<T> entries) where T : IMsbEntry
-    {
+namespace SoulsFormats {
+  internal static class MSB {
+    public static void DisambiguateNames<T>(List<T> entries)
+        where T : IMsbEntry {
       bool flag;
-      do
-      {
+      do {
         flag = false;
         Dictionary<string, int> dictionary = new Dictionary<string, int>();
-        foreach (T entry in entries)
-        {
+        foreach (T entry in entries) {
           IMsbEntry msbEntry = (IMsbEntry) entry;
           string name = msbEntry.Name;
-          if (!dictionary.ContainsKey(name))
-          {
+          if (!dictionary.ContainsKey(name)) {
             dictionary[name] = 1;
-          }
-          else
-          {
+          } else {
             flag = true;
             dictionary[name]++;
-            msbEntry.Name = string.Format("{0} {{{1}}}", (object) name, (object) dictionary[name]);
+            msbEntry.Name = string.Format("{0} {{{1}}}",
+                                          (object) name,
+                                          (object) dictionary[name]);
           }
         }
-      }
-      while (flag);
+      } while (flag);
     }
 
-    public static string ReambiguateName(string name)
-    {
+    public static string ReambiguateName(string name) {
       return Regex.Replace(name, " \\{\\d+\\}", "");
     }
 
-    public static string FindName<T>(List<T> list, int index) where T : IMsbEntry
-    {
+    public static string FindName<T>(List<T> list, int index)
+        where T : IMsbEntry {
       return index == -1 ? (string) null : list[index].Name;
     }
 
-    public static string[] FindNames<T>(List<T> list, int[] indices) where T : IMsbEntry
-    {
+    public static string[] FindNames<T>(List<T> list, int[] indices)
+        where T : IMsbEntry {
       string[] strArray = new string[indices.Length];
       for (int index = 0; index < indices.Length; ++index)
         strArray[index] = MSB.FindName<T>(list, indices[index]);
       return strArray;
     }
 
-    public static int FindIndex<T>(List<T> list, string name) where T : IMsbEntry
-    {
+    public static int FindIndex<T>(List<T> list, string name)
+        where T : IMsbEntry {
       if (name == null)
         return -1;
       int index = list.FindIndex((Predicate<T>) (entry => entry.Name == name));
@@ -66,8 +59,8 @@ namespace SoulsFormats
       throw new KeyNotFoundException("Name not found: " + name);
     }
 
-    public static int[] FindIndices<T>(List<T> list, string[] names) where T : IMsbEntry
-    {
+    public static int[] FindIndices<T>(List<T> list, string[] names)
+        where T : IMsbEntry {
       int[] numArray = new int[names.Length];
       for (int index = 0; index < names.Length; ++index)
         numArray[index] = MSB.FindIndex<T>(list, names[index]);

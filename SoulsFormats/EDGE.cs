@@ -8,22 +8,18 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public class EDGE : SoulsFile<EDGE>
-  {
+  public class EDGE : SoulsFile<EDGE> {
     public int ID { get; set; }
 
     public List<EDGE.Edge> Edges { get; set; }
 
-    public EDGE()
-    {
+    public EDGE() {
       this.Edges = new List<EDGE.Edge>();
     }
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       br.BigEndian = false;
       br.AssertInt32(4);
       int capacity = br.ReadInt32();
@@ -34,8 +30,7 @@ namespace SoulsFormats
         this.Edges.Add(new EDGE.Edge(br));
     }
 
-    protected override void Write(BinaryWriterEx bw)
-    {
+    protected override void Write(BinaryWriterEx bw) {
       bw.BigEndian = false;
       bw.WriteInt32(4);
       bw.WriteInt32(this.Edges.Count);
@@ -45,15 +40,13 @@ namespace SoulsFormats
         edge.Write(bw);
     }
 
-    public enum EdgeType : byte
-    {
+    public enum EdgeType : byte {
       Grapple = 1,
       Hang = 2,
       Hug = 3,
     }
 
-    public class Edge
-    {
+    public class Edge {
       public Vector3 V1 { get; set; }
 
       public Vector3 V2 { get; set; }
@@ -70,18 +63,15 @@ namespace SoulsFormats
 
       public byte Unk36 { get; set; }
 
-      public Edge()
-      {
+      public Edge() {
         this.Type = EDGE.EdgeType.Grapple;
       }
 
-      public EDGE.Edge Clone()
-      {
+      public EDGE.Edge Clone() {
         return (EDGE.Edge) this.MemberwiseClone();
       }
 
-      internal Edge(BinaryReaderEx br)
-      {
+      internal Edge(BinaryReaderEx br) {
         this.V1 = br.ReadVector3();
         double num1 = (double) br.AssertSingle(1f);
         this.V2 = br.ReadVector3();
@@ -97,8 +87,7 @@ namespace SoulsFormats
         br.AssertInt32(new int[1]);
       }
 
-      internal void Write(BinaryWriterEx bw)
-      {
+      internal void Write(BinaryWriterEx bw) {
         bw.WriteVector3(this.V1);
         bw.WriteSingle(1f);
         bw.WriteVector3(this.V2);
@@ -114,9 +103,23 @@ namespace SoulsFormats
         bw.WriteInt32(0);
       }
 
-      public override string ToString()
-      {
-        return this.Type == EDGE.EdgeType.Grapple ? string.Format("{0} Var:{1} {2} {3} {4} {5} {6}", (object) this.Type, (object) this.VariationID, (object) this.Unk30, (object) this.Unk36, (object) this.V1, (object) this.V2, (object) this.V3) : string.Format("{0} Var:{1} {2} {3} {4} {5}", (object) this.Type, (object) this.VariationID, (object) this.Unk30, (object) this.Unk36, (object) this.V1, (object) this.V2);
+      public override string ToString() {
+        return this.Type == EDGE.EdgeType.Grapple
+                   ? string.Format("{0} Var:{1} {2} {3} {4} {5} {6}",
+                                   (object) this.Type,
+                                   (object) this.VariationID,
+                                   (object) this.Unk30,
+                                   (object) this.Unk36,
+                                   (object) this.V1,
+                                   (object) this.V2,
+                                   (object) this.V3)
+                   : string.Format("{0} Var:{1} {2} {3} {4} {5}",
+                                   (object) this.Type,
+                                   (object) this.VariationID,
+                                   (object) this.Unk30,
+                                   (object) this.Unk36,
+                                   (object) this.V1,
+                                   (object) this.V2);
       }
     }
   }

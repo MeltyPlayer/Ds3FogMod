@@ -5,82 +5,121 @@
 // Assembly location: M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\FogMod.exe
 
 using SoulsFormats;
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace SoulsIds
-{
-  public class GameEditor
-  {
+namespace SoulsIds {
+  public class GameEditor {
     public readonly GameSpec Spec;
 
-    public GameEditor(GameSpec.FromGame game)
-    {
+    public GameEditor(GameSpec.FromGame game) {
       this.Spec = GameSpec.ForGame(game);
     }
 
-    public GameEditor(GameSpec spec)
-    {
+    public GameEditor(GameSpec spec) {
       this.Spec = spec;
     }
 
     public Dictionary<string, PARAM> LoadParams(
-      Dictionary<string, PARAM.Layout> layouts = null,
-      bool allowError = false)
-    {
+        Dictionary<string, PARAM.Layout> layouts = null,
+        bool allowError = false) {
       if (this.Spec.ParamFile == null)
         throw new Exception("Param path unknown");
-      return this.LoadParams(this.Spec.GameDir + "\\" + this.Spec.ParamFile, layouts, allowError);
+      return this.LoadParams(this.Spec.GameDir + "\\" + this.Spec.ParamFile,
+                             layouts,
+                             allowError);
     }
 
     public Dictionary<string, PARAM> LoadParams(
-      string path,
-      Dictionary<string, PARAM.Layout> layouts = null,
-      bool allowError = false)
-    {
+        string path,
+        Dictionary<string, PARAM.Layout> layouts = null,
+        bool allowError = false) {
       layouts = layouts ?? this.LoadLayouts();
-      return this.LoadBnd<PARAM>(path, (Func<byte[], string, PARAM>) ((data, paramPath) =>
-      {
-        PARAM obj;
-        try
-        {
-          obj = SoulsFile<PARAM>.Read(data);
-        }
-        catch (Exception ex)
-        {
-          if (!allowError)
-            throw new Exception("Failed to load param " + paramPath + ": " + (object) ex);
-          return (PARAM) null;
-        }
-        if (layouts == null)
-          return obj;
-        if (layouts.ContainsKey(obj.ParamType))
-        {
-          PARAM.Layout layout = layouts[obj.ParamType];
-          if ((long) layout.Size == obj.DetectedSize)
-          {
-            obj.ApplyParamdef(layout.ToParamdef(obj.ParamType, out List<PARAMTDF> _));
-            return obj;
-          }
-        }
-        return (PARAM) null;
-      }), (string) null);
+      return this.LoadBnd<PARAM>(path,
+                                 (Func<byte[], string, PARAM>) ((
+                                                                         data,
+                                                                         paramPath)
+                                                                     => {
+                                                                   PARAM obj;
+                                                                   try {
+                                                                     obj =
+                                                                         SoulsFile
+                                                                         <PARAM
+                                                                         >.Read(
+                                                                             data);
+                                                                   } catch (
+                                                                       Exception
+                                                                       ex) {
+                                                                     if (
+                                                                         !allowError
+                                                                     )
+                                                                       throw new
+                                                                           Exception(
+                                                                               "Failed to load param " +
+                                                                               paramPath +
+                                                                               ": " +
+                                                                               (object
+                                                                               ) ex);
+                                                                     return (
+                                                                             PARAM
+                                                                         )
+                                                                         null;
+                                                                   }
+                                                                   if (
+                                                                       layouts ==
+                                                                       null)
+                                                                     return obj;
+                                                                   if (layouts
+                                                                       .ContainsKey(
+                                                                           obj
+                                                                               .ParamType)
+                                                                   ) {
+                                                                     PARAM.
+                                                                         Layout
+                                                                         layout
+                                                                             = layouts
+                                                                             [obj
+                                                                                  .ParamType];
+                                                                     if (
+                                                                         (long)
+                                                                         layout
+                                                                             .Size ==
+                                                                         obj
+                                                                             .DetectedSize
+                                                                     ) {
+                                                                       obj
+                                                                           .ApplyParamdef(
+                                                                               layout
+                                                                                   .ToParamdef(
+                                                                                       obj
+                                                                                           .ParamType,
+                                                                                       out
+                                                                                       List
+                                                                                       <PARAMTDF
+                                                                                       > _));
+                                                                       return
+                                                                           obj;
+                                                                     }
+                                                                   }
+                                                                   return (PARAM
+                                                                       ) null;
+                                                                 }),
+                                 (string) null);
     }
 
     public Dictionary<T, string> LoadNames<T>(
-      string name,
-      Func<string, T> key,
-      bool allowMissing = false)
-    {
+        string name,
+        Func<string, T> key,
+        bool allowMissing = false) {
       if (this.Spec.NameDir == null)
         throw new Exception("Name file dir not provided");
       Dictionary<T, string> dictionary = new Dictionary<T, string>();
       string path = this.Spec.NameDir + "\\" + name + ".txt";
       if (allowMissing && !File.Exists(path))
         return new Dictionary<T, string>();
-      foreach (string readLine in File.ReadLines(path))
-      {
+      foreach (string readLine in File.ReadLines(path)) {
         int length = readLine.IndexOf(' ');
         if (length == -1)
           throw new Exception("Bad line " + readLine + " in " + path);
@@ -91,13 +130,13 @@ namespace SoulsIds
       return dictionary;
     }
 
-    public Dictionary<string, PARAM.Layout> LoadLayouts()
-    {
+    public Dictionary<string, PARAM.Layout> LoadLayouts() {
       if (this.Spec.LayoutDir == null)
         throw new Exception("Layout dir not provided");
-      Dictionary<string, PARAM.Layout> dictionary = new Dictionary<string, PARAM.Layout>();
-      foreach (string file in Directory.GetFiles(this.Spec.LayoutDir, "*.xml"))
-      {
+      Dictionary<string, PARAM.Layout> dictionary =
+          new Dictionary<string, PARAM.Layout>();
+      foreach (string file in Directory.GetFiles(this.Spec.LayoutDir, "*.xml")
+      ) {
         string withoutExtension = Path.GetFileNameWithoutExtension(file);
         PARAM.Layout layout = PARAM.Layout.ReadXMLFile(file);
         dictionary[withoutExtension] = layout;
@@ -106,58 +145,53 @@ namespace SoulsIds
     }
 
     public Dictionary<string, T> Load<T>(
-      string relDir,
-      Func<string, T> reader,
-      string ext = "*.dcx")
-    {
+        string relDir,
+        Func<string, T> reader,
+        string ext = "*.dcx") {
       if (this.Spec.GameDir == null)
         throw new Exception("Base game dir not provided");
       Dictionary<string, T> dictionary = new Dictionary<string, T>();
-      foreach (string file in Directory.GetFiles(this.Spec.GameDir + "\\" + relDir, ext))
-      {
+      foreach (string file in Directory.GetFiles(
+          this.Spec.GameDir + "\\" + relDir,
+          ext)) {
         string index = GameEditor.BaseName(file);
-        try
-        {
+        try {
           dictionary[index] = reader(file);
-        }
-        catch (Exception ex)
-        {
-          throw new Exception(string.Format("Failed to load {0}: {1}", (object) file, (object) ex));
+        } catch (Exception ex) {
+          throw new Exception(string.Format("Failed to load {0}: {1}",
+                                            (object) file,
+                                            (object) ex));
         }
       }
       return dictionary;
     }
 
     public Dictionary<string, T> LoadBnd<T>(
-      string path,
-      Func<byte[], string, T> parser,
-      string fileExt = null)
-    {
+        string path,
+        Func<byte[], string, T> parser,
+        string fileExt = null) {
       GameEditor.BaseName(path);
       Dictionary<string, T> dictionary = new Dictionary<string, T>();
       IBinder binder;
-      try
-      {
+      try {
         binder = this.ReadBnd(path);
+      } catch (Exception ex) {
+        throw new Exception(string.Format("Failed to load {0}: {1}",
+                                          (object) path,
+                                          (object) ex));
       }
-      catch (Exception ex)
-      {
-        throw new Exception(string.Format("Failed to load {0}: {1}", (object) path, (object) ex));
-      }
-      foreach (BinderFile file in binder.Files)
-      {
-        if (fileExt == null || file.Name.EndsWith(fileExt))
-        {
+      foreach (BinderFile file in binder.Files) {
+        if (fileExt == null || file.Name.EndsWith(fileExt)) {
           string index = GameEditor.BaseName(file.Name);
-          try
-          {
+          try {
             T obj = parser(file.Bytes, index);
             if ((object) obj != null)
               dictionary[index] = obj;
-          }
-          catch (Exception ex)
-          {
-            throw new Exception(string.Format("Failed to load {0}: {1}: {2}", (object) path, (object) index, (object) ex));
+          } catch (Exception ex) {
+            throw new Exception(string.Format("Failed to load {0}: {1}: {2}",
+                                              (object) path,
+                                              (object) index,
+                                              (object) ex));
           }
         }
       }
@@ -165,98 +199,95 @@ namespace SoulsIds
     }
 
     public Dictionary<string, Dictionary<string, T>> LoadBnds<T>(
-      string relDir,
-      Func<byte[], string, T> parser,
-      string ext = "*bnd.dcx",
-      string fileExt = null)
-    {
+        string relDir,
+        Func<byte[], string, T> parser,
+        string ext = "*bnd.dcx",
+        string fileExt = null) {
       if (this.Spec.GameDir == null)
         throw new Exception("Base game dir not provided");
-      Dictionary<string, Dictionary<string, T>> dictionary1 = new Dictionary<string, Dictionary<string, T>>();
-      foreach (string file in Directory.GetFiles(this.Spec.GameDir + "\\" + relDir, ext))
-      {
+      Dictionary<string, Dictionary<string, T>> dictionary1 =
+          new Dictionary<string, Dictionary<string, T>>();
+      foreach (string file in Directory.GetFiles(
+          this.Spec.GameDir + "\\" + relDir,
+          ext)) {
         string index = GameEditor.BaseName(file);
-        Dictionary<string, T> dictionary2 = this.LoadBnd<T>(file, parser, fileExt);
+        Dictionary<string, T> dictionary2 =
+            this.LoadBnd<T>(file, parser, fileExt);
         if (dictionary2.Count > 0)
           dictionary1[index] = dictionary2;
       }
       return dictionary1;
     }
 
-    private IBinder ReadBnd(string path)
-    {
-      try
-      {
+    private IBinder ReadBnd(string path) {
+      try {
         if (SoulsFile<BND3>.Is(path))
           return (IBinder) SoulsFile<BND3>.Read(path);
         if (SoulsFile<BND4>.Is(path))
           return (IBinder) SoulsFile<BND4>.Read(path);
-        if (this.Spec.Game == GameSpec.FromGame.DS3 && path.EndsWith("Data0.bdt"))
+        if (this.Spec.Game == GameSpec.FromGame.DS3 &&
+            path.EndsWith("Data0.bdt"))
           return (IBinder) SFUtil.DecryptDS3Regulation(path);
-        throw new Exception(string.Format("Unrecognized bnd format for game {0}: {1}", (object) this.Spec.Game, (object) path));
-      }
-      catch (Exception ex)
-      {
-        throw new Exception(string.Format("Failed to load {0}: {1}", (object) path, (object) ex));
+        throw new Exception(string.Format(
+                                "Unrecognized bnd format for game {0}: {1}",
+                                (object) this.Spec.Game,
+                                (object) path));
+      } catch (Exception ex) {
+        throw new Exception(string.Format("Failed to load {0}: {1}",
+                                          (object) path,
+                                          (object) ex));
       }
     }
 
     public void OverrideBnd<T>(
-      string path,
-      string toDir,
-      Dictionary<string, T> diffData,
-      Func<T, byte[]> writer,
-      string fileExt = null)
-    {
+        string path,
+        string toDir,
+        Dictionary<string, T> diffData,
+        Func<T, byte[]> writer,
+        string fileExt = null) {
       string fileName = Path.GetFileName(path);
-      string outPath = GameEditor.AbsolutePath(this.Spec.GameDir, toDir + "\\" + fileName);
+      string outPath =
+          GameEditor.AbsolutePath(this.Spec.GameDir, toDir + "\\" + fileName);
       this.OverrideBndRel<T>(path, outPath, diffData, writer, fileExt);
     }
 
     public void OverrideBndRel<T>(
-      string path,
-      string outPath,
-      Dictionary<string, T> diffData,
-      Func<T, byte[]> writer,
-      string fileExt = null)
-    {
+        string path,
+        string outPath,
+        Dictionary<string, T> diffData,
+        Func<T, byte[]> writer,
+        string fileExt = null) {
       if (this.Spec.Dcx == DCX.Type.Unknown)
         throw new Exception("DCX encoding not provided");
       Path.GetFileName(path);
       IBinder binder = this.ReadBnd(path);
-      foreach (BinderFile file in binder.Files)
-      {
-        if (fileExt == null || file.Name.EndsWith(fileExt))
-        {
+      foreach (BinderFile file in binder.Files) {
+        if (fileExt == null || file.Name.EndsWith(fileExt)) {
           string key = GameEditor.BaseName(file.Name);
-          if (diffData.ContainsKey(key))
-          {
-            if ((object) diffData[key] != null)
-            {
-              try
-              {
+          if (diffData.ContainsKey(key)) {
+            if ((object) diffData[key] != null) {
+              try {
                 file.Bytes = writer(diffData[key]);
-              }
-              catch (Exception ex)
-              {
-                Console.WriteLine(string.Format("Failed to load {0}: {1}: {2}", (object) path, (object) key, (object) ex));
+              } catch (Exception ex) {
+                Console.WriteLine(string.Format("Failed to load {0}: {1}: {2}",
+                                                (object) path,
+                                                (object) key,
+                                                (object) ex));
               }
             }
           }
         }
       }
-      if (binder is BND4 bnd)
-      {
-        if (this.Spec.Game == GameSpec.FromGame.DS3 && outPath.EndsWith("Data0.bdt"))
-        {
+      if (binder is BND4 bnd) {
+        if (this.Spec.Game == GameSpec.FromGame.DS3 &&
+            outPath.EndsWith("Data0.bdt")) {
           SFUtil.EncryptDS3Regulation(outPath, bnd);
-          if (new FileInfo(outPath).Length > 1048588L)
-          {
+          if (new FileInfo(outPath).Length > 1048588L) {
             File.Delete(outPath);
-            throw new Exception("You must set loadLooseParams=1 in modengine.ini. Otherwise Data0.bdt is too large and will permanently corrupt your save file.");
+            throw new Exception(
+                "You must set loadLooseParams=1 in modengine.ini. Otherwise Data0.bdt is too large and will permanently corrupt your save file.");
           }
-        }
-        else
+        } else
           bnd.Write(outPath, this.Spec.Dcx);
       }
       if (!(binder is BND3 bnD3))
@@ -265,36 +296,37 @@ namespace SoulsIds
     }
 
     public void OverrideBnds<T>(
-      string fromDir,
-      string toDir,
-      Dictionary<string, Dictionary<string, T>> diffBnds,
-      Func<T, byte[]> writer,
-      string ext = "*bnd.dcx",
-      string fileExt = null)
-    {
+        string fromDir,
+        string toDir,
+        Dictionary<string, Dictionary<string, T>> diffBnds,
+        Func<T, byte[]> writer,
+        string ext = "*bnd.dcx",
+        string fileExt = null) {
       if (this.Spec.GameDir == null)
         throw new Exception("Base game dir not provided");
-      foreach (string file in Directory.GetFiles(this.Spec.GameDir + "\\" + fromDir, ext))
-      {
+      foreach (string file in Directory.GetFiles(
+          this.Spec.GameDir + "\\" + fromDir,
+          ext)) {
         string key = GameEditor.BaseName(file);
         if (diffBnds.ContainsKey(key))
           this.OverrideBnd<T>(file, toDir, diffBnds[key], writer, fileExt);
       }
     }
 
-    public static string BaseName(string path)
-    {
+    public static string BaseName(string path) {
       path = Path.GetFileName(path);
-      return path.IndexOf('.') == -1 ? path : path.Substring(0, path.IndexOf('.'));
+      return path.IndexOf('.') == -1
+                 ? path
+                 : path.Substring(0, path.IndexOf('.'));
     }
 
-    public static string AbsolutePath(string basePath, string maybeRelPath)
-    {
-      return basePath == null ? Path.GetFullPath(maybeRelPath) : Path.GetFullPath(Path.Combine(basePath, maybeRelPath));
+    public static string AbsolutePath(string basePath, string maybeRelPath) {
+      return basePath == null
+                 ? Path.GetFullPath(maybeRelPath)
+                 : Path.GetFullPath(Path.Combine(basePath, maybeRelPath));
     }
 
-    public static void CopyRow(PARAM.Row from, PARAM.Row to)
-    {
+    public static void CopyRow(PARAM.Row from, PARAM.Row to) {
       for (int index = 0; index < from.Cells.Count; ++index)
         to.Cells[index].Value = from.Cells[index].Value;
     }

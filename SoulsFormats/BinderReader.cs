@@ -8,11 +8,9 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public abstract class BinderReader : IDisposable
-  {
+  public abstract class BinderReader : IDisposable {
     protected BinaryReaderEx DataBR;
     private bool disposedValue;
 
@@ -26,18 +24,15 @@ namespace SoulsFormats
 
     public List<BinderFileHeader> Files { get; set; }
 
-    public byte[] ReadFile(int index)
-    {
+    public byte[] ReadFile(int index) {
       return this.ReadFile(this.Files[index]);
     }
 
-    public byte[] ReadFile(BinderFileHeader fileHeader)
-    {
+    public byte[] ReadFile(BinderFileHeader fileHeader) {
       return fileHeader.ReadFileData(this.DataBR).Bytes;
     }
 
-    protected virtual void Dispose(bool disposing)
-    {
+    protected virtual void Dispose(bool disposing) {
       if (this.disposedValue)
         return;
       if (disposing)
@@ -45,8 +40,7 @@ namespace SoulsFormats
       this.disposedValue = true;
     }
 
-    public void Dispose()
-    {
+    public void Dispose() {
       this.Dispose(true);
     }
   }

@@ -7,16 +7,13 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [AttributeUsage(AttributeTargets.All, AllowMultiple = false)]
   [ComVisible(true)]
-  public class SupportsAlphaAttribute : Attribute
-  {
+  public class SupportsAlphaAttribute : Attribute {
     public bool Supports { get; }
 
-    public SupportsAlphaAttribute(bool supports)
-    {
+    public SupportsAlphaAttribute(bool supports) {
       this.Supports = supports;
     }
   }

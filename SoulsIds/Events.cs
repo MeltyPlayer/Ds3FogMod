@@ -56,11 +56,11 @@ namespace SoulsIds {
     public Events(string emedfPath) {
       doc_ = EMEDF.ReadFile(emedfPath);
       docByName_ = doc_
-                  .Classes
-                  .SelectMany(
-                      c => c.Instructions.Select(i => (i, (int) c.Index)))
-                  .ToDictionary(i => i.Item1.Name,
-                                i => (i.Item2, (int) i.Item1.Index));
+                   .Classes
+                   .SelectMany(
+                       c => c.Instructions.Select(i => (i, (int) c.Index)))
+                   .ToDictionary(i => i.Item1.Name,
+                                 i => (i.Item2, (int) i.Item1.Index));
       funcBytePositions_ = new Dictionary<EMEDF.InstrDoc, List<int>>();
       foreach (EMEDF.ClassDoc bank in doc_.Classes) {
         foreach (EMEDF.InstrDoc instr in bank.Instructions) {

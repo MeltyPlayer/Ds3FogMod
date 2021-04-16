@@ -7,29 +7,24 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats.Kuon
-{
+namespace SoulsFormats.Kuon {
   [ComVisible(true)]
-  public class BND0 : SoulsFile<BND0>
-  {
+  public class BND0 : SoulsFile<BND0> {
     public List<BND0.File> Files;
     public int Unk04;
 
-    protected override bool Is(BinaryReaderEx br)
-    {
+    protected override bool Is(BinaryReaderEx br) {
       return br.Length >= 4L && br.GetASCII(0L, 4) == "BND\0";
     }
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       br.BigEndian = false;
       br.AssertASCII("BND\0");
       this.Unk04 = br.AssertInt32(200, 202);
       int num = br.ReadInt32();
       int capacity = br.ReadInt32();
       this.Files = new List<BND0.File>(capacity);
-      for (int index = 0; index < capacity; ++index)
-      {
+      for (int index = 0; index < capacity; ++index) {
         int nextOffset = num;
         if (index < capacity - 1)
           nextOffset = br.GetInt32(br.Position + 12L + 4L);
@@ -37,14 +32,12 @@ namespace SoulsFormats.Kuon
       }
     }
 
-    public class File
-    {
+    public class File {
       public int ID;
       public string Name;
       public byte[] Bytes;
 
-      internal File(BinaryReaderEx br, int nextOffset)
-      {
+      internal File(BinaryReaderEx br, int nextOffset) {
         this.ID = br.ReadInt32();
         int num1 = br.ReadInt32();
         int num2 = br.ReadInt32();

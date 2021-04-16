@@ -11,43 +11,29 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public class MSBS : SoulsFile<MSBS>, IMsb
-  {
+  public class MSBS : SoulsFile<MSBS>, IMsb {
     public MSBS.ModelParam Models { get; set; }
 
-    IMsbParam<IMsbModel> IMsb.Models
-    {
-      get
-      {
-        return (IMsbParam<IMsbModel>) this.Models;
-      }
+    IMsbParam<IMsbModel> IMsb.Models {
+      get { return (IMsbParam<IMsbModel>) this.Models; }
     }
 
     public MSBS.EventParam Events { get; set; }
 
     public MSBS.PointParam Regions { get; set; }
 
-    IMsbParam<IMsbRegion> IMsb.Regions
-    {
-      get
-      {
-        return (IMsbParam<IMsbRegion>) this.Regions;
-      }
+    IMsbParam<IMsbRegion> IMsb.Regions {
+      get { return (IMsbParam<IMsbRegion>) this.Regions; }
     }
 
     public MSBS.RouteParam Routes { get; set; }
 
     public MSBS.PartsParam Parts { get; set; }
 
-    IMsbParam<IMsbPart> IMsb.Parts
-    {
-      get
-      {
-        return (IMsbParam<IMsbPart>) this.Parts;
-      }
+    IMsbParam<IMsbPart> IMsb.Parts {
+      get { return (IMsbParam<IMsbPart>) this.Parts; }
     }
 
     public MSBS.EmptyParam Layers { get; set; }
@@ -56,8 +42,7 @@ namespace SoulsFormats
 
     public MSBS.EmptyParam BoneNames { get; set; }
 
-    public MSBS()
-    {
+    public MSBS() {
       this.Models = new MSBS.ModelParam(35);
       this.Events = new MSBS.EventParam(35);
       this.Regions = new MSBS.PointParam(35);
@@ -68,13 +53,11 @@ namespace SoulsFormats
       this.BoneNames = new MSBS.EmptyParam(0, "MAPSTUDIO_BONE_NAME_STRING");
     }
 
-    protected override bool Is(BinaryReaderEx br)
-    {
+    protected override bool Is(BinaryReaderEx br) {
       return br.Length >= 4L && br.GetASCII(0L, 4) == "MSB ";
     }
 
-    protected override void Read(BinaryReaderEx br)
-    {
+    protected override void Read(BinaryReaderEx br) {
       br.BigEndian = false;
       br.AssertASCII("MSB ");
       br.AssertInt32(1);
@@ -101,7 +84,8 @@ namespace SoulsFormats
       this.BoneNames = new MSBS.EmptyParam(0, "MAPSTUDIO_BONE_NAME_STRING");
       this.BoneNames.Read(br);
       if (br.Position != 0L)
-        throw new InvalidDataException("The next param offset of the final param should be 0, but it wasn't.");
+        throw new InvalidDataException(
+            "The next param offset of the final param should be 0, but it wasn't.");
       MSB.DisambiguateNames<MSBS.Model>(entries.Models);
       MSB.DisambiguateNames<MSBS.Region>(entries.Regions);
       MSB.DisambiguateNames<MSBS.Part>(entries.Parts);
@@ -113,8 +97,7 @@ namespace SoulsFormats
         part.GetNames(this, entries);
     }
 
-    protected override void Write(BinaryWriterEx bw)
-    {
+    protected override void Write(BinaryWriterEx bw) {
       MSBS.Entries entries;
       entries.Models = this.Models.GetEntries();
       entries.Events = this.Events.GetEntries();
@@ -155,26 +138,24 @@ namespace SoulsFormats
       bw.FillInt64("NextParamOffset", 0L);
     }
 
-    public enum EventType : uint
-    {
+    public enum EventType : uint {
       Treasure = 4,
       Generator = 5,
       ObjAct = 7,
       MapOffset = 9,
-      WalkRoute = 14, // 0x0000000E
-      GroupTour = 15, // 0x0000000F
-      Event17 = 17, // 0x00000011
-      Event18 = 18, // 0x00000012
-      Event20 = 20, // 0x00000014
-      Event21 = 21, // 0x00000015
-      PartsGroup = 22, // 0x00000016
-      Talk = 23, // 0x00000017
+      WalkRoute = 14,     // 0x0000000E
+      GroupTour = 15,     // 0x0000000F
+      Event17 = 17,       // 0x00000011
+      Event18 = 18,       // 0x00000012
+      Event20 = 20,       // 0x00000014
+      Event21 = 21,       // 0x00000015
+      PartsGroup = 22,    // 0x00000016
+      Talk = 23,          // 0x00000017
       AutoDrawGroup = 24, // 0x00000018
       Other = 4294967295, // 0xFFFFFFFF
     }
 
-    public class EventParam : MSBS.Param<MSBS.Event>
-    {
+    public class EventParam : MSBS.Param<MSBS.Event> {
       public List<MSBS.Event.Treasure> Treasures { get; set; }
 
       public List<MSBS.Event.Generator> Generators { get; set; }
@@ -204,8 +185,7 @@ namespace SoulsFormats
       public List<MSBS.Event.Other> Others { get; set; }
 
       public EventParam(int unk00 = 35)
-        : base(unk00, "EVENT_PARAM_ST")
-      {
+          : base(unk00, "EVENT_PARAM_ST") {
         this.Treasures = new List<MSBS.Event.Treasure>();
         this.Generators = new List<MSBS.Event.Generator>();
         this.ObjActs = new List<MSBS.Event.ObjAct>();
@@ -222,11 +202,9 @@ namespace SoulsFormats
         this.Others = new List<MSBS.Event.Other>();
       }
 
-      internal override MSBS.Event ReadEntry(BinaryReaderEx br)
-      {
+      internal override MSBS.Event ReadEntry(BinaryReaderEx br) {
         MSBS.EventType enum32 = br.GetEnum32<MSBS.EventType>(br.Position + 12L);
-        switch (enum32)
-        {
+        switch (enum32) {
           case MSBS.EventType.Treasure:
             MSBS.Event.Treasure treasure = new MSBS.Event.Treasure(br);
             this.Treasures.Add(treasure);
@@ -276,7 +254,8 @@ namespace SoulsFormats
             this.Talks.Add(talk);
             return (MSBS.Event) talk;
           case MSBS.EventType.AutoDrawGroup:
-            MSBS.Event.AutoDrawGroup autoDrawGroup = new MSBS.Event.AutoDrawGroup(br);
+            MSBS.Event.AutoDrawGroup autoDrawGroup =
+                new MSBS.Event.AutoDrawGroup(br);
             this.AutoDrawGroups.Add(autoDrawGroup);
             return (MSBS.Event) autoDrawGroup;
           case MSBS.EventType.Other:
@@ -284,34 +263,33 @@ namespace SoulsFormats
             this.Others.Add(other);
             return (MSBS.Event) other;
           default:
-            throw new NotImplementedException(string.Format("Unimplemented model type: {0}", (object) enum32));
+            throw new NotImplementedException(
+                string.Format("Unimplemented model type: {0}",
+                              (object) enum32));
         }
       }
 
-      public override List<MSBS.Event> GetEntries()
-      {
-        return SFUtil.ConcatAll<MSBS.Event>(new IEnumerable<MSBS.Event>[14]
-        {
-          (IEnumerable<MSBS.Event>) this.Treasures,
-          (IEnumerable<MSBS.Event>) this.Generators,
-          (IEnumerable<MSBS.Event>) this.ObjActs,
-          (IEnumerable<MSBS.Event>) this.MapOffsets,
-          (IEnumerable<MSBS.Event>) this.WalkRoutes,
-          (IEnumerable<MSBS.Event>) this.GroupTours,
-          (IEnumerable<MSBS.Event>) this.Event17s,
-          (IEnumerable<MSBS.Event>) this.Event18s,
-          (IEnumerable<MSBS.Event>) this.Event20s,
-          (IEnumerable<MSBS.Event>) this.Event21s,
-          (IEnumerable<MSBS.Event>) this.PartsGroups,
-          (IEnumerable<MSBS.Event>) this.Talks,
-          (IEnumerable<MSBS.Event>) this.AutoDrawGroups,
-          (IEnumerable<MSBS.Event>) this.Others
+      public override List<MSBS.Event> GetEntries() {
+        return SFUtil.ConcatAll<MSBS.Event>(new IEnumerable<MSBS.Event>[14] {
+            (IEnumerable<MSBS.Event>) this.Treasures,
+            (IEnumerable<MSBS.Event>) this.Generators,
+            (IEnumerable<MSBS.Event>) this.ObjActs,
+            (IEnumerable<MSBS.Event>) this.MapOffsets,
+            (IEnumerable<MSBS.Event>) this.WalkRoutes,
+            (IEnumerable<MSBS.Event>) this.GroupTours,
+            (IEnumerable<MSBS.Event>) this.Event17s,
+            (IEnumerable<MSBS.Event>) this.Event18s,
+            (IEnumerable<MSBS.Event>) this.Event20s,
+            (IEnumerable<MSBS.Event>) this.Event21s,
+            (IEnumerable<MSBS.Event>) this.PartsGroups,
+            (IEnumerable<MSBS.Event>) this.Talks,
+            (IEnumerable<MSBS.Event>) this.AutoDrawGroups,
+            (IEnumerable<MSBS.Event>) this.Others
         });
       }
     }
 
-    public abstract class Event : MSBS.Entry
-    {
+    public abstract class Event : MSBS.Entry {
       private int PartIndex;
       private int RegionIndex;
 
@@ -327,15 +305,13 @@ namespace SoulsFormats
 
       public int EntityID { get; set; }
 
-      internal Event()
-      {
+      internal Event() {
         this.Name = "";
         this.EventIndex = -1;
         this.EntityID = -1;
       }
 
-      internal Event(BinaryReaderEx br)
-      {
+      internal Event(BinaryReaderEx br) {
         long position = br.Position;
         long num1 = br.ReadInt64();
         this.EventIndex = br.ReadInt32();
@@ -353,8 +329,7 @@ namespace SoulsFormats
         br.Position = position + num4;
       }
 
-      internal override void Write(BinaryWriterEx bw, int id)
-      {
+      internal override void Write(BinaryWriterEx bw, int id) {
         long position = bw.Position;
         bw.ReserveInt64("NameOffset");
         bw.WriteInt32(this.EventIndex);
@@ -371,55 +346,43 @@ namespace SoulsFormats
         bw.WriteInt32(this.RegionIndex);
         bw.WriteInt32(this.EntityID);
         bw.WriteInt32(0);
-        if (this.HasTypeData)
-        {
+        if (this.HasTypeData) {
           bw.FillInt64("TypeDataOffset", bw.Position - position);
           this.WriteTypeData(bw);
-        }
-        else
+        } else
           bw.FillInt64("TypeDataOffset", 0L);
       }
 
-      internal virtual void WriteTypeData(BinaryWriterEx bw)
-      {
-        throw new InvalidOperationException("Type data should not be written for events with no type data.");
+      internal virtual void WriteTypeData(BinaryWriterEx bw) {
+        throw new InvalidOperationException(
+            "Type data should not be written for events with no type data.");
       }
 
-      internal virtual void GetNames(MSBS msb, MSBS.Entries entries)
-      {
+      internal virtual void GetNames(MSBS msb, MSBS.Entries entries) {
         this.PartName = MSB.FindName<MSBS.Part>(entries.Parts, this.PartIndex);
-        this.RegionName = MSB.FindName<MSBS.Region>(entries.Regions, this.RegionIndex);
+        this.RegionName =
+            MSB.FindName<MSBS.Region>(entries.Regions, this.RegionIndex);
       }
 
-      internal virtual void GetIndices(MSBS msb, MSBS.Entries entries)
-      {
+      internal virtual void GetIndices(MSBS msb, MSBS.Entries entries) {
         this.PartIndex = MSB.FindIndex<MSBS.Part>(entries.Parts, this.PartName);
-        this.RegionIndex = MSB.FindIndex<MSBS.Region>(entries.Regions, this.RegionName);
+        this.RegionIndex =
+            MSB.FindIndex<MSBS.Region>(entries.Regions, this.RegionName);
       }
 
-      public override string ToString()
-      {
+      public override string ToString() {
         return string.Format("{0} {1}", (object) this.Type, (object) this.Name);
       }
 
-      public class Treasure : MSBS.Event
-      {
+      public class Treasure : MSBS.Event {
         private int TreasurePartIndex;
 
-        public override MSBS.EventType Type
-        {
-          get
-          {
-            return MSBS.EventType.Treasure;
-          }
+        public override MSBS.EventType Type {
+          get { return MSBS.EventType.Treasure; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public string TreasurePartName { get; set; }
@@ -434,16 +397,14 @@ namespace SoulsFormats
 
         public bool StartDisabled { get; set; }
 
-        public Treasure()
-        {
+        public Treasure() {
           this.ItemLotID = -1;
           this.ActionButtonID = -1;
           this.PickupAnimID = -1;
         }
 
         internal Treasure(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           br.AssertInt32(new int[1]);
           br.AssertInt32(new int[1]);
           this.TreasurePartIndex = br.ReadInt32();
@@ -460,8 +421,7 @@ namespace SoulsFormats
           br.AssertInt32(new int[1]);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt32(0);
           bw.WriteInt32(0);
           bw.WriteInt32(this.TreasurePartIndex);
@@ -478,38 +438,29 @@ namespace SoulsFormats
           bw.WriteInt32(0);
         }
 
-        internal override void GetNames(MSBS msb, MSBS.Entries entries)
-        {
+        internal override void GetNames(MSBS msb, MSBS.Entries entries) {
           base.GetNames(msb, entries);
-          this.TreasurePartName = MSB.FindName<MSBS.Part>(entries.Parts, this.TreasurePartIndex);
+          this.TreasurePartName =
+              MSB.FindName<MSBS.Part>(entries.Parts, this.TreasurePartIndex);
         }
 
-        internal override void GetIndices(MSBS msb, MSBS.Entries entries)
-        {
+        internal override void GetIndices(MSBS msb, MSBS.Entries entries) {
           base.GetIndices(msb, entries);
-          this.TreasurePartIndex = MSB.FindIndex<MSBS.Part>(entries.Parts, this.TreasurePartName);
+          this.TreasurePartIndex =
+              MSB.FindIndex<MSBS.Part>(entries.Parts, this.TreasurePartName);
         }
       }
 
-      public class Generator : MSBS.Event
-      {
+      public class Generator : MSBS.Event {
         private int[] SpawnRegionIndices;
         private int[] SpawnPartIndices;
 
-        public override MSBS.EventType Type
-        {
-          get
-          {
-            return MSBS.EventType.Generator;
-          }
+        public override MSBS.EventType Type {
+          get { return MSBS.EventType.Generator; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public short MaxNum { get; set; }
@@ -534,15 +485,13 @@ namespace SoulsFormats
 
         public string[] SpawnPartNames { get; private set; }
 
-        public Generator()
-        {
+        public Generator() {
           this.SpawnRegionNames = new string[8];
           this.SpawnPartNames = new string[32];
         }
 
         internal Generator(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.MaxNum = br.ReadInt16();
           this.LimitNum = br.ReadInt16();
           this.MinGenNum = br.ReadInt16();
@@ -559,8 +508,7 @@ namespace SoulsFormats
           br.AssertPattern(32, (byte) 0);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt16(this.MaxNum);
           bw.WriteInt16(this.LimitNum);
           bw.WriteInt16(this.MinGenNum);
@@ -577,39 +525,34 @@ namespace SoulsFormats
           bw.WritePattern(32, (byte) 0);
         }
 
-        internal override void GetNames(MSBS msb, MSBS.Entries entries)
-        {
+        internal override void GetNames(MSBS msb, MSBS.Entries entries) {
           base.GetNames(msb, entries);
-          this.SpawnRegionNames = MSB.FindNames<MSBS.Region>(entries.Regions, this.SpawnRegionIndices);
-          this.SpawnPartNames = MSB.FindNames<MSBS.Part>(entries.Parts, this.SpawnPartIndices);
+          this.SpawnRegionNames =
+              MSB.FindNames<MSBS.Region>(entries.Regions,
+                                         this.SpawnRegionIndices);
+          this.SpawnPartNames =
+              MSB.FindNames<MSBS.Part>(entries.Parts, this.SpawnPartIndices);
         }
 
-        internal override void GetIndices(MSBS msb, MSBS.Entries entries)
-        {
+        internal override void GetIndices(MSBS msb, MSBS.Entries entries) {
           base.GetIndices(msb, entries);
-          this.SpawnRegionIndices = MSB.FindIndices<MSBS.Region>(entries.Regions, this.SpawnRegionNames);
-          this.SpawnPartIndices = MSB.FindIndices<MSBS.Part>(entries.Parts, this.SpawnPartNames);
+          this.SpawnRegionIndices =
+              MSB.FindIndices<MSBS.Region>(entries.Regions,
+                                           this.SpawnRegionNames);
+          this.SpawnPartIndices =
+              MSB.FindIndices<MSBS.Part>(entries.Parts, this.SpawnPartNames);
         }
       }
 
-      public class ObjAct : MSBS.Event
-      {
+      public class ObjAct : MSBS.Event {
         private int ObjActPartIndex;
 
-        public override MSBS.EventType Type
-        {
-          get
-          {
-            return MSBS.EventType.ObjAct;
-          }
+        public override MSBS.EventType Type {
+          get { return MSBS.EventType.ObjAct; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public int ObjActEntityID { get; set; }
@@ -622,16 +565,14 @@ namespace SoulsFormats
 
         public int EventFlagID { get; set; }
 
-        public ObjAct()
-        {
+        public ObjAct() {
           this.ObjActEntityID = -1;
           this.ObjActID = -1;
           this.EventFlagID = -1;
         }
 
         internal ObjAct(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.ObjActEntityID = br.ReadInt32();
           this.ObjActPartIndex = br.ReadInt32();
           this.ObjActID = br.ReadInt32();
@@ -644,8 +585,7 @@ namespace SoulsFormats
           br.AssertInt32(new int[1]);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt32(this.ObjActEntityID);
           bw.WriteInt32(this.ObjActPartIndex);
           bw.WriteInt32(this.ObjActID);
@@ -658,77 +598,55 @@ namespace SoulsFormats
           bw.WriteInt32(0);
         }
 
-        internal override void GetNames(MSBS msb, MSBS.Entries entries)
-        {
+        internal override void GetNames(MSBS msb, MSBS.Entries entries) {
           base.GetNames(msb, entries);
-          this.ObjActPartName = MSB.FindName<MSBS.Part>(entries.Parts, this.ObjActPartIndex);
+          this.ObjActPartName =
+              MSB.FindName<MSBS.Part>(entries.Parts, this.ObjActPartIndex);
         }
 
-        internal override void GetIndices(MSBS msb, MSBS.Entries entries)
-        {
+        internal override void GetIndices(MSBS msb, MSBS.Entries entries) {
           base.GetIndices(msb, entries);
-          this.ObjActPartIndex = MSB.FindIndex<MSBS.Part>(entries.Parts, this.ObjActPartName);
+          this.ObjActPartIndex =
+              MSB.FindIndex<MSBS.Part>(entries.Parts, this.ObjActPartName);
         }
       }
 
-      public class MapOffset : MSBS.Event
-      {
-        public override MSBS.EventType Type
-        {
-          get
-          {
-            return MSBS.EventType.MapOffset;
-          }
+      public class MapOffset : MSBS.Event {
+        public override MSBS.EventType Type {
+          get { return MSBS.EventType.MapOffset; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public Vector3 Position { get; set; }
 
         public float Degree { get; set; }
 
-        public MapOffset()
-        {
-        }
+        public MapOffset() {}
 
         internal MapOffset(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.Position = br.ReadVector3();
           this.Degree = br.ReadSingle();
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteVector3(this.Position);
           bw.WriteSingle(this.Degree);
         }
       }
 
-      public class WalkRoute : MSBS.Event
-      {
+      public class WalkRoute : MSBS.Event {
         private short[] WalkRegionIndices;
 
-        public override MSBS.EventType Type
-        {
-          get
-          {
-            return MSBS.EventType.WalkRoute;
-          }
+        public override MSBS.EventType Type {
+          get { return MSBS.EventType.WalkRoute; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public int UnkT00 { get; set; }
@@ -737,8 +655,7 @@ namespace SoulsFormats
 
         public MSBS.Event.WalkRoute.WREntry[] WREntries { get; set; }
 
-        public WalkRoute()
-        {
+        public WalkRoute() {
           this.WalkRegionNames = new string[32];
           this.WREntries = new MSBS.Event.WalkRoute.WREntry[5];
           for (int index = 0; index < 5; ++index)
@@ -746,8 +663,7 @@ namespace SoulsFormats
         }
 
         internal WalkRoute(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.UnkT00 = br.ReadInt32();
           br.AssertInt32(new int[1]);
           br.AssertInt32(new int[1]);
@@ -759,8 +675,7 @@ namespace SoulsFormats
           br.AssertPattern(20, (byte) 0);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt32(this.UnkT00);
           bw.WriteInt32(0);
           bw.WriteInt32(0);
@@ -771,28 +686,30 @@ namespace SoulsFormats
           bw.WritePattern(20, (byte) 0);
         }
 
-        internal override void GetNames(MSBS msb, MSBS.Entries entries)
-        {
+        internal override void GetNames(MSBS msb, MSBS.Entries entries) {
           base.GetNames(msb, entries);
           this.WalkRegionNames = new string[this.WalkRegionIndices.Length];
           for (int index = 0; index < this.WalkRegionIndices.Length; ++index)
-            this.WalkRegionNames[index] = MSB.FindName<MSBS.Region>(entries.Regions, (int) this.WalkRegionIndices[index]);
+            this.WalkRegionNames[index] =
+                MSB.FindName<MSBS.Region>(entries.Regions,
+                                          (int) this.WalkRegionIndices[index]);
           foreach (MSBS.Event.WalkRoute.WREntry wrEntry in this.WREntries)
             wrEntry.GetNames(entries);
         }
 
-        internal override void GetIndices(MSBS msb, MSBS.Entries entries)
-        {
+        internal override void GetIndices(MSBS msb, MSBS.Entries entries) {
           base.GetIndices(msb, entries);
           this.WalkRegionIndices = new short[this.WalkRegionNames.Length];
           for (int index = 0; index < this.WalkRegionNames.Length; ++index)
-            this.WalkRegionIndices[index] = (short) MSB.FindIndex<MSBS.Region>(entries.Regions, this.WalkRegionNames[index]);
+            this.WalkRegionIndices[index] =
+                (short) MSB.FindIndex<MSBS.Region>(
+                    entries.Regions,
+                    this.WalkRegionNames[index]);
           foreach (MSBS.Event.WalkRoute.WREntry wrEntry in this.WREntries)
             wrEntry.GetIndices(entries);
         }
 
-        public class WREntry
-        {
+        public class WREntry {
           private short RegionIndex;
 
           public string RegionName { get; set; }
@@ -801,56 +718,46 @@ namespace SoulsFormats
 
           public int Unk08 { get; set; }
 
-          public WREntry()
-          {
-          }
+          public WREntry() {}
 
-          internal WREntry(BinaryReaderEx br)
-          {
+          internal WREntry(BinaryReaderEx br) {
             this.RegionIndex = br.ReadInt16();
             int num = (int) br.AssertInt16(new short[1]);
             this.Unk04 = br.ReadInt32();
             this.Unk08 = br.ReadInt32();
           }
 
-          internal void Write(BinaryWriterEx bw)
-          {
+          internal void Write(BinaryWriterEx bw) {
             bw.WriteInt16(this.RegionIndex);
             bw.WriteInt16((short) 0);
             bw.WriteInt32(this.Unk04);
             bw.WriteInt32(this.Unk08);
           }
 
-          internal void GetNames(MSBS.Entries entries)
-          {
-            this.RegionName = MSB.FindName<MSBS.Region>(entries.Regions, (int) this.RegionIndex);
+          internal void GetNames(MSBS.Entries entries) {
+            this.RegionName =
+                MSB.FindName<MSBS.Region>(entries.Regions,
+                                          (int) this.RegionIndex);
           }
 
-          internal void GetIndices(MSBS.Entries entries)
-          {
-            this.RegionIndex = (short) MSB.FindIndex<MSBS.Region>(entries.Regions, this.RegionName);
+          internal void GetIndices(MSBS.Entries entries) {
+            this.RegionIndex =
+                (short) MSB.FindIndex<MSBS.Region>(
+                    entries.Regions,
+                    this.RegionName);
           }
         }
       }
 
-      public class GroupTour : MSBS.Event
-      {
+      public class GroupTour : MSBS.Event {
         private int[] GroupPartIndices;
 
-        public override MSBS.EventType Type
-        {
-          get
-          {
-            return MSBS.EventType.GroupTour;
-          }
+        public override MSBS.EventType Type {
+          get { return MSBS.EventType.GroupTour; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public int PlatoonIDScriptActive { get; set; }
@@ -859,14 +766,12 @@ namespace SoulsFormats
 
         public string[] GroupPartNames { get; private set; }
 
-        public GroupTour()
-        {
+        public GroupTour() {
           this.GroupPartNames = new string[32];
         }
 
         internal GroupTour(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.PlatoonIDScriptActive = br.ReadInt32();
           this.State = br.ReadInt32();
           br.AssertInt32(new int[1]);
@@ -874,8 +779,7 @@ namespace SoulsFormats
           this.GroupPartIndices = br.ReadInt32s(32);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt32(this.PlatoonIDScriptActive);
           bw.WriteInt32(this.State);
           bw.WriteInt32(0);
@@ -883,111 +787,76 @@ namespace SoulsFormats
           bw.WriteInt32s((IList<int>) this.GroupPartIndices);
         }
 
-        internal override void GetNames(MSBS msb, MSBS.Entries entries)
-        {
+        internal override void GetNames(MSBS msb, MSBS.Entries entries) {
           base.GetNames(msb, entries);
-          this.GroupPartNames = MSB.FindNames<MSBS.Part>(entries.Parts, this.GroupPartIndices);
+          this.GroupPartNames =
+              MSB.FindNames<MSBS.Part>(entries.Parts, this.GroupPartIndices);
         }
 
-        internal override void GetIndices(MSBS msb, MSBS.Entries entries)
-        {
+        internal override void GetIndices(MSBS msb, MSBS.Entries entries) {
           base.GetIndices(msb, entries);
-          this.GroupPartIndices = MSB.FindIndices<MSBS.Part>(entries.Parts, this.GroupPartNames);
+          this.GroupPartIndices =
+              MSB.FindIndices<MSBS.Part>(entries.Parts, this.GroupPartNames);
         }
       }
 
-      public class Event17 : MSBS.Event
-      {
-        public override MSBS.EventType Type
-        {
-          get
-          {
-            return MSBS.EventType.Event17;
-          }
+      public class Event17 : MSBS.Event {
+        public override MSBS.EventType Type {
+          get { return MSBS.EventType.Event17; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public int UnkT00 { get; set; }
 
-        public Event17()
-        {
-        }
+        public Event17() {}
 
         internal Event17(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.UnkT00 = br.ReadInt32();
           br.AssertPattern(28, (byte) 0);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt32(this.UnkT00);
           bw.WritePattern(28, (byte) 0);
         }
       }
 
-      public class Event18 : MSBS.Event
-      {
-        public override MSBS.EventType Type
-        {
-          get
-          {
-            return MSBS.EventType.Event18;
-          }
+      public class Event18 : MSBS.Event {
+        public override MSBS.EventType Type {
+          get { return MSBS.EventType.Event18; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public int UnkT00 { get; set; }
 
-        public Event18()
-        {
-        }
+        public Event18() {}
 
         internal Event18(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.UnkT00 = br.ReadInt32();
           br.AssertPattern(28, (byte) 0);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt32(this.UnkT00);
           bw.WritePattern(28, (byte) 0);
         }
       }
 
-      public class Event20 : MSBS.Event
-      {
-        public override MSBS.EventType Type
-        {
-          get
-          {
-            return MSBS.EventType.Event20;
-          }
+      public class Event20 : MSBS.Event {
+        public override MSBS.EventType Type {
+          get { return MSBS.EventType.Event20; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public int UnkT00 { get; set; }
@@ -996,21 +865,17 @@ namespace SoulsFormats
 
         public short UnkT06 { get; set; }
 
-        public Event20()
-        {
-        }
+        public Event20() {}
 
         internal Event20(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.UnkT00 = br.ReadInt32();
           this.UnkT04 = br.ReadInt16();
           this.UnkT06 = br.ReadInt16();
           br.AssertPattern(24, (byte) 0);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt32(this.UnkT00);
           bw.WriteInt16(this.UnkT04);
           bw.WriteInt16(this.UnkT06);
@@ -1018,103 +883,69 @@ namespace SoulsFormats
         }
       }
 
-      public class Event21 : MSBS.Event
-      {
+      public class Event21 : MSBS.Event {
         private int[] Event21PartIndices;
 
-        public override MSBS.EventType Type
-        {
-          get
-          {
-            return MSBS.EventType.Event21;
-          }
+        public override MSBS.EventType Type {
+          get { return MSBS.EventType.Event21; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public string[] Event21PartNames { get; private set; }
 
-        public Event21()
-        {
+        public Event21() {
           this.Event21PartNames = new string[32];
         }
 
         internal Event21(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.Event21PartIndices = br.ReadInt32s(32);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt32s((IList<int>) this.Event21PartIndices);
         }
 
-        internal override void GetNames(MSBS msb, MSBS.Entries entries)
-        {
+        internal override void GetNames(MSBS msb, MSBS.Entries entries) {
           base.GetNames(msb, entries);
-          this.Event21PartNames = MSB.FindNames<MSBS.Part>(entries.Parts, this.Event21PartIndices);
+          this.Event21PartNames =
+              MSB.FindNames<MSBS.Part>(entries.Parts, this.Event21PartIndices);
         }
 
-        internal override void GetIndices(MSBS msb, MSBS.Entries entries)
-        {
+        internal override void GetIndices(MSBS msb, MSBS.Entries entries) {
           base.GetIndices(msb, entries);
-          this.Event21PartIndices = MSB.FindIndices<MSBS.Part>(entries.Parts, this.Event21PartNames);
+          this.Event21PartIndices =
+              MSB.FindIndices<MSBS.Part>(entries.Parts, this.Event21PartNames);
         }
       }
 
-      public class PartsGroup : MSBS.Event
-      {
-        public override MSBS.EventType Type
-        {
-          get
-          {
-            return MSBS.EventType.PartsGroup;
-          }
+      public class PartsGroup : MSBS.Event {
+        public override MSBS.EventType Type {
+          get { return MSBS.EventType.PartsGroup; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasTypeData {
+          get { return false; }
         }
 
-        public PartsGroup()
-        {
-        }
+        public PartsGroup() {}
 
         internal PartsGroup(BinaryReaderEx br)
-          : base(br)
-        {
-        }
+            : base(br) {}
       }
 
-      public class Talk : MSBS.Event
-      {
+      public class Talk : MSBS.Event {
         private int[] EnemyIndices;
 
-        public override MSBS.EventType Type
-        {
-          get
-          {
-            return MSBS.EventType.Talk;
-          }
+        public override MSBS.EventType Type {
+          get { return MSBS.EventType.Talk; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public int UnkT00 { get; set; }
@@ -1129,15 +960,13 @@ namespace SoulsFormats
 
         public int UnkT48 { get; set; }
 
-        public Talk()
-        {
+        public Talk() {
           this.EnemyNames = new string[8];
           this.TalkIDs = new int[8];
         }
 
         internal Talk(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.UnkT00 = br.ReadInt32();
           this.EnemyIndices = br.ReadInt32s(8);
           this.TalkIDs = br.ReadInt32s(8);
@@ -1147,8 +976,7 @@ namespace SoulsFormats
           br.AssertPattern(52, (byte) 0);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt32(this.UnkT00);
           bw.WriteInt32s((IList<int>) this.EnemyIndices);
           bw.WriteInt32s((IList<int>) this.TalkIDs);
@@ -1158,92 +986,67 @@ namespace SoulsFormats
           bw.WritePattern(52, (byte) 0);
         }
 
-        internal override void GetNames(MSBS msb, MSBS.Entries entries)
-        {
+        internal override void GetNames(MSBS msb, MSBS.Entries entries) {
           base.GetNames(msb, entries);
-          this.EnemyNames = MSB.FindNames<MSBS.Part.Enemy>(msb.Parts.Enemies, this.EnemyIndices);
+          this.EnemyNames =
+              MSB.FindNames<MSBS.Part.Enemy>(msb.Parts.Enemies,
+                                             this.EnemyIndices);
         }
 
-        internal override void GetIndices(MSBS msb, MSBS.Entries entries)
-        {
+        internal override void GetIndices(MSBS msb, MSBS.Entries entries) {
           base.GetIndices(msb, entries);
-          this.EnemyIndices = MSB.FindIndices<MSBS.Part.Enemy>(msb.Parts.Enemies, this.EnemyNames);
+          this.EnemyIndices =
+              MSB.FindIndices<MSBS.Part.Enemy>(msb.Parts.Enemies,
+                                               this.EnemyNames);
         }
       }
 
-      public class AutoDrawGroup : MSBS.Event
-      {
-        public override MSBS.EventType Type
-        {
-          get
-          {
-            return MSBS.EventType.AutoDrawGroup;
-          }
+      public class AutoDrawGroup : MSBS.Event {
+        public override MSBS.EventType Type {
+          get { return MSBS.EventType.AutoDrawGroup; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public int UnkT00 { get; set; }
 
         public int UnkT04 { get; set; }
 
-        public AutoDrawGroup()
-        {
-        }
+        public AutoDrawGroup() {}
 
         internal AutoDrawGroup(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.UnkT00 = br.ReadInt32();
           this.UnkT04 = br.ReadInt32();
           br.AssertPattern(24, (byte) 0);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt32(this.UnkT00);
           bw.WriteInt32(this.UnkT04);
           bw.WritePattern(24, (byte) 0);
         }
       }
 
-      public class Other : MSBS.Event
-      {
-        public override MSBS.EventType Type
-        {
-          get
-          {
-            return MSBS.EventType.Other;
-          }
+      public class Other : MSBS.Event {
+        public override MSBS.EventType Type {
+          get { return MSBS.EventType.Other; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasTypeData {
+          get { return false; }
         }
 
-        public Other()
-        {
-        }
+        public Other() {}
 
         internal Other(BinaryReaderEx br)
-          : base(br)
-        {
-        }
+            : base(br) {}
       }
     }
 
-    public enum ModelType : uint
-    {
+    public enum ModelType : uint {
       MapPiece = 0,
       Object = 1,
       Enemy = 2,
@@ -1251,8 +1054,7 @@ namespace SoulsFormats
       Collision = 5,
     }
 
-    public class ModelParam : MSBS.Param<MSBS.Model>, IMsbParam<IMsbModel>
-    {
+    public class ModelParam : MSBS.Param<MSBS.Model>, IMsbParam<IMsbModel> {
       public List<MSBS.Model.MapPiece> MapPieces { get; set; }
 
       public List<MSBS.Model.Object> Objects { get; set; }
@@ -1264,8 +1066,7 @@ namespace SoulsFormats
       public List<MSBS.Model.Collision> Collisions { get; set; }
 
       public ModelParam(int unk00 = 35)
-        : base(unk00, "MODEL_PARAM_ST")
-      {
+          : base(unk00, "MODEL_PARAM_ST") {
         this.MapPieces = new List<MSBS.Model.MapPiece>();
         this.Objects = new List<MSBS.Model.Object>();
         this.Enemies = new List<MSBS.Model.Enemy>();
@@ -1273,11 +1074,9 @@ namespace SoulsFormats
         this.Collisions = new List<MSBS.Model.Collision>();
       }
 
-      internal override MSBS.Model ReadEntry(BinaryReaderEx br)
-      {
+      internal override MSBS.Model ReadEntry(BinaryReaderEx br) {
         MSBS.ModelType enum32 = br.GetEnum32<MSBS.ModelType>(br.Position + 8L);
-        switch (enum32)
-        {
+        switch (enum32) {
           case MSBS.ModelType.MapPiece:
             MSBS.Model.MapPiece mapPiece = new MSBS.Model.MapPiece(br);
             this.MapPieces.Add(mapPiece);
@@ -1299,30 +1098,28 @@ namespace SoulsFormats
             this.Collisions.Add(collision);
             return (MSBS.Model) collision;
           default:
-            throw new NotImplementedException(string.Format("Unimplemented model type: {0}", (object) enum32));
+            throw new NotImplementedException(
+                string.Format("Unimplemented model type: {0}",
+                              (object) enum32));
         }
       }
 
-      public override List<MSBS.Model> GetEntries()
-      {
-        return SFUtil.ConcatAll<MSBS.Model>(new IEnumerable<MSBS.Model>[5]
-        {
-          (IEnumerable<MSBS.Model>) this.MapPieces,
-          (IEnumerable<MSBS.Model>) this.Objects,
-          (IEnumerable<MSBS.Model>) this.Enemies,
-          (IEnumerable<MSBS.Model>) this.Players,
-          (IEnumerable<MSBS.Model>) this.Collisions
+      public override List<MSBS.Model> GetEntries() {
+        return SFUtil.ConcatAll<MSBS.Model>(new IEnumerable<MSBS.Model>[5] {
+            (IEnumerable<MSBS.Model>) this.MapPieces,
+            (IEnumerable<MSBS.Model>) this.Objects,
+            (IEnumerable<MSBS.Model>) this.Enemies,
+            (IEnumerable<MSBS.Model>) this.Players,
+            (IEnumerable<MSBS.Model>) this.Collisions
         });
       }
 
-      IReadOnlyList<IMsbModel> IMsbParam<IMsbModel>.GetEntries()
-      {
+      IReadOnlyList<IMsbModel> IMsbParam<IMsbModel>.GetEntries() {
         return (IReadOnlyList<IMsbModel>) this.GetEntries();
       }
     }
 
-    public abstract class Model : MSBS.Entry, IMsbModel, IMsbEntry
-    {
+    public abstract class Model : MSBS.Entry, IMsbModel, IMsbEntry {
       private int InstanceCount;
 
       public abstract MSBS.ModelType Type { get; }
@@ -1333,14 +1130,12 @@ namespace SoulsFormats
 
       public int Unk1C { get; set; }
 
-      internal Model()
-      {
+      internal Model() {
         this.Name = "";
         this.Placeholder = "";
       }
 
-      internal Model(BinaryReaderEx br)
-      {
+      internal Model(BinaryReaderEx br) {
         long position = br.Position;
         long num1 = br.ReadInt64();
         int num2 = (int) br.AssertUInt32((uint) this.Type);
@@ -1354,8 +1149,7 @@ namespace SoulsFormats
         br.Position = position + num4;
       }
 
-      internal override void Write(BinaryWriterEx bw, int id)
-      {
+      internal override void Write(BinaryWriterEx bw, int id) {
         long position = bw.Position;
         bw.ReserveInt64("NameOffset");
         bw.WriteUInt32((uint) this.Type);
@@ -1369,46 +1163,35 @@ namespace SoulsFormats
         bw.FillInt64("SibOffset", bw.Position - position);
         bw.WriteUTF16(this.Placeholder, true);
         bw.Pad(8);
-        if (this.HasTypeData)
-        {
+        if (this.HasTypeData) {
           bw.FillInt64("TypeDataOffset", bw.Position - position);
           this.WriteTypeData(bw);
-        }
-        else
+        } else
           bw.FillInt64("TypeDataOffset", 0L);
       }
 
-      internal virtual void WriteTypeData(BinaryWriterEx bw)
-      {
-        throw new InvalidOperationException("Type data should not be written for models with no type data.");
+      internal virtual void WriteTypeData(BinaryWriterEx bw) {
+        throw new InvalidOperationException(
+            "Type data should not be written for models with no type data.");
       }
 
-      internal void CountInstances(List<MSBS.Part> parts)
-      {
-        this.InstanceCount = parts.Count<MSBS.Part>((Func<MSBS.Part, bool>) (p => p.ModelName == this.Name));
+      internal void CountInstances(List<MSBS.Part> parts) {
+        this.InstanceCount =
+            parts.Count<MSBS.Part>(
+                (Func<MSBS.Part, bool>) (p => p.ModelName == this.Name));
       }
 
-      public override string ToString()
-      {
+      public override string ToString() {
         return string.Format("{0} {1}", (object) this.Type, (object) this.Name);
       }
 
-      public class MapPiece : MSBS.Model
-      {
-        public override MSBS.ModelType Type
-        {
-          get
-          {
-            return MSBS.ModelType.MapPiece;
-          }
+      public class MapPiece : MSBS.Model {
+        public override MSBS.ModelType Type {
+          get { return MSBS.ModelType.MapPiece; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public bool UnkT00 { get; set; }
@@ -1429,13 +1212,10 @@ namespace SoulsFormats
 
         public float UnkT18 { get; set; }
 
-        public MapPiece()
-        {
-        }
+        public MapPiece() {}
 
         internal MapPiece(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.UnkT00 = br.ReadBoolean();
           this.UnkT01 = br.ReadBoolean();
           this.UnkT02 = br.ReadBoolean();
@@ -1449,8 +1229,7 @@ namespace SoulsFormats
           br.AssertInt32(new int[1]);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteBoolean(this.UnkT00);
           bw.WriteBoolean(this.UnkT01);
           bw.WriteBoolean(this.UnkT02);
@@ -1465,121 +1244,68 @@ namespace SoulsFormats
         }
       }
 
-      public class Object : MSBS.Model
-      {
-        public override MSBS.ModelType Type
-        {
-          get
-          {
-            return MSBS.ModelType.Object;
-          }
+      public class Object : MSBS.Model {
+        public override MSBS.ModelType Type {
+          get { return MSBS.ModelType.Object; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasTypeData {
+          get { return false; }
         }
 
-        public Object()
-        {
-        }
+        public Object() {}
 
         internal Object(BinaryReaderEx br)
-          : base(br)
-        {
-        }
+            : base(br) {}
       }
 
-      public class Enemy : MSBS.Model
-      {
-        public override MSBS.ModelType Type
-        {
-          get
-          {
-            return MSBS.ModelType.Enemy;
-          }
+      public class Enemy : MSBS.Model {
+        public override MSBS.ModelType Type {
+          get { return MSBS.ModelType.Enemy; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasTypeData {
+          get { return false; }
         }
 
-        public Enemy()
-        {
-        }
+        public Enemy() {}
 
         internal Enemy(BinaryReaderEx br)
-          : base(br)
-        {
-        }
+            : base(br) {}
       }
 
-      public class Player : MSBS.Model
-      {
-        public override MSBS.ModelType Type
-        {
-          get
-          {
-            return MSBS.ModelType.Player;
-          }
+      public class Player : MSBS.Model {
+        public override MSBS.ModelType Type {
+          get { return MSBS.ModelType.Player; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasTypeData {
+          get { return false; }
         }
 
-        public Player()
-        {
-        }
+        public Player() {}
 
         internal Player(BinaryReaderEx br)
-          : base(br)
-        {
-        }
+            : base(br) {}
       }
 
-      public class Collision : MSBS.Model
-      {
-        public override MSBS.ModelType Type
-        {
-          get
-          {
-            return MSBS.ModelType.Collision;
-          }
+      public class Collision : MSBS.Model {
+        public override MSBS.ModelType Type {
+          get { return MSBS.ModelType.Collision; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasTypeData {
+          get { return false; }
         }
 
-        public Collision()
-        {
-        }
+        public Collision() {}
 
         internal Collision(BinaryReaderEx br)
-          : base(br)
-        {
-        }
+            : base(br) {}
       }
     }
 
-    internal struct Entries
-    {
+    internal struct Entries {
       public List<MSBS.Model> Models;
       public List<MSBS.Event> Events;
       public List<MSBS.Region> Regions;
@@ -1587,20 +1313,17 @@ namespace SoulsFormats
       public List<MSBS.Part> Parts;
     }
 
-    public abstract class Param<T> where T : MSBS.Entry
-    {
+    public abstract class Param<T> where T : MSBS.Entry {
       public int Unk00 { get; set; }
 
       public string Name { get; }
 
-      internal Param(int unk00, string name)
-      {
+      internal Param(int unk00, string name) {
         this.Unk00 = unk00;
         this.Name = name;
       }
 
-      internal List<T> Read(BinaryReaderEx br)
-      {
+      internal List<T> Read(BinaryReaderEx br) {
         this.Unk00 = br.ReadInt32();
         int num1 = br.ReadInt32();
         long offset = br.ReadInt64();
@@ -1608,10 +1331,13 @@ namespace SoulsFormats
         long num2 = br.ReadInt64();
         string utF16 = br.GetUTF16(offset);
         if (utF16 != this.Name)
-          throw new InvalidDataException("Expected param \"" + this.Name + "\", got param \"" + utF16 + "\"");
+          throw new InvalidDataException("Expected param \"" +
+                                         this.Name +
+                                         "\", got param \"" +
+                                         utF16 +
+                                         "\"");
         List<T> objList = new List<T>(num1 - 1);
-        foreach (long num3 in numArray)
-        {
+        foreach (long num3 in numArray) {
           br.Position = num3;
           objList.Add(this.ReadEntry(br));
         }
@@ -1621,8 +1347,7 @@ namespace SoulsFormats
 
       internal abstract T ReadEntry(BinaryReaderEx br);
 
-      internal virtual void Write(BinaryWriterEx bw, List<T> entries)
-      {
+      internal virtual void Write(BinaryWriterEx bw, List<T> entries) {
         bw.WriteInt32(this.Unk00);
         bw.WriteInt32(entries.Count + 1);
         bw.ReserveInt64("ParamNameOffset");
@@ -1634,14 +1359,13 @@ namespace SoulsFormats
         bw.Pad(8);
         int id = 0;
         System.Type type = (System.Type) null;
-        for (int index = 0; index < entries.Count; ++index)
-        {
-          if (type != entries[index].GetType())
-          {
+        for (int index = 0; index < entries.Count; ++index) {
+          if (type != entries[index].GetType()) {
             type = entries[index].GetType();
             id = 0;
           }
-          bw.FillInt64(string.Format("EntryOffset{0}", (object) index), bw.Position);
+          bw.FillInt64(string.Format("EntryOffset{0}", (object) index),
+                       bw.Position);
           entries[index].Write(bw, id);
           ++id;
         }
@@ -1649,51 +1373,46 @@ namespace SoulsFormats
 
       public abstract List<T> GetEntries();
 
-      public override string ToString()
-      {
-        return string.Format("0x{0:X2} {1}", (object) this.Unk00, (object) this.Name);
+      public override string ToString() {
+        return string.Format("0x{0:X2} {1}",
+                             (object) this.Unk00,
+                             (object) this.Name);
       }
     }
 
-    public abstract class Entry : IMsbEntry
-    {
+    public abstract class Entry : IMsbEntry {
       public string Name { get; set; }
 
       internal abstract void Write(BinaryWriterEx bw, int id);
     }
 
-    public class EmptyParam : MSBS.Param<MSBS.Entry>
-    {
+    public class EmptyParam : MSBS.Param<MSBS.Entry> {
       public EmptyParam(int unk00, string name)
-        : base(unk00, name)
-      {
+          : base(unk00, name) {}
+
+      internal override MSBS.Entry ReadEntry(BinaryReaderEx br) {
+        throw new InvalidDataException("Expected param \"" +
+                                       this.Name +
+                                       "\" to be empty, but it wasn't.");
       }
 
-      internal override MSBS.Entry ReadEntry(BinaryReaderEx br)
-      {
-        throw new InvalidDataException("Expected param \"" + this.Name + "\" to be empty, but it wasn't.");
-      }
-
-      public override List<MSBS.Entry> GetEntries()
-      {
+      public override List<MSBS.Entry> GetEntries() {
         return new List<MSBS.Entry>();
       }
     }
 
-    public enum PartType : uint
-    {
+    public enum PartType : uint {
       MapPiece = 0,
       Object = 1,
       Enemy = 2,
       Player = 4,
       Collision = 5,
       DummyObject = 9,
-      DummyEnemy = 10, // 0x0000000A
+      DummyEnemy = 10,       // 0x0000000A
       ConnectCollision = 11, // 0x0000000B
     }
 
-    public class PartsParam : MSBS.Param<MSBS.Part>, IMsbParam<IMsbPart>
-    {
+    public class PartsParam : MSBS.Param<MSBS.Part>, IMsbParam<IMsbPart> {
       public List<MSBS.Part.MapPiece> MapPieces { get; set; }
 
       public List<MSBS.Part.Object> Objects { get; set; }
@@ -1711,8 +1430,7 @@ namespace SoulsFormats
       public List<MSBS.Part.ConnectCollision> ConnectCollisions { get; set; }
 
       public PartsParam(int unk00 = 35)
-        : base(unk00, "PARTS_PARAM_ST")
-      {
+          : base(unk00, "PARTS_PARAM_ST") {
         this.MapPieces = new List<MSBS.Part.MapPiece>();
         this.Objects = new List<MSBS.Part.Object>();
         this.Enemies = new List<MSBS.Part.Enemy>();
@@ -1723,11 +1441,9 @@ namespace SoulsFormats
         this.ConnectCollisions = new List<MSBS.Part.ConnectCollision>();
       }
 
-      internal override MSBS.Part ReadEntry(BinaryReaderEx br)
-      {
+      internal override MSBS.Part ReadEntry(BinaryReaderEx br) {
         MSBS.PartType enum32 = br.GetEnum32<MSBS.PartType>(br.Position + 8L);
-        switch (enum32)
-        {
+        switch (enum32) {
           case MSBS.PartType.MapPiece:
             MSBS.Part.MapPiece mapPiece = new MSBS.Part.MapPiece(br);
             this.MapPieces.Add(mapPiece);
@@ -1757,37 +1473,35 @@ namespace SoulsFormats
             this.DummyEnemies.Add(dummyEnemy);
             return (MSBS.Part) dummyEnemy;
           case MSBS.PartType.ConnectCollision:
-            MSBS.Part.ConnectCollision connectCollision = new MSBS.Part.ConnectCollision(br);
+            MSBS.Part.ConnectCollision connectCollision =
+                new MSBS.Part.ConnectCollision(br);
             this.ConnectCollisions.Add(connectCollision);
             return (MSBS.Part) connectCollision;
           default:
-            throw new NotImplementedException(string.Format("Unimplemented part type: {0}", (object) enum32));
+            throw new NotImplementedException(
+                string.Format("Unimplemented part type: {0}", (object) enum32));
         }
       }
 
-      public override List<MSBS.Part> GetEntries()
-      {
-        return SFUtil.ConcatAll<MSBS.Part>(new IEnumerable<MSBS.Part>[8]
-        {
-          (IEnumerable<MSBS.Part>) this.MapPieces,
-          (IEnumerable<MSBS.Part>) this.Objects,
-          (IEnumerable<MSBS.Part>) this.Enemies,
-          (IEnumerable<MSBS.Part>) this.Players,
-          (IEnumerable<MSBS.Part>) this.Collisions,
-          (IEnumerable<MSBS.Part>) this.DummyObjects,
-          (IEnumerable<MSBS.Part>) this.DummyEnemies,
-          (IEnumerable<MSBS.Part>) this.ConnectCollisions
+      public override List<MSBS.Part> GetEntries() {
+        return SFUtil.ConcatAll<MSBS.Part>(new IEnumerable<MSBS.Part>[8] {
+            (IEnumerable<MSBS.Part>) this.MapPieces,
+            (IEnumerable<MSBS.Part>) this.Objects,
+            (IEnumerable<MSBS.Part>) this.Enemies,
+            (IEnumerable<MSBS.Part>) this.Players,
+            (IEnumerable<MSBS.Part>) this.Collisions,
+            (IEnumerable<MSBS.Part>) this.DummyObjects,
+            (IEnumerable<MSBS.Part>) this.DummyEnemies,
+            (IEnumerable<MSBS.Part>) this.ConnectCollisions
         });
       }
 
-      IReadOnlyList<IMsbPart> IMsbParam<IMsbPart>.GetEntries()
-      {
+      IReadOnlyList<IMsbPart> IMsbParam<IMsbPart>.GetEntries() {
         return (IReadOnlyList<IMsbPart>) this.GetEntries();
       }
     }
 
-    public abstract class Part : MSBS.Entry, IMsbPart, IMsbEntry
-    {
+    public abstract class Part : MSBS.Entry, IMsbPart, IMsbEntry {
       private int ModelIndex;
 
       public abstract MSBS.PartType Type { get; }
@@ -1862,8 +1576,7 @@ namespace SoulsFormats
 
       public int UnkE40 { get; set; }
 
-      internal Part()
-      {
+      internal Part() {
         this.Name = "";
         this.Placeholder = "";
         this.Scale = Vector3.One;
@@ -1873,8 +1586,7 @@ namespace SoulsFormats
           this.EntityGroupIDs[index] = -1;
       }
 
-      internal Part(MSBS.Part clone)
-      {
+      internal Part(MSBS.Part clone) {
         this.Name = clone.Name;
         this.ModelName = clone.ModelName;
         this.Placeholder = clone.Placeholder;
@@ -1908,8 +1620,7 @@ namespace SoulsFormats
         this.UnkE40 = clone.UnkE40;
       }
 
-      internal Part(BinaryReaderEx br)
-      {
+      internal Part(BinaryReaderEx br) {
         long position = br.Position;
         long num1 = br.ReadInt64();
         int num2 = (int) br.AssertUInt32((uint) this.Type);
@@ -1935,13 +1646,11 @@ namespace SoulsFormats
         br.AssertInt64(new long[1]);
         this.Name = br.GetUTF16(position + num1);
         this.Placeholder = br.GetUTF16(position + num3);
-        if (this.HasUnk1)
-        {
+        if (this.HasUnk1) {
           br.Position = position + num4;
           this.ReadUnk1(br);
         }
-        if (this.HasUnk2)
-        {
+        if (this.HasUnk2) {
           br.Position = position + num5;
           this.ReadUnk2(br);
         }
@@ -1972,51 +1681,47 @@ namespace SoulsFormats
         this.UnkE3C = br.ReadInt32();
         this.UnkE40 = br.ReadInt32();
         br.AssertPattern(16, (byte) 0);
-        if (this.HasGparamConfig)
-        {
+        if (this.HasGparamConfig) {
           br.Position = position + num8;
           this.ReadGparamConfig(br);
         }
-        if (this.HasUnk6)
-        {
+        if (this.HasUnk6) {
           br.Position = position + num9;
           this.ReadUnk6(br);
         }
-        if (this.HasUnk7)
-        {
+        if (this.HasUnk7) {
           br.Position = position + num10;
           this.ReadUnk7(br);
         }
         br.Position = position + num7;
       }
 
-      internal virtual void ReadUnk1(BinaryReaderEx br)
-      {
-        throw new InvalidOperationException("Unk struct 1 should not be read for parts with no unk struct 1.");
+      internal virtual void ReadUnk1(BinaryReaderEx br) {
+        throw new InvalidOperationException(
+            "Unk struct 1 should not be read for parts with no unk struct 1.");
       }
 
-      internal virtual void ReadUnk2(BinaryReaderEx br)
-      {
-        throw new InvalidOperationException("Unk struct 2 should not be read for parts with no unk struct 2.");
+      internal virtual void ReadUnk2(BinaryReaderEx br) {
+        throw new InvalidOperationException(
+            "Unk struct 2 should not be read for parts with no unk struct 2.");
       }
 
-      internal virtual void ReadGparamConfig(BinaryReaderEx br)
-      {
-        throw new InvalidOperationException("Unk struct 5 should not be read for parts with no unk struct 5.");
+      internal virtual void ReadGparamConfig(BinaryReaderEx br) {
+        throw new InvalidOperationException(
+            "Unk struct 5 should not be read for parts with no unk struct 5.");
       }
 
-      internal virtual void ReadUnk6(BinaryReaderEx br)
-      {
-        throw new InvalidOperationException("Unk struct 6 should not be read for parts with no unk struct 6.");
+      internal virtual void ReadUnk6(BinaryReaderEx br) {
+        throw new InvalidOperationException(
+            "Unk struct 6 should not be read for parts with no unk struct 6.");
       }
 
-      internal virtual void ReadUnk7(BinaryReaderEx br)
-      {
-        throw new InvalidOperationException("Unk struct 7 should not be read for parts with no unk struct 7.");
+      internal virtual void ReadUnk7(BinaryReaderEx br) {
+        throw new InvalidOperationException(
+            "Unk struct 7 should not be read for parts with no unk struct 7.");
       }
 
-      internal override void Write(BinaryWriterEx bw, int id)
-      {
+      internal override void Write(BinaryWriterEx bw, int id) {
         long position = bw.Position;
         bw.ReserveInt64("NameOffset");
         bw.WriteUInt32((uint) this.Type);
@@ -2045,19 +1750,15 @@ namespace SoulsFormats
         bw.FillInt64("SibOffset", bw.Position - position);
         bw.WriteUTF16(this.Placeholder, true);
         bw.Pad(8);
-        if (this.HasUnk1)
-        {
+        if (this.HasUnk1) {
           bw.FillInt64("UnkOffset1", bw.Position - position);
           this.WriteUnk1(bw);
-        }
-        else
+        } else
           bw.FillInt64("UnkOffset1", 0L);
-        if (this.HasUnk2)
-        {
+        if (this.HasUnk2) {
           bw.FillInt64("UnkOffset2", bw.Position - position);
           this.WriteUnk2(bw);
-        }
-        else
+        } else
           bw.FillInt64("UnkOffset2", 0L);
         bw.FillInt64("EntityDataOffset", bw.Position - position);
         bw.WriteInt32(this.EntityID);
@@ -2089,95 +1790,84 @@ namespace SoulsFormats
         bw.Pad(8);
         bw.FillInt64("TypeDataOffset", bw.Position - position);
         this.WriteTypeData(bw);
-        if (this.HasGparamConfig)
-        {
+        if (this.HasGparamConfig) {
           bw.FillInt64("GparamOffset", bw.Position - position);
           this.WriteGparamConfig(bw);
-        }
-        else
+        } else
           bw.FillInt64("GparamOffset", 0L);
-        if (this.HasUnk6)
-        {
+        if (this.HasUnk6) {
           bw.FillInt64("UnkOffset6", bw.Position - position);
           this.WriteUnk6(bw);
-        }
-        else
+        } else
           bw.FillInt64("UnkOffset6", 0L);
-        if (this.HasUnk7)
-        {
+        if (this.HasUnk7) {
           bw.FillInt64("UnkOffset7", bw.Position - position);
           this.WriteUnk7(bw);
-        }
-        else
+        } else
           bw.FillInt64("UnkOffset7", 0L);
       }
 
       internal abstract void WriteTypeData(BinaryWriterEx bw);
 
-      internal virtual void WriteUnk1(BinaryWriterEx bw)
-      {
-        throw new InvalidOperationException("Unk struct 1 should not be written for parts with no unk struct 1.");
+      internal virtual void WriteUnk1(BinaryWriterEx bw) {
+        throw new InvalidOperationException(
+            "Unk struct 1 should not be written for parts with no unk struct 1.");
       }
 
-      internal virtual void WriteUnk2(BinaryWriterEx bw)
-      {
-        throw new InvalidOperationException("Unk struct 2 should not be written for parts with no unk struct 2.");
+      internal virtual void WriteUnk2(BinaryWriterEx bw) {
+        throw new InvalidOperationException(
+            "Unk struct 2 should not be written for parts with no unk struct 2.");
       }
 
-      internal virtual void WriteGparamConfig(BinaryWriterEx bw)
-      {
-        throw new InvalidOperationException("Unk struct 5 should not be written for parts with no unk struct 5.");
+      internal virtual void WriteGparamConfig(BinaryWriterEx bw) {
+        throw new InvalidOperationException(
+            "Unk struct 5 should not be written for parts with no unk struct 5.");
       }
 
-      internal virtual void WriteUnk6(BinaryWriterEx bw)
-      {
-        throw new InvalidOperationException("Unk struct 6 should not be written for parts with no unk struct 6.");
+      internal virtual void WriteUnk6(BinaryWriterEx bw) {
+        throw new InvalidOperationException(
+            "Unk struct 6 should not be written for parts with no unk struct 6.");
       }
 
-      internal virtual void WriteUnk7(BinaryWriterEx bw)
-      {
-        throw new InvalidOperationException("Unk struct 7 should not be written for parts with no unk struct 7.");
+      internal virtual void WriteUnk7(BinaryWriterEx bw) {
+        throw new InvalidOperationException(
+            "Unk struct 7 should not be written for parts with no unk struct 7.");
       }
 
-      internal virtual void GetNames(MSBS msb, MSBS.Entries entries)
-      {
-        this.ModelName = MSB.FindName<MSBS.Model>(entries.Models, this.ModelIndex);
+      internal virtual void GetNames(MSBS msb, MSBS.Entries entries) {
+        this.ModelName =
+            MSB.FindName<MSBS.Model>(entries.Models, this.ModelIndex);
       }
 
-      internal virtual void GetIndices(MSBS msb, MSBS.Entries entries)
-      {
-        this.ModelIndex = MSB.FindIndex<MSBS.Model>(entries.Models, this.ModelName);
+      internal virtual void GetIndices(MSBS msb, MSBS.Entries entries) {
+        this.ModelIndex =
+            MSB.FindIndex<MSBS.Model>(entries.Models, this.ModelName);
       }
 
-      public override string ToString()
-      {
+      public override string ToString() {
         return string.Format("{0} {1}", (object) this.Type, (object) this.Name);
       }
 
-      public class UnkStruct1
-      {
+      public class UnkStruct1 {
         public uint[] CollisionMask { get; private set; }
 
         public byte Condition1 { get; set; }
 
         public byte Condition2 { get; set; }
 
-        public UnkStruct1()
-        {
+        public UnkStruct1() {
           this.CollisionMask = new uint[48];
           this.Condition1 = (byte) 0;
           this.Condition2 = (byte) 0;
         }
 
-        public UnkStruct1(MSBS.Part.UnkStruct1 clone)
-        {
+        public UnkStruct1(MSBS.Part.UnkStruct1 clone) {
           this.CollisionMask = (uint[]) clone.CollisionMask.Clone();
           this.Condition1 = clone.Condition1;
           this.Condition2 = clone.Condition2;
         }
 
-        internal UnkStruct1(BinaryReaderEx br)
-        {
+        internal UnkStruct1(BinaryReaderEx br) {
           this.CollisionMask = br.ReadUInt32s(48);
           this.Condition1 = br.ReadByte();
           this.Condition2 = br.ReadByte();
@@ -2185,8 +1875,7 @@ namespace SoulsFormats
           br.AssertPattern(192, (byte) 0);
         }
 
-        internal void Write(BinaryWriterEx bw)
-        {
+        internal void Write(BinaryWriterEx bw) {
           bw.WriteUInt32s((IList<uint>) this.CollisionMask);
           bw.WriteByte(this.Condition1);
           bw.WriteByte(this.Condition2);
@@ -2195,8 +1884,7 @@ namespace SoulsFormats
         }
       }
 
-      public class UnkStruct2
-      {
+      public class UnkStruct2 {
         public int Condition { get; set; }
 
         public int[] DispGroups { get; private set; }
@@ -2205,13 +1893,11 @@ namespace SoulsFormats
 
         public short Unk26 { get; set; }
 
-        public UnkStruct2()
-        {
+        public UnkStruct2() {
           this.DispGroups = new int[8];
         }
 
-        internal UnkStruct2(BinaryReaderEx br)
-        {
+        internal UnkStruct2(BinaryReaderEx br) {
           this.Condition = br.ReadInt32();
           this.DispGroups = br.ReadInt32s(8);
           this.Unk24 = br.ReadInt16();
@@ -2219,8 +1905,7 @@ namespace SoulsFormats
           br.AssertPattern(32, (byte) 0);
         }
 
-        internal void Write(BinaryWriterEx bw)
-        {
+        internal void Write(BinaryWriterEx bw) {
           bw.WriteInt32(this.Condition);
           bw.WriteInt32s((IList<int>) this.DispGroups);
           bw.WriteInt16(this.Unk24);
@@ -2229,8 +1914,7 @@ namespace SoulsFormats
         }
       }
 
-      public class GparamConfig
-      {
+      public class GparamConfig {
         public int LightSetID { get; set; }
 
         public int FogParamID { get; set; }
@@ -2239,20 +1923,16 @@ namespace SoulsFormats
 
         public int EnvMapID { get; set; }
 
-        public GparamConfig()
-        {
-        }
+        public GparamConfig() {}
 
-        public GparamConfig(MSBS.Part.GparamConfig clone)
-        {
+        public GparamConfig(MSBS.Part.GparamConfig clone) {
           this.LightSetID = clone.LightSetID;
           this.FogParamID = clone.FogParamID;
           this.LightScatteringID = clone.LightScatteringID;
           this.EnvMapID = clone.EnvMapID;
         }
 
-        internal GparamConfig(BinaryReaderEx br)
-        {
+        internal GparamConfig(BinaryReaderEx br) {
           this.LightSetID = br.ReadInt32();
           this.FogParamID = br.ReadInt32();
           this.LightScatteringID = br.ReadInt32();
@@ -2260,8 +1940,7 @@ namespace SoulsFormats
           br.AssertPattern(16, (byte) 0);
         }
 
-        internal void Write(BinaryWriterEx bw)
-        {
+        internal void Write(BinaryWriterEx bw) {
           bw.WriteInt32(this.LightSetID);
           bw.WriteInt32(this.FogParamID);
           bw.WriteInt32(this.LightScatteringID);
@@ -2269,25 +1948,25 @@ namespace SoulsFormats
           bw.WritePattern(16, (byte) 0);
         }
 
-        public override string ToString()
-        {
-          return string.Format("{0}, {1}, {2}, {3}", (object) this.LightSetID, (object) this.FogParamID, (object) this.LightScatteringID, (object) this.EnvMapID);
+        public override string ToString() {
+          return string.Format("{0}, {1}, {2}, {3}",
+                               (object) this.LightSetID,
+                               (object) this.FogParamID,
+                               (object) this.LightScatteringID,
+                               (object) this.EnvMapID);
         }
       }
 
-      public class UnkStruct6
-      {
+      public class UnkStruct6 {
         public sbyte[] EventIDs { get; private set; }
 
         public float Unk40 { get; set; }
 
-        public UnkStruct6()
-        {
+        public UnkStruct6() {
           this.EventIDs = new sbyte[4];
         }
 
-        internal UnkStruct6(BinaryReaderEx br)
-        {
+        internal UnkStruct6(BinaryReaderEx br) {
           br.AssertPattern(60, (byte) 0);
           this.EventIDs = br.ReadSBytes(4);
           this.Unk40 = br.ReadSingle();
@@ -2296,8 +1975,7 @@ namespace SoulsFormats
           br.AssertInt32(new int[1]);
         }
 
-        internal void Write(BinaryWriterEx bw)
-        {
+        internal void Write(BinaryWriterEx bw) {
           bw.WritePattern(60, (byte) 0);
           bw.WriteSBytes((IList<sbyte>) this.EventIDs);
           bw.WriteSingle(this.Unk40);
@@ -2306,14 +1984,17 @@ namespace SoulsFormats
           bw.WriteInt32(0);
         }
 
-        public override string ToString()
-        {
-          return string.Format("EventID[{0,2}][{1,2}][{2,2}][{3,2}] {4:0.0}", (object) this.EventIDs[0], (object) this.EventIDs[1], (object) this.EventIDs[2], (object) this.EventIDs[3], (object) this.Unk40);
+        public override string ToString() {
+          return string.Format("EventID[{0,2}][{1,2}][{2,2}][{3,2}] {4:0.0}",
+                               (object) this.EventIDs[0],
+                               (object) this.EventIDs[1],
+                               (object) this.EventIDs[2],
+                               (object) this.EventIDs[3],
+                               (object) this.Unk40);
         }
       }
 
-      public class UnkStruct7
-      {
+      public class UnkStruct7 {
         public int Unk00 { get; set; }
 
         public int Unk04 { get; set; }
@@ -2326,12 +2007,9 @@ namespace SoulsFormats
 
         public int Unk14 { get; set; }
 
-        public UnkStruct7()
-        {
-        }
+        public UnkStruct7() {}
 
-        internal UnkStruct7(BinaryReaderEx br)
-        {
+        internal UnkStruct7(BinaryReaderEx br) {
           this.Unk00 = br.ReadInt32();
           this.Unk04 = br.ReadInt32();
           this.GrassTypeParamID = br.ReadInt32();
@@ -2342,8 +2020,7 @@ namespace SoulsFormats
           br.AssertInt32(new int[1]);
         }
 
-        internal void Write(BinaryWriterEx bw)
-        {
+        internal void Write(BinaryWriterEx bw) {
           bw.WriteInt32(this.Unk00);
           bw.WriteInt32(this.Unk04);
           bw.WriteInt32(this.GrassTypeParamID);
@@ -2355,54 +2032,29 @@ namespace SoulsFormats
         }
       }
 
-      public class MapPiece : MSBS.Part
-      {
-        public override MSBS.PartType Type
-        {
-          get
-          {
-            return MSBS.PartType.MapPiece;
-          }
+      public class MapPiece : MSBS.Part {
+        public override MSBS.PartType Type {
+          get { return MSBS.PartType.MapPiece; }
         }
 
-        internal override bool HasUnk1
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasUnk1 {
+          get { return true; }
         }
 
-        internal override bool HasUnk2
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasUnk2 {
+          get { return false; }
         }
 
-        internal override bool HasGparamConfig
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasGparamConfig {
+          get { return true; }
         }
 
-        internal override bool HasUnk6
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasUnk6 {
+          get { return false; }
         }
 
-        internal override bool HasUnk7
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasUnk7 {
+          get { return true; }
         }
 
         public MSBS.Part.UnkStruct1 Unk1 { get; set; }
@@ -2411,277 +2063,182 @@ namespace SoulsFormats
 
         public MSBS.Part.UnkStruct7 Unk7 { get; set; }
 
-        public MapPiece()
-        {
+        public MapPiece() {
           this.Unk1 = new MSBS.Part.UnkStruct1();
           this.Gparam = new MSBS.Part.GparamConfig();
           this.Unk7 = new MSBS.Part.UnkStruct7();
         }
 
         internal MapPiece(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           br.AssertInt32(new int[1]);
           br.AssertInt32(new int[1]);
         }
 
-        internal override void ReadUnk1(BinaryReaderEx br)
-        {
+        internal override void ReadUnk1(BinaryReaderEx br) {
           this.Unk1 = new MSBS.Part.UnkStruct1(br);
         }
 
-        internal override void ReadGparamConfig(BinaryReaderEx br)
-        {
+        internal override void ReadGparamConfig(BinaryReaderEx br) {
           this.Gparam = new MSBS.Part.GparamConfig(br);
         }
 
-        internal override void ReadUnk7(BinaryReaderEx br)
-        {
+        internal override void ReadUnk7(BinaryReaderEx br) {
           this.Unk7 = new MSBS.Part.UnkStruct7(br);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt32(0);
           bw.WriteInt32(0);
         }
 
-        internal override void WriteUnk1(BinaryWriterEx bw)
-        {
+        internal override void WriteUnk1(BinaryWriterEx bw) {
           this.Unk1.Write(bw);
         }
 
-        internal override void WriteGparamConfig(BinaryWriterEx bw)
-        {
+        internal override void WriteGparamConfig(BinaryWriterEx bw) {
           this.Gparam.Write(bw);
         }
 
-        internal override void WriteUnk7(BinaryWriterEx bw)
-        {
+        internal override void WriteUnk7(BinaryWriterEx bw) {
           this.Unk7.Write(bw);
         }
       }
 
-      public class Object : MSBS.Part.DummyObject
-      {
-        public override MSBS.PartType Type
-        {
-          get
-          {
-            return MSBS.PartType.Object;
-          }
+      public class Object : MSBS.Part.DummyObject {
+        public override MSBS.PartType Type {
+          get { return MSBS.PartType.Object; }
         }
 
-        internal override bool HasUnk1
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasUnk1 {
+          get { return true; }
         }
 
         public MSBS.Part.UnkStruct1 Unk1 { get; set; }
 
-        public Object()
-        {
+        public Object() {
           this.Unk1 = new MSBS.Part.UnkStruct1();
         }
 
         public Object(MSBS.Part.Object clone)
-          : base((MSBS.Part.DummyObject) clone)
-        {
+            : base((MSBS.Part.DummyObject) clone) {
           this.Unk1 = new MSBS.Part.UnkStruct1(clone.Unk1);
         }
 
         public Object(MSBS.Part.DummyObject clone)
-          : base(clone)
-        {
+            : base(clone) {
           this.Unk1 = new MSBS.Part.UnkStruct1();
         }
 
         internal Object(BinaryReaderEx br)
-          : base(br)
-        {
-        }
+            : base(br) {}
 
-        internal override void ReadUnk1(BinaryReaderEx br)
-        {
+        internal override void ReadUnk1(BinaryReaderEx br) {
           this.Unk1 = new MSBS.Part.UnkStruct1(br);
         }
 
-        internal override void WriteUnk1(BinaryWriterEx bw)
-        {
+        internal override void WriteUnk1(BinaryWriterEx bw) {
           this.Unk1.Write(bw);
         }
       }
 
-      public class Enemy : MSBS.Part.DummyEnemy
-      {
-        public override MSBS.PartType Type
-        {
-          get
-          {
-            return MSBS.PartType.Enemy;
-          }
+      public class Enemy : MSBS.Part.DummyEnemy {
+        public override MSBS.PartType Type {
+          get { return MSBS.PartType.Enemy; }
         }
 
-        internal override bool HasUnk1
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasUnk1 {
+          get { return true; }
         }
 
         public MSBS.Part.UnkStruct1 Unk1 { get; set; }
 
-        public Enemy()
-        {
+        public Enemy() {
           this.Unk1 = new MSBS.Part.UnkStruct1();
         }
 
         public Enemy(MSBS.Part.Enemy clone)
-          : base((MSBS.Part.DummyEnemy) clone)
-        {
+            : base((MSBS.Part.DummyEnemy) clone) {
           this.Unk1 = new MSBS.Part.UnkStruct1(clone.Unk1);
         }
 
         public Enemy(MSBS.Part.DummyEnemy clone)
-          : base(clone)
-        {
+            : base(clone) {
           this.Unk1 = new MSBS.Part.UnkStruct1();
         }
 
         internal Enemy(BinaryReaderEx br)
-          : base(br)
-        {
-        }
+            : base(br) {}
 
-        internal override void ReadUnk1(BinaryReaderEx br)
-        {
+        internal override void ReadUnk1(BinaryReaderEx br) {
           this.Unk1 = new MSBS.Part.UnkStruct1(br);
         }
 
-        internal override void WriteUnk1(BinaryWriterEx bw)
-        {
+        internal override void WriteUnk1(BinaryWriterEx bw) {
           this.Unk1.Write(bw);
         }
       }
 
-      public class Player : MSBS.Part
-      {
-        public override MSBS.PartType Type
-        {
-          get
-          {
-            return MSBS.PartType.Player;
-          }
+      public class Player : MSBS.Part {
+        public override MSBS.PartType Type {
+          get { return MSBS.PartType.Player; }
         }
 
-        internal override bool HasUnk1
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasUnk1 {
+          get { return false; }
         }
 
-        internal override bool HasUnk2
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasUnk2 {
+          get { return false; }
         }
 
-        internal override bool HasGparamConfig
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasGparamConfig {
+          get { return false; }
         }
 
-        internal override bool HasUnk6
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasUnk6 {
+          get { return false; }
         }
 
-        internal override bool HasUnk7
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasUnk7 {
+          get { return false; }
         }
 
-        public Player()
-        {
-        }
+        public Player() {}
 
         internal Player(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           br.AssertPattern(16, (byte) 0);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WritePattern(16, (byte) 0);
         }
       }
 
-      public class Collision : MSBS.Part
-      {
-        public override MSBS.PartType Type
-        {
-          get
-          {
-            return MSBS.PartType.Collision;
-          }
+      public class Collision : MSBS.Part {
+        public override MSBS.PartType Type {
+          get { return MSBS.PartType.Collision; }
         }
 
-        internal override bool HasUnk1
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasUnk1 {
+          get { return true; }
         }
 
-        internal override bool HasUnk2
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasUnk2 {
+          get { return true; }
         }
 
-        internal override bool HasGparamConfig
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasGparamConfig {
+          get { return true; }
         }
 
-        internal override bool HasUnk6
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasUnk6 {
+          get { return true; }
         }
 
-        internal override bool HasUnk7
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasUnk7 {
+          get { return false; }
         }
 
         public MSBS.Part.UnkStruct1 Unk1 { get; set; }
@@ -2732,8 +2289,7 @@ namespace SoulsFormats
 
         public float UnkT54 { get; set; }
 
-        public Collision()
-        {
+        public Collision() {
           this.Unk1 = new MSBS.Part.UnkStruct1();
           this.Unk2 = new MSBS.Part.UnkStruct2();
           this.Gparam = new MSBS.Part.GparamConfig();
@@ -2742,8 +2298,7 @@ namespace SoulsFormats
         }
 
         internal Collision(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.HitFilterID = br.ReadByte();
           this.SoundSpaceType = br.ReadByte();
           int num1 = (int) br.AssertInt16(new short[1]);
@@ -2778,28 +2333,23 @@ namespace SoulsFormats
           br.AssertInt32(new int[1]);
         }
 
-        internal override void ReadUnk1(BinaryReaderEx br)
-        {
+        internal override void ReadUnk1(BinaryReaderEx br) {
           this.Unk1 = new MSBS.Part.UnkStruct1(br);
         }
 
-        internal override void ReadUnk2(BinaryReaderEx br)
-        {
+        internal override void ReadUnk2(BinaryReaderEx br) {
           this.Unk2 = new MSBS.Part.UnkStruct2(br);
         }
 
-        internal override void ReadGparamConfig(BinaryReaderEx br)
-        {
+        internal override void ReadGparamConfig(BinaryReaderEx br) {
           this.Gparam = new MSBS.Part.GparamConfig(br);
         }
 
-        internal override void ReadUnk6(BinaryReaderEx br)
-        {
+        internal override void ReadUnk6(BinaryReaderEx br) {
           this.Unk6 = new MSBS.Part.UnkStruct6(br);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteByte(this.HitFilterID);
           bw.WriteByte(this.SoundSpaceType);
           bw.WriteInt16((short) 0);
@@ -2834,79 +2384,50 @@ namespace SoulsFormats
           bw.WriteInt32(0);
         }
 
-        internal override void WriteUnk1(BinaryWriterEx bw)
-        {
+        internal override void WriteUnk1(BinaryWriterEx bw) {
           this.Unk1.Write(bw);
         }
 
-        internal override void WriteUnk2(BinaryWriterEx bw)
-        {
+        internal override void WriteUnk2(BinaryWriterEx bw) {
           this.Unk2.Write(bw);
         }
 
-        internal override void WriteGparamConfig(BinaryWriterEx bw)
-        {
+        internal override void WriteGparamConfig(BinaryWriterEx bw) {
           this.Gparam.Write(bw);
         }
 
-        internal override void WriteUnk6(BinaryWriterEx bw)
-        {
+        internal override void WriteUnk6(BinaryWriterEx bw) {
           this.Unk6.Write(bw);
         }
       }
 
-      public class DummyObject : MSBS.Part
-      {
+      public class DummyObject : MSBS.Part {
         private int ObjPartIndex1;
         private int ObjPartIndex2;
         private int ObjPartIndex3;
 
-        public override MSBS.PartType Type
-        {
-          get
-          {
-            return MSBS.PartType.DummyObject;
-          }
+        public override MSBS.PartType Type {
+          get { return MSBS.PartType.DummyObject; }
         }
 
-        internal override bool HasUnk1
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasUnk1 {
+          get { return false; }
         }
 
-        internal override bool HasUnk2
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasUnk2 {
+          get { return false; }
         }
 
-        internal override bool HasGparamConfig
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasGparamConfig {
+          get { return true; }
         }
 
-        internal override bool HasUnk6
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasUnk6 {
+          get { return false; }
         }
 
-        internal override bool HasUnk7
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasUnk7 {
+          get { return false; }
         }
 
         public MSBS.Part.GparamConfig Gparam { get; set; }
@@ -2931,18 +2452,17 @@ namespace SoulsFormats
 
         public string ObjPartName3 { get; set; }
 
-        public DummyObject()
-        {
+        public DummyObject() {
           this.Gparam = new MSBS.Part.GparamConfig();
         }
 
         public DummyObject(MSBS.Part.DummyObject clone)
-          : base((MSBS.Part) clone)
-        {
+            : base((MSBS.Part) clone) {
           this.Gparam = new MSBS.Part.GparamConfig(clone.Gparam);
           this.ObjPartName1 = clone.ObjPartName1;
           this.UnkT0C = clone.UnkT0C;
-          this.EnableObjAnimNetSyncStructure = clone.EnableObjAnimNetSyncStructure;
+          this.EnableObjAnimNetSyncStructure =
+              clone.EnableObjAnimNetSyncStructure;
           this.UnkT0E = clone.UnkT0E;
           this.SetMainObjStructureBooleans = clone.SetMainObjStructureBooleans;
           this.AnimID = clone.AnimID;
@@ -2953,8 +2473,7 @@ namespace SoulsFormats
         }
 
         internal DummyObject(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           br.AssertInt32(new int[1]);
           br.AssertInt32(new int[1]);
           this.ObjPartIndex1 = br.ReadInt32();
@@ -2972,13 +2491,11 @@ namespace SoulsFormats
           this.ObjPartIndex3 = br.ReadInt32();
         }
 
-        internal override void ReadGparamConfig(BinaryReaderEx br)
-        {
+        internal override void ReadGparamConfig(BinaryReaderEx br) {
           this.Gparam = new MSBS.Part.GparamConfig(br);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt32(0);
           bw.WriteInt32(0);
           bw.WriteInt32(this.ObjPartIndex1);
@@ -2996,78 +2513,56 @@ namespace SoulsFormats
           bw.WriteInt32(this.ObjPartIndex3);
         }
 
-        internal override void WriteGparamConfig(BinaryWriterEx bw)
-        {
+        internal override void WriteGparamConfig(BinaryWriterEx bw) {
           this.Gparam.Write(bw);
         }
 
-        internal override void GetNames(MSBS msb, MSBS.Entries entries)
-        {
+        internal override void GetNames(MSBS msb, MSBS.Entries entries) {
           base.GetNames(msb, entries);
-          this.ObjPartName1 = MSB.FindName<MSBS.Part>(entries.Parts, this.ObjPartIndex1);
-          this.ObjPartName2 = MSB.FindName<MSBS.Part>(entries.Parts, this.ObjPartIndex2);
-          this.ObjPartName3 = MSB.FindName<MSBS.Part>(entries.Parts, this.ObjPartIndex3);
+          this.ObjPartName1 =
+              MSB.FindName<MSBS.Part>(entries.Parts, this.ObjPartIndex1);
+          this.ObjPartName2 =
+              MSB.FindName<MSBS.Part>(entries.Parts, this.ObjPartIndex2);
+          this.ObjPartName3 =
+              MSB.FindName<MSBS.Part>(entries.Parts, this.ObjPartIndex3);
         }
 
-        internal override void GetIndices(MSBS msb, MSBS.Entries entries)
-        {
+        internal override void GetIndices(MSBS msb, MSBS.Entries entries) {
           base.GetIndices(msb, entries);
-          this.ObjPartIndex1 = MSB.FindIndex<MSBS.Part>(entries.Parts, this.ObjPartName1);
-          this.ObjPartIndex2 = MSB.FindIndex<MSBS.Part>(entries.Parts, this.ObjPartName2);
-          this.ObjPartIndex3 = MSB.FindIndex<MSBS.Part>(entries.Parts, this.ObjPartName3);
+          this.ObjPartIndex1 =
+              MSB.FindIndex<MSBS.Part>(entries.Parts, this.ObjPartName1);
+          this.ObjPartIndex2 =
+              MSB.FindIndex<MSBS.Part>(entries.Parts, this.ObjPartName2);
+          this.ObjPartIndex3 =
+              MSB.FindIndex<MSBS.Part>(entries.Parts, this.ObjPartName3);
         }
       }
 
-      public class DummyEnemy : MSBS.Part
-      {
+      public class DummyEnemy : MSBS.Part {
         private int CollisionPartIndex;
 
-        public override MSBS.PartType Type
-        {
-          get
-          {
-            return MSBS.PartType.DummyEnemy;
-          }
+        public override MSBS.PartType Type {
+          get { return MSBS.PartType.DummyEnemy; }
         }
 
-        internal override bool HasUnk1
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasUnk1 {
+          get { return false; }
         }
 
-        internal override bool HasUnk2
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasUnk2 {
+          get { return false; }
         }
 
-        internal override bool HasGparamConfig
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasGparamConfig {
+          get { return true; }
         }
 
-        internal override bool HasUnk6
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasUnk6 {
+          get { return false; }
         }
 
-        internal override bool HasUnk7
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasUnk7 {
+          get { return false; }
         }
 
         public MSBS.Part.GparamConfig Gparam { get; set; }
@@ -3106,8 +2601,7 @@ namespace SoulsFormats
 
         public float UnkT84 { get; set; }
 
-        public DummyEnemy()
-        {
+        public DummyEnemy() {
           this.Gparam = new MSBS.Part.GparamConfig();
           this.ThinkParamID = -1;
           this.NPCParamID = -1;
@@ -3118,13 +2612,13 @@ namespace SoulsFormats
         }
 
         public DummyEnemy(MSBS.Part.DummyEnemy clone)
-          : base((MSBS.Part) clone)
-        {
+            : base((MSBS.Part) clone) {
           this.Gparam = new MSBS.Part.GparamConfig(clone.Gparam);
           this.ThinkParamID = clone.ThinkParamID;
           this.NPCParamID = clone.NPCParamID;
           this.UnkT10 = clone.UnkT10;
-          this.ChrManipulatorAllocationParameter = clone.ChrManipulatorAllocationParameter;
+          this.ChrManipulatorAllocationParameter =
+              clone.ChrManipulatorAllocationParameter;
           this.CharaInitID = clone.CharaInitID;
           this.CollisionPartName = clone.CollisionPartName;
           this.UnkT20 = clone.UnkT20;
@@ -3141,8 +2635,7 @@ namespace SoulsFormats
         }
 
         internal DummyEnemy(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           br.AssertInt32(new int[1]);
           br.AssertInt32(new int[1]);
           this.ThinkParamID = br.ReadInt32();
@@ -3171,8 +2664,7 @@ namespace SoulsFormats
           br.AssertInt32(new int[1]);
           br.AssertInt32(new int[1]);
           this.UnkT84 = br.ReadSingle();
-          for (int index = 0; index < 5; ++index)
-          {
+          for (int index = 0; index < 5; ++index) {
             br.AssertInt32(-1);
             int num2 = (int) br.AssertInt16((short) -1);
             int num3 = (int) br.AssertInt16((short) 10);
@@ -3180,13 +2672,11 @@ namespace SoulsFormats
           br.AssertPattern(16, (byte) 0);
         }
 
-        internal override void ReadGparamConfig(BinaryReaderEx br)
-        {
+        internal override void ReadGparamConfig(BinaryReaderEx br) {
           this.Gparam = new MSBS.Part.GparamConfig(br);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt32(0);
           bw.WriteInt32(0);
           bw.WriteInt32(this.ThinkParamID);
@@ -3215,8 +2705,7 @@ namespace SoulsFormats
           bw.WriteInt32(0);
           bw.WriteInt32(0);
           bw.WriteSingle(this.UnkT84);
-          for (int index = 0; index < 5; ++index)
-          {
+          for (int index = 0; index < 5; ++index) {
             bw.WriteInt32(-1);
             bw.WriteInt16((short) -1);
             bw.WriteInt16((short) 10);
@@ -3224,74 +2713,48 @@ namespace SoulsFormats
           bw.WritePattern(16, (byte) 0);
         }
 
-        internal override void WriteGparamConfig(BinaryWriterEx bw)
-        {
+        internal override void WriteGparamConfig(BinaryWriterEx bw) {
           this.Gparam.Write(bw);
         }
 
-        internal override void GetNames(MSBS msb, MSBS.Entries entries)
-        {
+        internal override void GetNames(MSBS msb, MSBS.Entries entries) {
           base.GetNames(msb, entries);
-          this.CollisionPartName = MSB.FindName<MSBS.Part>(entries.Parts, this.CollisionPartIndex);
+          this.CollisionPartName =
+              MSB.FindName<MSBS.Part>(entries.Parts, this.CollisionPartIndex);
         }
 
-        internal override void GetIndices(MSBS msb, MSBS.Entries entries)
-        {
+        internal override void GetIndices(MSBS msb, MSBS.Entries entries) {
           base.GetIndices(msb, entries);
-          this.CollisionPartIndex = MSB.FindIndex<MSBS.Part>(entries.Parts, this.CollisionPartName);
+          this.CollisionPartIndex =
+              MSB.FindIndex<MSBS.Part>(entries.Parts, this.CollisionPartName);
         }
       }
 
-      public class ConnectCollision : MSBS.Part
-      {
+      public class ConnectCollision : MSBS.Part {
         private int CollisionIndex;
 
-        public override MSBS.PartType Type
-        {
-          get
-          {
-            return MSBS.PartType.ConnectCollision;
-          }
+        public override MSBS.PartType Type {
+          get { return MSBS.PartType.ConnectCollision; }
         }
 
-        internal override bool HasUnk1
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasUnk1 {
+          get { return false; }
         }
 
-        internal override bool HasUnk2
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasUnk2 {
+          get { return true; }
         }
 
-        internal override bool HasGparamConfig
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasGparamConfig {
+          get { return false; }
         }
 
-        internal override bool HasUnk6
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasUnk6 {
+          get { return false; }
         }
 
-        internal override bool HasUnk7
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasUnk7 {
+          get { return false; }
         }
 
         public MSBS.Part.UnkStruct2 Unk2 { get; set; }
@@ -3300,55 +2763,52 @@ namespace SoulsFormats
 
         public byte[] MapID { get; private set; }
 
-        public ConnectCollision()
-        {
+        public ConnectCollision() {
           this.Unk2 = new MSBS.Part.UnkStruct2();
           this.MapID = new byte[4];
         }
 
         internal ConnectCollision(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.CollisionIndex = br.ReadInt32();
           this.MapID = br.ReadBytes(4);
           br.AssertInt32(new int[1]);
           br.AssertInt32(new int[1]);
         }
 
-        internal override void ReadUnk2(BinaryReaderEx br)
-        {
+        internal override void ReadUnk2(BinaryReaderEx br) {
           this.Unk2 = new MSBS.Part.UnkStruct2(br);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt32(this.CollisionIndex);
           bw.WriteBytes(this.MapID);
           bw.WriteInt32(0);
           bw.WriteInt32(0);
         }
 
-        internal override void WriteUnk2(BinaryWriterEx bw)
-        {
+        internal override void WriteUnk2(BinaryWriterEx bw) {
           this.Unk2.Write(bw);
         }
 
-        internal override void GetNames(MSBS msb, MSBS.Entries entries)
-        {
+        internal override void GetNames(MSBS msb, MSBS.Entries entries) {
           base.GetNames(msb, entries);
-          this.CollisionName = MSB.FindName<MSBS.Part.Collision>(msb.Parts.Collisions, this.CollisionIndex);
+          this.CollisionName =
+              MSB.FindName<MSBS.Part.Collision>(msb.Parts.Collisions,
+                                                this.CollisionIndex);
         }
 
-        internal override void GetIndices(MSBS msb, MSBS.Entries entries)
-        {
+        internal override void GetIndices(MSBS msb, MSBS.Entries entries) {
           base.GetIndices(msb, entries);
-          this.CollisionIndex = MSB.FindIndex<MSBS.Part.Collision>(msb.Parts.Collisions, this.CollisionName);
+          this.CollisionIndex =
+              MSB.FindIndex<MSBS.Part.Collision>(
+                  msb.Parts.Collisions,
+                  this.CollisionName);
         }
       }
     }
 
-    public enum RegionType : uint
-    {
+    public enum RegionType : uint {
       Region0 = 0,
       InvasionPoint = 1,
       EnvironmentMapPoint = 2,
@@ -3356,28 +2816,30 @@ namespace SoulsFormats
       SFX = 5,
       WindSFX = 6,
       SpawnPoint = 8,
-      WalkRoute = 11, // 0x0000000B
-      WarpPoint = 13, // 0x0000000D
-      ActivationArea = 14, // 0x0000000E
-      Event = 15, // 0x0000000F
+      WalkRoute = 11,               // 0x0000000B
+      WarpPoint = 13,               // 0x0000000D
+      ActivationArea = 14,          // 0x0000000E
+      Event = 15,                   // 0x0000000F
       EnvironmentMapEffectBox = 17, // 0x00000011
-      WindArea = 18, // 0x00000012
-      MufflingBox = 20, // 0x00000014
-      MufflingPortal = 21, // 0x00000015
-      Region23 = 23, // 0x00000017
-      Region24 = 24, // 0x00000018
-      PartsGroup = 25, // 0x00000019
-      AutoDrawGroup = 26, // 0x0000001A
-      Other = 4294967295, // 0xFFFFFFFF
+      WindArea = 18,                // 0x00000012
+      MufflingBox = 20,             // 0x00000014
+      MufflingPortal = 21,          // 0x00000015
+      Region23 = 23,                // 0x00000017
+      Region24 = 24,                // 0x00000018
+      PartsGroup = 25,              // 0x00000019
+      AutoDrawGroup = 26,           // 0x0000001A
+      Other = 4294967295,           // 0xFFFFFFFF
     }
 
-    public class PointParam : MSBS.Param<MSBS.Region>, IMsbParam<IMsbRegion>
-    {
+    public class PointParam : MSBS.Param<MSBS.Region>, IMsbParam<IMsbRegion> {
       public List<MSBS.Region.Region0> Region0s { get; set; }
 
       public List<MSBS.Region.InvasionPoint> InvasionPoints { get; set; }
 
-      public List<MSBS.Region.EnvironmentMapPoint> EnvironmentMapPoints { get; set; }
+      public List<MSBS.Region.EnvironmentMapPoint> EnvironmentMapPoints {
+        get;
+        set;
+      }
 
       public List<MSBS.Region.Sound> Sounds { get; set; }
 
@@ -3395,7 +2857,8 @@ namespace SoulsFormats
 
       public List<MSBS.Region.Event> Events { get; set; }
 
-      public List<MSBS.Region.EnvironmentMapEffectBox> EnvironmentMapEffectBoxes { get; set; }
+      public List<MSBS.Region.EnvironmentMapEffectBox>
+          EnvironmentMapEffectBoxes { get; set; }
 
       public List<MSBS.Region.WindArea> WindAreas { get; set; }
 
@@ -3414,8 +2877,7 @@ namespace SoulsFormats
       public List<MSBS.Region.Other> Others { get; set; }
 
       public PointParam(int unk00 = 35)
-        : base(unk00, "POINT_PARAM_ST")
-      {
+          : base(unk00, "POINT_PARAM_ST") {
         this.Region0s = new List<MSBS.Region.Region0>();
         this.InvasionPoints = new List<MSBS.Region.InvasionPoint>();
         this.EnvironmentMapPoints = new List<MSBS.Region.EnvironmentMapPoint>();
@@ -3427,7 +2889,8 @@ namespace SoulsFormats
         this.WarpPoints = new List<MSBS.Region.WarpPoint>();
         this.ActivationAreas = new List<MSBS.Region.ActivationArea>();
         this.Events = new List<MSBS.Region.Event>();
-        this.EnvironmentMapEffectBoxes = new List<MSBS.Region.EnvironmentMapEffectBox>();
+        this.EnvironmentMapEffectBoxes =
+            new List<MSBS.Region.EnvironmentMapEffectBox>();
         this.WindAreas = new List<MSBS.Region.WindArea>();
         this.MufflingBoxes = new List<MSBS.Region.MufflingBox>();
         this.MufflingPortals = new List<MSBS.Region.MufflingPortal>();
@@ -3438,21 +2901,22 @@ namespace SoulsFormats
         this.Others = new List<MSBS.Region.Other>();
       }
 
-      internal override MSBS.Region ReadEntry(BinaryReaderEx br)
-      {
-        MSBS.RegionType enum32 = br.GetEnum32<MSBS.RegionType>(br.Position + 8L);
-        switch (enum32)
-        {
+      internal override MSBS.Region ReadEntry(BinaryReaderEx br) {
+        MSBS.RegionType enum32 =
+            br.GetEnum32<MSBS.RegionType>(br.Position + 8L);
+        switch (enum32) {
           case MSBS.RegionType.Region0:
             MSBS.Region.Region0 region0 = new MSBS.Region.Region0(br);
             this.Region0s.Add(region0);
             return (MSBS.Region) region0;
           case MSBS.RegionType.InvasionPoint:
-            MSBS.Region.InvasionPoint invasionPoint = new MSBS.Region.InvasionPoint(br);
+            MSBS.Region.InvasionPoint invasionPoint =
+                new MSBS.Region.InvasionPoint(br);
             this.InvasionPoints.Add(invasionPoint);
             return (MSBS.Region) invasionPoint;
           case MSBS.RegionType.EnvironmentMapPoint:
-            MSBS.Region.EnvironmentMapPoint environmentMapPoint = new MSBS.Region.EnvironmentMapPoint(br);
+            MSBS.Region.EnvironmentMapPoint environmentMapPoint =
+                new MSBS.Region.EnvironmentMapPoint(br);
             this.EnvironmentMapPoints.Add(environmentMapPoint);
             return (MSBS.Region) environmentMapPoint;
           case MSBS.RegionType.Sound:
@@ -3480,7 +2944,8 @@ namespace SoulsFormats
             this.WarpPoints.Add(warpPoint);
             return (MSBS.Region) warpPoint;
           case MSBS.RegionType.ActivationArea:
-            MSBS.Region.ActivationArea activationArea = new MSBS.Region.ActivationArea(br);
+            MSBS.Region.ActivationArea activationArea =
+                new MSBS.Region.ActivationArea(br);
             this.ActivationAreas.Add(activationArea);
             return (MSBS.Region) activationArea;
           case MSBS.RegionType.Event:
@@ -3488,7 +2953,8 @@ namespace SoulsFormats
             this.Events.Add(@event);
             return (MSBS.Region) @event;
           case MSBS.RegionType.EnvironmentMapEffectBox:
-            MSBS.Region.EnvironmentMapEffectBox environmentMapEffectBox = new MSBS.Region.EnvironmentMapEffectBox(br);
+            MSBS.Region.EnvironmentMapEffectBox environmentMapEffectBox =
+                new MSBS.Region.EnvironmentMapEffectBox(br);
             this.EnvironmentMapEffectBoxes.Add(environmentMapEffectBox);
             return (MSBS.Region) environmentMapEffectBox;
           case MSBS.RegionType.WindArea:
@@ -3496,11 +2962,13 @@ namespace SoulsFormats
             this.WindAreas.Add(windArea);
             return (MSBS.Region) windArea;
           case MSBS.RegionType.MufflingBox:
-            MSBS.Region.MufflingBox mufflingBox = new MSBS.Region.MufflingBox(br);
+            MSBS.Region.MufflingBox mufflingBox =
+                new MSBS.Region.MufflingBox(br);
             this.MufflingBoxes.Add(mufflingBox);
             return (MSBS.Region) mufflingBox;
           case MSBS.RegionType.MufflingPortal:
-            MSBS.Region.MufflingPortal mufflingPortal = new MSBS.Region.MufflingPortal(br);
+            MSBS.Region.MufflingPortal mufflingPortal =
+                new MSBS.Region.MufflingPortal(br);
             this.MufflingPortals.Add(mufflingPortal);
             return (MSBS.Region) mufflingPortal;
           case MSBS.RegionType.Region23:
@@ -3516,7 +2984,8 @@ namespace SoulsFormats
             this.PartsGroups.Add(partsGroup);
             return (MSBS.Region) partsGroup;
           case MSBS.RegionType.AutoDrawGroup:
-            MSBS.Region.AutoDrawGroup autoDrawGroup = new MSBS.Region.AutoDrawGroup(br);
+            MSBS.Region.AutoDrawGroup autoDrawGroup =
+                new MSBS.Region.AutoDrawGroup(br);
             this.AutoDrawGroups.Add(autoDrawGroup);
             return (MSBS.Region) autoDrawGroup;
           case MSBS.RegionType.Other:
@@ -3524,45 +2993,43 @@ namespace SoulsFormats
             this.Others.Add(other);
             return (MSBS.Region) other;
           default:
-            throw new NotImplementedException(string.Format("Unimplemented region type: {0}", (object) enum32));
+            throw new NotImplementedException(
+                string.Format("Unimplemented region type: {0}",
+                              (object) enum32));
         }
       }
 
-      public override List<MSBS.Region> GetEntries()
-      {
-        return SFUtil.ConcatAll<MSBS.Region>(new IEnumerable<MSBS.Region>[20]
-        {
-          (IEnumerable<MSBS.Region>) this.InvasionPoints,
-          (IEnumerable<MSBS.Region>) this.EnvironmentMapPoints,
-          (IEnumerable<MSBS.Region>) this.Sounds,
-          (IEnumerable<MSBS.Region>) this.SFXs,
-          (IEnumerable<MSBS.Region>) this.WindSFXs,
-          (IEnumerable<MSBS.Region>) this.SpawnPoints,
-          (IEnumerable<MSBS.Region>) this.WalkRoutes,
-          (IEnumerable<MSBS.Region>) this.WarpPoints,
-          (IEnumerable<MSBS.Region>) this.ActivationAreas,
-          (IEnumerable<MSBS.Region>) this.Events,
-          (IEnumerable<MSBS.Region>) this.Region0s,
-          (IEnumerable<MSBS.Region>) this.EnvironmentMapEffectBoxes,
-          (IEnumerable<MSBS.Region>) this.WindAreas,
-          (IEnumerable<MSBS.Region>) this.MufflingBoxes,
-          (IEnumerable<MSBS.Region>) this.MufflingPortals,
-          (IEnumerable<MSBS.Region>) this.Region23s,
-          (IEnumerable<MSBS.Region>) this.Region24s,
-          (IEnumerable<MSBS.Region>) this.PartsGroups,
-          (IEnumerable<MSBS.Region>) this.AutoDrawGroups,
-          (IEnumerable<MSBS.Region>) this.Others
+      public override List<MSBS.Region> GetEntries() {
+        return SFUtil.ConcatAll<MSBS.Region>(new IEnumerable<MSBS.Region>[20] {
+            (IEnumerable<MSBS.Region>) this.InvasionPoints,
+            (IEnumerable<MSBS.Region>) this.EnvironmentMapPoints,
+            (IEnumerable<MSBS.Region>) this.Sounds,
+            (IEnumerable<MSBS.Region>) this.SFXs,
+            (IEnumerable<MSBS.Region>) this.WindSFXs,
+            (IEnumerable<MSBS.Region>) this.SpawnPoints,
+            (IEnumerable<MSBS.Region>) this.WalkRoutes,
+            (IEnumerable<MSBS.Region>) this.WarpPoints,
+            (IEnumerable<MSBS.Region>) this.ActivationAreas,
+            (IEnumerable<MSBS.Region>) this.Events,
+            (IEnumerable<MSBS.Region>) this.Region0s,
+            (IEnumerable<MSBS.Region>) this.EnvironmentMapEffectBoxes,
+            (IEnumerable<MSBS.Region>) this.WindAreas,
+            (IEnumerable<MSBS.Region>) this.MufflingBoxes,
+            (IEnumerable<MSBS.Region>) this.MufflingPortals,
+            (IEnumerable<MSBS.Region>) this.Region23s,
+            (IEnumerable<MSBS.Region>) this.Region24s,
+            (IEnumerable<MSBS.Region>) this.PartsGroups,
+            (IEnumerable<MSBS.Region>) this.AutoDrawGroups,
+            (IEnumerable<MSBS.Region>) this.Others
         });
       }
 
-      IReadOnlyList<IMsbRegion> IMsbParam<IMsbRegion>.GetEntries()
-      {
+      IReadOnlyList<IMsbRegion> IMsbParam<IMsbRegion>.GetEntries() {
         return (IReadOnlyList<IMsbRegion>) this.GetEntries();
       }
     }
 
-    public abstract class Region : MSBS.Entry, IMsbRegion, IMsbEntry
-    {
+    public abstract class Region : MSBS.Entry, IMsbRegion, IMsbEntry {
       private int ActivationPartIndex;
 
       public abstract MSBS.RegionType Type { get; }
@@ -3587,8 +3054,7 @@ namespace SoulsFormats
 
       public int EntityID { get; set; }
 
-      internal Region()
-      {
+      internal Region() {
         this.Name = "";
         this.Shape = (MSBS.Shape) new MSBS.Shape.Point();
         this.MapStudioLayer = uint.MaxValue;
@@ -3597,8 +3063,7 @@ namespace SoulsFormats
         this.EntityID = -1;
       }
 
-      internal Region(BinaryReaderEx br)
-      {
+      internal Region(BinaryReaderEx br) {
         long position = br.Position;
         long num1 = br.ReadInt64();
         int num2 = (int) br.AssertUInt32((uint) this.Type);
@@ -3617,13 +3082,14 @@ namespace SoulsFormats
         this.Name = br.GetUTF16(position + num1);
         br.Position = position + num3;
         short num8 = br.ReadInt16();
-        this.UnkA = new List<short>((IEnumerable<short>) br.ReadInt16s((int) num8));
+        this.UnkA =
+            new List<short>((IEnumerable<short>) br.ReadInt16s((int) num8));
         br.Position = position + num4;
         short num9 = br.ReadInt16();
-        this.UnkB = new List<short>((IEnumerable<short>) br.ReadInt16s((int) num9));
+        this.UnkB =
+            new List<short>((IEnumerable<short>) br.ReadInt16s((int) num9));
         br.Position = position + num5;
-        switch (shapeType)
-        {
+        switch (shapeType) {
           case MSBS.ShapeType.Point:
             this.Shape = (MSBS.Shape) new MSBS.Shape.Point();
             break;
@@ -3646,7 +3112,9 @@ namespace SoulsFormats
             this.Shape = (MSBS.Shape) new MSBS.Shape.Composite(br);
             break;
           default:
-            throw new NotImplementedException(string.Format("Unimplemented shape type: {0}", (object) shapeType));
+            throw new NotImplementedException(
+                string.Format("Unimplemented shape type: {0}",
+                              (object) shapeType));
         }
         br.Position = position + num6;
         this.ActivationPartIndex = br.ReadInt32();
@@ -3654,8 +3122,7 @@ namespace SoulsFormats
         br.Position = position + num7;
       }
 
-      internal override void Write(BinaryWriterEx bw, int id)
-      {
+      internal override void Write(BinaryWriterEx bw, int id) {
         long position = bw.Position;
         bw.ReserveInt64("NameOffset");
         bw.WriteUInt32((uint) this.Type);
@@ -3682,136 +3149,101 @@ namespace SoulsFormats
         bw.WriteInt16((short) this.UnkB.Count);
         bw.WriteInt16s((IList<short>) this.UnkB);
         bw.Pad(8);
-        if (this.Shape.HasShapeData)
-        {
+        if (this.Shape.HasShapeData) {
           bw.FillInt64("ShapeDataOffset", bw.Position - position);
           this.Shape.WriteShapeData(bw);
-        }
-        else
+        } else
           bw.FillInt64("ShapeDataOffset", 0L);
         bw.FillInt64("BaseDataOffset3", bw.Position - position);
         bw.WriteInt32(this.ActivationPartIndex);
         bw.WriteInt32(this.EntityID);
-        if (this.HasTypeData)
-        {
-          if (this.Type == MSBS.RegionType.Region23 || this.Type == MSBS.RegionType.PartsGroup || this.Type == MSBS.RegionType.AutoDrawGroup)
+        if (this.HasTypeData) {
+          if (this.Type == MSBS.RegionType.Region23 ||
+              this.Type == MSBS.RegionType.PartsGroup ||
+              this.Type == MSBS.RegionType.AutoDrawGroup)
             bw.Pad(8);
           bw.FillInt64("TypeDataOffset", bw.Position - position);
           this.WriteTypeData(bw);
-        }
-        else
+        } else
           bw.FillInt64("TypeDataOffset", 0L);
         bw.Pad(8);
       }
 
-      internal virtual void WriteTypeData(BinaryWriterEx bw)
-      {
-        throw new InvalidOperationException("Type data should not be written for regions with no type data.");
+      internal virtual void WriteTypeData(BinaryWriterEx bw) {
+        throw new InvalidOperationException(
+            "Type data should not be written for regions with no type data.");
       }
 
-      internal virtual void GetNames(MSBS.Entries entries)
-      {
-        this.ActivationPartName = MSB.FindName<MSBS.Part>(entries.Parts, this.ActivationPartIndex);
+      internal virtual void GetNames(MSBS.Entries entries) {
+        this.ActivationPartName =
+            MSB.FindName<MSBS.Part>(entries.Parts, this.ActivationPartIndex);
         if (!(this.Shape is MSBS.Shape.Composite shape))
           return;
         foreach (MSBS.Shape.Composite.Child child in shape.Children)
           child.GetNames(entries);
       }
 
-      internal virtual void GetIndices(MSBS.Entries entries)
-      {
-        this.ActivationPartIndex = MSB.FindIndex<MSBS.Part>(entries.Parts, this.ActivationPartName);
+      internal virtual void GetIndices(MSBS.Entries entries) {
+        this.ActivationPartIndex =
+            MSB.FindIndex<MSBS.Part>(entries.Parts, this.ActivationPartName);
         if (!(this.Shape is MSBS.Shape.Composite shape))
           return;
         foreach (MSBS.Shape.Composite.Child child in shape.Children)
           child.GetIndices(entries);
       }
 
-      public override string ToString()
-      {
-        return string.Format("{0} {1} {2}", (object) this.Type, (object) this.Shape.Type, (object) this.Name);
+      public override string ToString() {
+        return string.Format("{0} {1} {2}",
+                             (object) this.Type,
+                             (object) this.Shape.Type,
+                             (object) this.Name);
       }
 
-      public class Region0 : MSBS.Region
-      {
-        public override MSBS.RegionType Type
-        {
-          get
-          {
-            return MSBS.RegionType.Region0;
-          }
+      public class Region0 : MSBS.Region {
+        public override MSBS.RegionType Type {
+          get { return MSBS.RegionType.Region0; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasTypeData {
+          get { return false; }
         }
 
-        public Region0()
-        {
-        }
+        public Region0() {}
 
         internal Region0(BinaryReaderEx br)
-          : base(br)
-        {
-        }
+            : base(br) {}
       }
 
-      public class InvasionPoint : MSBS.Region
-      {
-        public override MSBS.RegionType Type
-        {
-          get
-          {
-            return MSBS.RegionType.InvasionPoint;
-          }
+      public class InvasionPoint : MSBS.Region {
+        public override MSBS.RegionType Type {
+          get { return MSBS.RegionType.InvasionPoint; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public int UnkT00 { get; set; }
 
-        public InvasionPoint()
-        {
-        }
+        public InvasionPoint() {}
 
         internal InvasionPoint(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.UnkT00 = br.ReadInt32();
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt32(this.UnkT00);
         }
       }
 
-      public class EnvironmentMapPoint : MSBS.Region
-      {
-        public override MSBS.RegionType Type
-        {
-          get
-          {
-            return MSBS.RegionType.EnvironmentMapPoint;
-          }
+      public class EnvironmentMapPoint : MSBS.Region {
+        public override MSBS.RegionType Type {
+          get { return MSBS.RegionType.EnvironmentMapPoint; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public float UnkT00 { get; set; }
@@ -3834,13 +3266,10 @@ namespace SoulsFormats
 
         public int UnkT28 { get; set; }
 
-        public EnvironmentMapPoint()
-        {
-        }
+        public EnvironmentMapPoint() {}
 
         internal EnvironmentMapPoint(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.UnkT00 = br.ReadSingle();
           this.UnkT04 = br.ReadInt32();
           br.AssertInt32(-1);
@@ -3856,8 +3285,7 @@ namespace SoulsFormats
           br.AssertPattern(16, (byte) 0);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteSingle(this.UnkT00);
           bw.WriteInt32(this.UnkT04);
           bw.WriteInt32(-1);
@@ -3874,24 +3302,15 @@ namespace SoulsFormats
         }
       }
 
-      public class Sound : MSBS.Region
-      {
+      public class Sound : MSBS.Region {
         private int[] ChildRegionIndices;
 
-        public override MSBS.RegionType Type
-        {
-          get
-          {
-            return MSBS.RegionType.Sound;
-          }
+        public override MSBS.RegionType Type {
+          get { return MSBS.RegionType.Sound; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public int SoundType { get; set; }
@@ -3902,57 +3321,47 @@ namespace SoulsFormats
 
         public int UnkT48 { get; set; }
 
-        public Sound()
-        {
+        public Sound() {
           this.ChildRegionNames = new string[16];
         }
 
         internal Sound(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.SoundType = br.ReadInt32();
           this.SoundID = br.ReadInt32();
           this.ChildRegionIndices = br.ReadInt32s(16);
           this.UnkT48 = br.ReadInt32();
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt32(this.SoundType);
           bw.WriteInt32(this.SoundID);
           bw.WriteInt32s((IList<int>) this.ChildRegionIndices);
           bw.WriteInt32(this.UnkT48);
         }
 
-        internal override void GetNames(MSBS.Entries entries)
-        {
+        internal override void GetNames(MSBS.Entries entries) {
           base.GetNames(entries);
-          this.ChildRegionNames = MSB.FindNames<MSBS.Region>(entries.Regions, this.ChildRegionIndices);
+          this.ChildRegionNames =
+              MSB.FindNames<MSBS.Region>(entries.Regions,
+                                         this.ChildRegionIndices);
         }
 
-        internal override void GetIndices(MSBS.Entries entries)
-        {
+        internal override void GetIndices(MSBS.Entries entries) {
           base.GetIndices(entries);
-          this.ChildRegionIndices = MSB.FindIndices<MSBS.Region>(entries.Regions, this.ChildRegionNames);
+          this.ChildRegionIndices =
+              MSB.FindIndices<MSBS.Region>(entries.Regions,
+                                           this.ChildRegionNames);
         }
       }
 
-      public class SFX : MSBS.Region
-      {
-        public override MSBS.RegionType Type
-        {
-          get
-          {
-            return MSBS.RegionType.SFX;
-          }
+      public class SFX : MSBS.Region {
+        public override MSBS.RegionType Type {
+          get { return MSBS.RegionType.SFX; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public int FFXID { get; set; }
@@ -3961,13 +3370,10 @@ namespace SoulsFormats
 
         public int StartDisabled { get; set; }
 
-        public SFX()
-        {
-        }
+        public SFX() {}
 
         internal SFX(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.FFXID = br.ReadInt32();
           this.UnkT04 = br.ReadInt32();
           br.AssertInt32(-1);
@@ -3976,8 +3382,7 @@ namespace SoulsFormats
           this.StartDisabled = br.ReadInt32();
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt32(this.FFXID);
           bw.WriteInt32(this.UnkT04);
           bw.WriteInt32(-1);
@@ -3987,38 +3392,26 @@ namespace SoulsFormats
         }
       }
 
-      public class WindSFX : MSBS.Region
-      {
+      public class WindSFX : MSBS.Region {
         public string WindAreaName;
         private int WindAreaIndex;
 
-        public override MSBS.RegionType Type
-        {
-          get
-          {
-            return MSBS.RegionType.WindSFX;
-          }
+        public override MSBS.RegionType Type {
+          get { return MSBS.RegionType.WindSFX; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public int FFXID { get; set; }
 
         public float UnkT18 { get; set; }
 
-        public WindSFX()
-        {
-        }
+        public WindSFX() {}
 
         internal WindSFX(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.FFXID = br.ReadInt32();
           br.AssertPattern(16, byte.MaxValue);
           this.WindAreaIndex = br.ReadInt32();
@@ -4026,8 +3419,7 @@ namespace SoulsFormats
           br.AssertInt32(new int[1]);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt32(this.FFXID);
           bw.WritePattern(16, byte.MaxValue);
           bw.WriteInt32(this.WindAreaIndex);
@@ -4035,52 +3427,39 @@ namespace SoulsFormats
           bw.WriteInt32(0);
         }
 
-        internal override void GetNames(MSBS.Entries entries)
-        {
+        internal override void GetNames(MSBS.Entries entries) {
           base.GetNames(entries);
-          this.WindAreaName = MSB.FindName<MSBS.Region>(entries.Regions, this.WindAreaIndex);
+          this.WindAreaName =
+              MSB.FindName<MSBS.Region>(entries.Regions, this.WindAreaIndex);
         }
 
-        internal override void GetIndices(MSBS.Entries entries)
-        {
+        internal override void GetIndices(MSBS.Entries entries) {
           base.GetIndices(entries);
-          this.WindAreaIndex = MSB.FindIndex<MSBS.Region>(entries.Regions, this.WindAreaName);
+          this.WindAreaIndex =
+              MSB.FindIndex<MSBS.Region>(entries.Regions, this.WindAreaName);
         }
       }
 
-      public class SpawnPoint : MSBS.Region
-      {
-        public override MSBS.RegionType Type
-        {
-          get
-          {
-            return MSBS.RegionType.SpawnPoint;
-          }
+      public class SpawnPoint : MSBS.Region {
+        public override MSBS.RegionType Type {
+          get { return MSBS.RegionType.SpawnPoint; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
-        public SpawnPoint()
-        {
-        }
+        public SpawnPoint() {}
 
         internal SpawnPoint(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           br.AssertInt32(-1);
           br.AssertInt32(new int[1]);
           br.AssertInt32(new int[1]);
           br.AssertInt32(new int[1]);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt32(-1);
           bw.WriteInt32(0);
           bw.WriteInt32(0);
@@ -4088,134 +3467,73 @@ namespace SoulsFormats
         }
       }
 
-      public class WalkRoute : MSBS.Region
-      {
-        public override MSBS.RegionType Type
-        {
-          get
-          {
-            return MSBS.RegionType.WalkRoute;
-          }
+      public class WalkRoute : MSBS.Region {
+        public override MSBS.RegionType Type {
+          get { return MSBS.RegionType.WalkRoute; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasTypeData {
+          get { return false; }
         }
 
-        public WalkRoute()
-        {
-        }
+        public WalkRoute() {}
 
         internal WalkRoute(BinaryReaderEx br)
-          : base(br)
-        {
-        }
+            : base(br) {}
       }
 
-      public class WarpPoint : MSBS.Region
-      {
-        public override MSBS.RegionType Type
-        {
-          get
-          {
-            return MSBS.RegionType.WarpPoint;
-          }
+      public class WarpPoint : MSBS.Region {
+        public override MSBS.RegionType Type {
+          get { return MSBS.RegionType.WarpPoint; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasTypeData {
+          get { return false; }
         }
 
-        public WarpPoint()
-        {
-        }
+        public WarpPoint() {}
 
         internal WarpPoint(BinaryReaderEx br)
-          : base(br)
-        {
-        }
+            : base(br) {}
       }
 
-      public class ActivationArea : MSBS.Region
-      {
-        public override MSBS.RegionType Type
-        {
-          get
-          {
-            return MSBS.RegionType.ActivationArea;
-          }
+      public class ActivationArea : MSBS.Region {
+        public override MSBS.RegionType Type {
+          get { return MSBS.RegionType.ActivationArea; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasTypeData {
+          get { return false; }
         }
 
-        public ActivationArea()
-        {
-        }
+        public ActivationArea() {}
 
         internal ActivationArea(BinaryReaderEx br)
-          : base(br)
-        {
-        }
+            : base(br) {}
       }
 
-      public class Event : MSBS.Region
-      {
-        public override MSBS.RegionType Type
-        {
-          get
-          {
-            return MSBS.RegionType.Event;
-          }
+      public class Event : MSBS.Region {
+        public override MSBS.RegionType Type {
+          get { return MSBS.RegionType.Event; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasTypeData {
+          get { return false; }
         }
 
-        public Event()
-        {
-        }
+        public Event() {}
 
         internal Event(BinaryReaderEx br)
-          : base(br)
-        {
-        }
+            : base(br) {}
       }
 
-      public class EnvironmentMapEffectBox : MSBS.Region
-      {
-        public override MSBS.RegionType Type
-        {
-          get
-          {
-            return MSBS.RegionType.EnvironmentMapEffectBox;
-          }
+      public class EnvironmentMapEffectBox : MSBS.Region {
+        public override MSBS.RegionType Type {
+          get { return MSBS.RegionType.EnvironmentMapEffectBox; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public float UnkT00 { get; set; }
@@ -4234,13 +3552,10 @@ namespace SoulsFormats
 
         public float UnkT2C { get; set; }
 
-        public EnvironmentMapEffectBox()
-        {
-        }
+        public EnvironmentMapEffectBox() {}
 
         internal EnvironmentMapEffectBox(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.UnkT00 = br.ReadSingle();
           this.Compare = br.ReadSingle();
           this.UnkT08 = br.ReadByte();
@@ -4253,8 +3568,7 @@ namespace SoulsFormats
           br.AssertInt32(new int[1]);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteSingle(this.UnkT00);
           bw.WriteSingle(this.Compare);
           bw.WriteByte(this.UnkT08);
@@ -4268,339 +3582,232 @@ namespace SoulsFormats
         }
       }
 
-      public class WindArea : MSBS.Region
-      {
-        public override MSBS.RegionType Type
-        {
-          get
-          {
-            return MSBS.RegionType.WindArea;
-          }
+      public class WindArea : MSBS.Region {
+        public override MSBS.RegionType Type {
+          get { return MSBS.RegionType.WindArea; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasTypeData {
+          get { return false; }
         }
 
-        public WindArea()
-        {
-        }
+        public WindArea() {}
 
         internal WindArea(BinaryReaderEx br)
-          : base(br)
-        {
-        }
+            : base(br) {}
       }
 
-      public class MufflingBox : MSBS.Region
-      {
-        public override MSBS.RegionType Type
-        {
-          get
-          {
-            return MSBS.RegionType.MufflingBox;
-          }
+      public class MufflingBox : MSBS.Region {
+        public override MSBS.RegionType Type {
+          get { return MSBS.RegionType.MufflingBox; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public int UnkT00 { get; set; }
 
-        public MufflingBox()
-        {
-        }
+        public MufflingBox() {}
 
         internal MufflingBox(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.UnkT00 = br.ReadInt32();
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt32(this.UnkT00);
         }
       }
 
-      public class MufflingPortal : MSBS.Region
-      {
-        public override MSBS.RegionType Type
-        {
-          get
-          {
-            return MSBS.RegionType.MufflingPortal;
-          }
+      public class MufflingPortal : MSBS.Region {
+        public override MSBS.RegionType Type {
+          get { return MSBS.RegionType.MufflingPortal; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public int UnkT00 { get; set; }
 
-        public MufflingPortal()
-        {
-        }
+        public MufflingPortal() {}
 
         internal MufflingPortal(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.UnkT00 = br.ReadInt32();
           br.AssertInt32(new int[1]);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt32(this.UnkT00);
           bw.WriteInt32(0);
         }
       }
 
-      public class Region23 : MSBS.Region
-      {
-        public override MSBS.RegionType Type
-        {
-          get
-          {
-            return MSBS.RegionType.Region23;
-          }
+      public class Region23 : MSBS.Region {
+        public override MSBS.RegionType Type {
+          get { return MSBS.RegionType.Region23; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public long UnkT00 { get; set; }
 
-        public Region23()
-        {
-        }
+        public Region23() {}
 
         internal Region23(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.UnkT00 = br.ReadInt64();
           br.AssertPattern(24, (byte) 0);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt64(this.UnkT00);
           bw.WritePattern(24, (byte) 0);
         }
       }
 
-      public class Region24 : MSBS.Region
-      {
-        public override MSBS.RegionType Type
-        {
-          get
-          {
-            return MSBS.RegionType.Region24;
-          }
+      public class Region24 : MSBS.Region {
+        public override MSBS.RegionType Type {
+          get { return MSBS.RegionType.Region24; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasTypeData {
+          get { return false; }
         }
 
-        public Region24()
-        {
-        }
+        public Region24() {}
 
         internal Region24(BinaryReaderEx br)
-          : base(br)
-        {
-        }
+            : base(br) {}
       }
 
-      public class PartsGroup : MSBS.Region
-      {
-        public override MSBS.RegionType Type
-        {
-          get
-          {
-            return MSBS.RegionType.PartsGroup;
-          }
+      public class PartsGroup : MSBS.Region {
+        public override MSBS.RegionType Type {
+          get { return MSBS.RegionType.PartsGroup; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public long UnkT00 { get; set; }
 
-        public PartsGroup()
-        {
-        }
+        public PartsGroup() {}
 
         internal PartsGroup(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.UnkT00 = br.ReadInt64();
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt64(this.UnkT00);
         }
       }
 
-      public class AutoDrawGroup : MSBS.Region
-      {
-        public override MSBS.RegionType Type
-        {
-          get
-          {
-            return MSBS.RegionType.AutoDrawGroup;
-          }
+      public class AutoDrawGroup : MSBS.Region {
+        public override MSBS.RegionType Type {
+          get { return MSBS.RegionType.AutoDrawGroup; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasTypeData {
+          get { return true; }
         }
 
         public long UnkT00 { get; set; }
 
-        public AutoDrawGroup()
-        {
-        }
+        public AutoDrawGroup() {}
 
         internal AutoDrawGroup(BinaryReaderEx br)
-          : base(br)
-        {
+            : base(br) {
           this.UnkT00 = br.ReadInt64();
           br.AssertPattern(24, (byte) 0);
         }
 
-        internal override void WriteTypeData(BinaryWriterEx bw)
-        {
+        internal override void WriteTypeData(BinaryWriterEx bw) {
           bw.WriteInt64(this.UnkT00);
           bw.WritePattern(24, (byte) 0);
         }
       }
 
-      public class Other : MSBS.Region
-      {
-        public override MSBS.RegionType Type
-        {
-          get
-          {
-            return MSBS.RegionType.Other;
-          }
+      public class Other : MSBS.Region {
+        public override MSBS.RegionType Type {
+          get { return MSBS.RegionType.Other; }
         }
 
-        internal override bool HasTypeData
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasTypeData {
+          get { return false; }
         }
 
-        public Other()
-        {
-        }
+        public Other() {}
 
         internal Other(BinaryReaderEx br)
-          : base(br)
-        {
-        }
+            : base(br) {}
       }
     }
 
-    public enum RouteType : uint
-    {
+    public enum RouteType : uint {
       MufflingPortalLink = 3,
       MufflingBoxLink = 4,
     }
 
-    public class RouteParam : MSBS.Param<MSBS.Route>
-    {
-      public List<MSBS.Route.MufflingPortalLink> MufflingPortalLinks { get; set; }
+    public class RouteParam : MSBS.Param<MSBS.Route> {
+      public List<MSBS.Route.MufflingPortalLink> MufflingPortalLinks {
+        get;
+        set;
+      }
 
       public List<MSBS.Route.MufflingBoxLink> MufflingBoxLinks { get; set; }
 
       public RouteParam(int unk00 = 35)
-        : base(unk00, "ROUTE_PARAM_ST")
-      {
+          : base(unk00, "ROUTE_PARAM_ST") {
         this.MufflingPortalLinks = new List<MSBS.Route.MufflingPortalLink>();
         this.MufflingBoxLinks = new List<MSBS.Route.MufflingBoxLink>();
       }
 
-      internal override MSBS.Route ReadEntry(BinaryReaderEx br)
-      {
+      internal override MSBS.Route ReadEntry(BinaryReaderEx br) {
         MSBS.RouteType enum32 = br.GetEnum32<MSBS.RouteType>(br.Position + 16L);
-        switch (enum32)
-        {
+        switch (enum32) {
           case MSBS.RouteType.MufflingPortalLink:
-            MSBS.Route.MufflingPortalLink mufflingPortalLink = new MSBS.Route.MufflingPortalLink(br);
+            MSBS.Route.MufflingPortalLink mufflingPortalLink =
+                new MSBS.Route.MufflingPortalLink(br);
             this.MufflingPortalLinks.Add(mufflingPortalLink);
             return (MSBS.Route) mufflingPortalLink;
           case MSBS.RouteType.MufflingBoxLink:
-            MSBS.Route.MufflingBoxLink mufflingBoxLink = new MSBS.Route.MufflingBoxLink(br);
+            MSBS.Route.MufflingBoxLink mufflingBoxLink =
+                new MSBS.Route.MufflingBoxLink(br);
             this.MufflingBoxLinks.Add(mufflingBoxLink);
             return (MSBS.Route) mufflingBoxLink;
           default:
-            throw new NotImplementedException(string.Format("Unimplemented route type: {0}", (object) enum32));
+            throw new NotImplementedException(
+                string.Format("Unimplemented route type: {0}",
+                              (object) enum32));
         }
       }
 
-      public override List<MSBS.Route> GetEntries()
-      {
-        return SFUtil.ConcatAll<MSBS.Route>(new IEnumerable<MSBS.Route>[2]
-        {
-          (IEnumerable<MSBS.Route>) this.MufflingPortalLinks,
-          (IEnumerable<MSBS.Route>) this.MufflingBoxLinks
+      public override List<MSBS.Route> GetEntries() {
+        return SFUtil.ConcatAll<MSBS.Route>(new IEnumerable<MSBS.Route>[2] {
+            (IEnumerable<MSBS.Route>) this.MufflingPortalLinks,
+            (IEnumerable<MSBS.Route>) this.MufflingBoxLinks
         });
       }
     }
 
-    public abstract class Route : MSBS.Entry
-    {
+    public abstract class Route : MSBS.Entry {
       public abstract MSBS.RouteType Type { get; }
 
       public int Unk08 { get; set; }
 
       public int Unk0C { get; set; }
 
-      internal Route()
-      {
+      internal Route() {
         this.Name = "";
       }
 
-      internal Route(BinaryReaderEx br)
-      {
+      internal Route(BinaryReaderEx br) {
         long position = br.Position;
         long num1 = br.ReadInt64();
         this.Unk08 = br.ReadInt32();
@@ -4611,8 +3818,7 @@ namespace SoulsFormats
         this.Name = br.GetUTF16(position + num1);
       }
 
-      internal override void Write(BinaryWriterEx bw, int id)
-      {
+      internal override void Write(BinaryWriterEx bw, int id) {
         long position = bw.Position;
         bw.ReserveInt64("NameOffset");
         bw.WriteInt32(this.Unk08);
@@ -4625,54 +3831,37 @@ namespace SoulsFormats
         bw.Pad(8);
       }
 
-      public override string ToString()
-      {
-        return string.Format("\"{0}\" {1} {2}", (object) this.Name, (object) this.Unk08, (object) this.Unk0C);
+      public override string ToString() {
+        return string.Format("\"{0}\" {1} {2}",
+                             (object) this.Name,
+                             (object) this.Unk08,
+                             (object) this.Unk0C);
       }
 
-      public class MufflingPortalLink : MSBS.Route
-      {
-        public override MSBS.RouteType Type
-        {
-          get
-          {
-            return MSBS.RouteType.MufflingPortalLink;
-          }
+      public class MufflingPortalLink : MSBS.Route {
+        public override MSBS.RouteType Type {
+          get { return MSBS.RouteType.MufflingPortalLink; }
         }
 
-        public MufflingPortalLink()
-        {
-        }
+        public MufflingPortalLink() {}
 
         internal MufflingPortalLink(BinaryReaderEx br)
-          : base(br)
-        {
-        }
+            : base(br) {}
       }
 
-      public class MufflingBoxLink : MSBS.Route
-      {
-        public override MSBS.RouteType Type
-        {
-          get
-          {
-            return MSBS.RouteType.MufflingBoxLink;
-          }
+      public class MufflingBoxLink : MSBS.Route {
+        public override MSBS.RouteType Type {
+          get { return MSBS.RouteType.MufflingBoxLink; }
         }
 
-        public MufflingBoxLink()
-        {
-        }
+        public MufflingBoxLink() {}
 
         internal MufflingBoxLink(BinaryReaderEx br)
-          : base(br)
-        {
-        }
+            : base(br) {}
       }
     }
 
-    public enum ShapeType : uint
-    {
+    public enum ShapeType : uint {
       Point,
       Circle,
       Sphere,
@@ -4682,200 +3871,129 @@ namespace SoulsFormats
       Composite,
     }
 
-    public abstract class Shape
-    {
+    public abstract class Shape {
       internal abstract MSBS.ShapeType Type { get; }
 
       internal abstract bool HasShapeData { get; }
 
-      internal virtual void WriteShapeData(BinaryWriterEx bw)
-      {
-        throw new InvalidOperationException("Shape data should not be written for shapes with no shape data.");
+      internal virtual void WriteShapeData(BinaryWriterEx bw) {
+        throw new InvalidOperationException(
+            "Shape data should not be written for shapes with no shape data.");
       }
 
-      public class Point : MSBS.Shape
-      {
-        internal override MSBS.ShapeType Type
-        {
-          get
-          {
-            return MSBS.ShapeType.Point;
-          }
+      public class Point : MSBS.Shape {
+        internal override MSBS.ShapeType Type {
+          get { return MSBS.ShapeType.Point; }
         }
 
-        internal override bool HasShapeData
-        {
-          get
-          {
-            return false;
-          }
+        internal override bool HasShapeData {
+          get { return false; }
         }
       }
 
-      public class Circle : MSBS.Shape
-      {
-        internal override MSBS.ShapeType Type
-        {
-          get
-          {
-            return MSBS.ShapeType.Circle;
-          }
+      public class Circle : MSBS.Shape {
+        internal override MSBS.ShapeType Type {
+          get { return MSBS.ShapeType.Circle; }
         }
 
-        internal override bool HasShapeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasShapeData {
+          get { return true; }
         }
 
         public float Radius { get; set; }
 
-        public Circle()
-        {
-        }
+        public Circle() {}
 
-        internal Circle(BinaryReaderEx br)
-        {
+        internal Circle(BinaryReaderEx br) {
           this.Radius = br.ReadSingle();
         }
 
-        internal override void WriteShapeData(BinaryWriterEx bw)
-        {
+        internal override void WriteShapeData(BinaryWriterEx bw) {
           bw.WriteSingle(this.Radius);
         }
       }
 
-      public class Sphere : MSBS.Shape
-      {
-        internal override MSBS.ShapeType Type
-        {
-          get
-          {
-            return MSBS.ShapeType.Sphere;
-          }
+      public class Sphere : MSBS.Shape {
+        internal override MSBS.ShapeType Type {
+          get { return MSBS.ShapeType.Sphere; }
         }
 
-        internal override bool HasShapeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasShapeData {
+          get { return true; }
         }
 
         public float Radius { get; set; }
 
-        public Sphere()
-        {
-        }
+        public Sphere() {}
 
-        internal Sphere(BinaryReaderEx br)
-        {
+        internal Sphere(BinaryReaderEx br) {
           this.Radius = br.ReadSingle();
         }
 
-        internal override void WriteShapeData(BinaryWriterEx bw)
-        {
+        internal override void WriteShapeData(BinaryWriterEx bw) {
           bw.WriteSingle(this.Radius);
         }
       }
 
-      public class Cylinder : MSBS.Shape
-      {
-        internal override MSBS.ShapeType Type
-        {
-          get
-          {
-            return MSBS.ShapeType.Cylinder;
-          }
+      public class Cylinder : MSBS.Shape {
+        internal override MSBS.ShapeType Type {
+          get { return MSBS.ShapeType.Cylinder; }
         }
 
-        internal override bool HasShapeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasShapeData {
+          get { return true; }
         }
 
         public float Radius { get; set; }
 
         public float Height { get; set; }
 
-        public Cylinder()
-        {
-        }
+        public Cylinder() {}
 
-        internal Cylinder(BinaryReaderEx br)
-        {
+        internal Cylinder(BinaryReaderEx br) {
           this.Radius = br.ReadSingle();
           this.Height = br.ReadSingle();
         }
 
-        internal override void WriteShapeData(BinaryWriterEx bw)
-        {
+        internal override void WriteShapeData(BinaryWriterEx bw) {
           bw.WriteSingle(this.Radius);
           bw.WriteSingle(this.Height);
         }
       }
 
-      public class Rect : MSBS.Shape
-      {
-        internal override MSBS.ShapeType Type
-        {
-          get
-          {
-            return MSBS.ShapeType.Rect;
-          }
+      public class Rect : MSBS.Shape {
+        internal override MSBS.ShapeType Type {
+          get { return MSBS.ShapeType.Rect; }
         }
 
-        internal override bool HasShapeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasShapeData {
+          get { return true; }
         }
 
         public float Width { get; set; }
 
         public float Depth { get; set; }
 
-        public Rect()
-        {
-        }
+        public Rect() {}
 
-        internal Rect(BinaryReaderEx br)
-        {
+        internal Rect(BinaryReaderEx br) {
           this.Width = br.ReadSingle();
           this.Depth = br.ReadSingle();
         }
 
-        internal override void WriteShapeData(BinaryWriterEx bw)
-        {
+        internal override void WriteShapeData(BinaryWriterEx bw) {
           bw.WriteSingle(this.Width);
           bw.WriteSingle(this.Depth);
         }
       }
 
-      public class Box : MSBS.Shape
-      {
-        internal override MSBS.ShapeType Type
-        {
-          get
-          {
-            return MSBS.ShapeType.Box;
-          }
+      public class Box : MSBS.Shape {
+        internal override MSBS.ShapeType Type {
+          get { return MSBS.ShapeType.Box; }
         }
 
-        internal override bool HasShapeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasShapeData {
+          get { return true; }
         }
 
         public float Width { get; set; }
@@ -4884,97 +4002,76 @@ namespace SoulsFormats
 
         public float Height { get; set; }
 
-        public Box()
-        {
-        }
+        public Box() {}
 
-        internal Box(BinaryReaderEx br)
-        {
+        internal Box(BinaryReaderEx br) {
           this.Width = br.ReadSingle();
           this.Depth = br.ReadSingle();
           this.Height = br.ReadSingle();
         }
 
-        internal override void WriteShapeData(BinaryWriterEx bw)
-        {
+        internal override void WriteShapeData(BinaryWriterEx bw) {
           bw.WriteSingle(this.Width);
           bw.WriteSingle(this.Depth);
           bw.WriteSingle(this.Height);
         }
       }
 
-      public class Composite : MSBS.Shape
-      {
-        internal override MSBS.ShapeType Type
-        {
-          get
-          {
-            return MSBS.ShapeType.Composite;
-          }
+      public class Composite : MSBS.Shape {
+        internal override MSBS.ShapeType Type {
+          get { return MSBS.ShapeType.Composite; }
         }
 
-        internal override bool HasShapeData
-        {
-          get
-          {
-            return true;
-          }
+        internal override bool HasShapeData {
+          get { return true; }
         }
 
         public MSBS.Shape.Composite.Child[] Children { get; private set; }
 
-        public Composite()
-        {
+        public Composite() {
           this.Children = new MSBS.Shape.Composite.Child[8];
           for (int index = 0; index < 8; ++index)
             this.Children[index] = new MSBS.Shape.Composite.Child();
         }
 
-        internal Composite(BinaryReaderEx br)
-        {
+        internal Composite(BinaryReaderEx br) {
           this.Children = new MSBS.Shape.Composite.Child[8];
           for (int index = 0; index < 8; ++index)
             this.Children[index] = new MSBS.Shape.Composite.Child(br);
         }
 
-        internal override void WriteShapeData(BinaryWriterEx bw)
-        {
+        internal override void WriteShapeData(BinaryWriterEx bw) {
           for (int index = 0; index < 8; ++index)
             this.Children[index].Write(bw);
         }
 
-        public class Child
-        {
+        public class Child {
           private int RegionIndex;
 
           public string RegionName { get; set; }
 
           public int Unk04 { get; set; }
 
-          public Child()
-          {
-          }
+          public Child() {}
 
-          internal Child(BinaryReaderEx br)
-          {
+          internal Child(BinaryReaderEx br) {
             this.RegionIndex = br.ReadInt32();
             this.Unk04 = br.ReadInt32();
           }
 
-          internal void Write(BinaryWriterEx bw)
-          {
+          internal void Write(BinaryWriterEx bw) {
             bw.WriteInt32(this.RegionIndex);
             bw.WriteInt32(this.Unk04);
           }
 
-          internal void GetNames(MSBS.Entries entries)
-          {
-            this.RegionName = MSB.FindName<MSBS.Region>(entries.Regions, this.RegionIndex);
+          internal void GetNames(MSBS.Entries entries) {
+            this.RegionName =
+                MSB.FindName<MSBS.Region>(entries.Regions, this.RegionIndex);
           }
 
-          internal void GetIndices(MSBS.Entries entries)
-          {
-            this.RegionIndex = MSB.FindIndex<MSBS.Region>(entries.Regions, this.RegionName);
+          internal void GetIndices(MSBS.Entries entries) {
+            this.RegionIndex =
+                MSB.FindIndex<MSBS.Region>(entries.Regions, this.RegionName);
           }
         }
       }

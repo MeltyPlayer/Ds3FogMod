@@ -6,11 +6,9 @@
 
 using System.Runtime.InteropServices;
 
-namespace SoulsFormats
-{
+namespace SoulsFormats {
   [ComVisible(true)]
-  public interface IMsbEntry
-  {
+  public interface IMsbEntry {
     string Name { get; set; }
   }
 }
