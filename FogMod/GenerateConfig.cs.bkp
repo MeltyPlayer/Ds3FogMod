@@ -1,0 +1,313 @@
+﻿// Decompiled with JetBrains decompiler
+// Type: FogMod.GenerateConfig
+// Assembly: FogMod, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+// MVID: D28026FD-A9AB-45EB-9CE9-27B9E67A6072
+// Assembly location: M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\FogMod.exe
+
+using SoulsFormats;
+using SoulsIds;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using YamlDotNet.Serialization;
+
+namespace FogMod
+{
+  public class GenerateConfig
+  {
+    public void FogConfig()
+    {
+      AnnotationData ret = new AnnotationData();
+      ret.SetGame(GameSpec.FromGame.DS3);
+      Dictionary<string, MSB3> dictionary1 = new GameEditor(GameSpec.FromGame.DS3).Load<MSB3>("map\\MapStudio", (Func<string, MSB3>) (path => !ret.Specs.ContainsKey(GameEditor.BaseName(path)) ? (MSB3) null : SoulsFile<MSB3>.Read(path)), "*.msb.dcx");
+      ret.Entrances = new List<AnnotationData.Entrance>();
+      foreach (KeyValuePair<string, MSB3> keyValuePair in dictionary1)
+      {
+        AnnotationData.MapSpec mapSpec;
+        if (ret.Specs.TryGetValue(keyValuePair.Key, out mapSpec))
+        {
+          MSB3 msB3 = keyValuePair.Value;
+          Dictionary<string, MSB3.Part.Object> dictionary2 = new Dictionary<string, MSB3.Part.Object>();
+          foreach (MSB3.Part.Object @object in msB3.Parts.Objects)
+          {
+            dictionary2[@object.Name] = @object;
+            int num = int.Parse(@object.ModelName.Substring(1));
+            if (num >= mapSpec.Start && num <= mapSpec.End)
+            {
+              List<AnnotationData.Entrance> entrances = ret.Entrances;
+              AnnotationData.Entrance entrance = new AnnotationData.Entrance();
+              entrance.Area = mapSpec.Name;
+              entrance.Name = @object.Name;
+              entrance.ID = @object.EventEntityID;
+              entrance.Text = "Between";
+              entrance.Tags = "pvp boss";
+              entrance.ASide = new AnnotationData.Side()
+              {
+                Area = mapSpec.Name
+              };
+              entrance.BSide = new AnnotationData.Side()
+              {
+                Area = mapSpec.Name
+              };
+              entrances.Add(entrance);
+            }
+          }
+        }
+      }
+      using (TextWriter text = (TextWriter) File.CreateText("fog.txt"))
+        new SerializerBuilder().DisableAliases().Build().Serialize(text, (object) ret);
+    }
+
+    private static string CharacterName(SortedDictionary<int, string> characterSplits, int id)
+    {
+      int index = 0;
+      foreach (KeyValuePair<int, string> characterSplit in characterSplits)
+      {
+        if (characterSplit.Key <= id)
+          index = characterSplit.Key;
+        else
+          break;
+      }
+      string characterSplit1 = characterSplits[index];
+      return !(characterSplit1 == "UNUSED") ? characterSplit1 : string.Format("Human NPC {0}", (object) id);
+    }
+
+    public void WriteEventConfig(AnnotationData ann, Events events, RandomizerOptions opt)
+    {
+      GameEditor gameEditor = new GameEditor(GameSpec.FromGame.DS3);
+      gameEditor.Spec.GameDir = "fogdist";
+      Dictionary<string, MSB3> d = gameEditor.Load<MSB3>("Base", (Func<string, MSB3>) (path => !ann.Specs.ContainsKey(GameEditor.BaseName(path)) ? (MSB3) null : SoulsFile<MSB3>.Read(path)), "*.msb.dcx");
+      Dictionary<string, EMEVD> dictionary1 = gameEditor.Load<EMEVD>("Base", (Func<string, EMEVD>) (path => !ann.Specs.ContainsKey(GameEditor.BaseName(path)) && !path.Contains("common") ? (EMEVD) null : SoulsFile<EMEVD>.Read(path)), "*.emevd.dcx");
+      deleteEmpty<string, MSB3>(d);
+      deleteEmpty<string, EMEVD>(dictionary1);
+      gameEditor.Spec.NameDir = "fogdist\\Names";
+      Dictionary<string, string> dictionary2 = gameEditor.LoadNames<string>("ModelName", (Func<string, string>) (n => n), false);
+      SortedDictionary<int, string> characterSplits = new SortedDictionary<int, string>((IDictionary<int, string>) gameEditor.LoadNames<int>("CharaInitParam", (Func<string, int>) (n => int.Parse(n)), false));
+      Dictionary<string, List<string>> description = new Dictionary<string, List<string>>();
+      Dictionary<int, string> dictionary3 = new Dictionary<int, string>();
+      Dictionary<int, List<int>> groupIds = new Dictionary<int, List<int>>();
+      Dictionary<(string, string), MSB3.Event.ObjAct> dictionary4 = new Dictionary<(string, string), MSB3.Event.ObjAct>();
+      HashSet<int> highlightIds = new HashSet<int>();
+      HashSet<int> selectIds = new HashSet<int>();
+      foreach (AnnotationData.Entrance entrance in ann.Warps.Concat<AnnotationData.Entrance>((IEnumerable<AnnotationData.Entrance>) ann.Entrances))
+      {
+        int id = entrance.ID;
+        Util.AddMulti<string, string>((IDictionary<string, List<string>>) description, id.ToString(), (ann.Warps.Contains(entrance) ? "" : "fog gate ") + entrance.Text);
+        selectIds.Add(entrance.ID);
+        highlightIds.Add(entrance.ID);
+      }
+      HashSet<string> stringSet = new HashSet<string>();
+      foreach (AnnotationData.GameObject gameObject in ann.Objects)
+      {
+        int result;
+        if (int.TryParse(gameObject.ID, out result))
+        {
+          Util.AddMulti<string, string>((IDictionary<string, List<string>>) description, result.ToString(), gameObject.Text);
+          selectIds.Add(result);
+          highlightIds.Add(result);
+        }
+        else
+          stringSet.Add(gameObject.Area + "_" + gameObject.ID);
+      }
+      Dictionary<string, Dictionary<string, FMG>> dictionary5 = new GameEditor(GameSpec.FromGame.DS3).LoadBnds<FMG>("msg\\engus", (Func<byte[], string, FMG>) ((data, name) => SoulsFile<FMG>.Read(data)), "*_dlc2.msgbnd.dcx", (string) null);
+      addFMG(dictionary5["item_dlc2"]["NPC名"], "name");
+      addFMG(dictionary5["menu_dlc2"]["イベントテキスト"], "text");
+      foreach (KeyValuePair<string, MSB3> keyValuePair1 in d)
+      {
+        string name = ann.Specs[keyValuePair1.Key].Name;
+        MSB3 msB3 = keyValuePair1.Value;
+        foreach (MSB3.Part entry in msB3.Parts.GetEntries())
+        {
+          string key1 = name + "_" + entry.Name;
+          string str;
+          if (dictionary2.TryGetValue(entry.ModelName, out str))
+          {
+            switch (entry)
+            {
+              case MSB3.Part.Enemy enemy when str == "Human NPC" && enemy.CharaInitID > 0:
+                str = GenerateConfig.CharacterName(characterSplits, enemy.CharaInitID);
+                break;
+              case MSB3.Part.Player _:
+                str = "Warp Point";
+                break;
+            }
+            Util.AddMulti<string, string>((IDictionary<string, List<string>>) description, key1, str);
+          }
+          Util.AddMulti<string, string>((IDictionary<string, List<string>>) description, key1, name + " " + entry.GetType().Name.ToString().ToLowerInvariant() + " " + entry.Name);
+          if (entry.EventEntityID > 10)
+          {
+            highlightIds.Add(entry.EventEntityID);
+            string key2 = entry.EventEntityID.ToString();
+            if (description.ContainsKey(key2))
+              Util.AddMulti<string, string>((IDictionary<string, List<string>>) description, key1, (IEnumerable<string>) description[key2]);
+            description[key2] = description[key1];
+            if (entry is MSB3.Part.Player || entry.ModelName == "o000100")
+              selectIds.Add(entry.EventEntityID);
+            if (selectIds.Contains(entry.EventEntityID))
+              stringSet.Add(key1);
+            foreach (int eventEntityGroup in entry.EventEntityGroups)
+            {
+              if (eventEntityGroup > 0)
+              {
+                Util.AddMulti<int, int>((IDictionary<int, List<int>>) groupIds, eventEntityGroup, entry.EventEntityID);
+                highlightIds.Add(eventEntityGroup);
+              }
+            }
+          }
+        }
+        foreach (MSB3.Region entry in msB3.Regions.GetEntries())
+        {
+          if (entry.EventEntityID >= 1000000)
+          {
+            Util.AddMulti<string, string>((IDictionary<string, List<string>>) description, entry.EventEntityID.ToString(), name + " " + entry.GetType().Name.ToLowerInvariant() + " region " + entry.Name);
+            highlightIds.Add(entry.EventEntityID);
+          }
+        }
+        foreach (MSB3.Event entry in msB3.Events.GetEntries())
+        {
+          if (entry is MSB3.Event.ObjAct objAct)
+          {
+            string str1 = objAct.PartName ?? objAct.PartName2;
+            if (str1 != null)
+            {
+              List<string> stringList;
+              if (!description.TryGetValue(name + "_" + str1, out stringList))
+                throw new Exception(name + " " + objAct.Name);
+              string str2 = string.Join(" - ", (IEnumerable<string>) stringList);
+              dictionary4[(name, str1)] = objAct;
+              foreach (KeyValuePair<string, int> keyValuePair2 in new Dictionary<string, int>()
+              {
+                {
+                  "ObjAct",
+                  objAct.EventEntityID
+                },
+                {
+                  "ObjAct param",
+                  objAct.ObjActParamID
+                },
+                {
+                  "ObjAct entity",
+                  objAct.ObjActEntityID
+                },
+                {
+                  "ObjAct event flag",
+                  objAct.EventFlagID
+                }
+              })
+              {
+                int num = keyValuePair2.Value;
+                if (num > 1000)
+                {
+                  highlightIds.Add(num);
+                  Util.AddMulti<string, string>((IDictionary<string, List<string>>) description, num.ToString(), name + " " + keyValuePair2.Key + " " + objAct.Name + " for [" + str2 + "]");
+                  if (stringSet.Contains(name + "_" + str1))
+                    selectIds.Add(num);
+                }
+              }
+              if (entry.EventEntityID > 0)
+                highlightIds.Add(entry.EventEntityID);
+              if (objAct.ObjActParamID > 0)
+                highlightIds.Add(objAct.ObjActParamID);
+            }
+          }
+          else if (entry.EventEntityID > 0)
+          {
+            Util.AddMulti<string, string>((IDictionary<string, List<string>>) description, entry.EventEntityID.ToString(), name + " " + entry.Name);
+            highlightIds.Add(entry.EventEntityID);
+          }
+        }
+      }
+      selectIds.Add(13000000);
+      highlightIds.Add(13000000);
+      foreach (AnnotationData.Entrance entrance in ann.Warps.Concat<AnnotationData.Entrance>((IEnumerable<AnnotationData.Entrance>) ann.Entrances))
+      {
+        if (!highlightIds.Contains(entrance.ID))
+          throw new Exception(string.Format("Unknown id {0}", (object) entrance.ID));
+      }
+      foreach (AnnotationData.GameObject gameObject in ann.Objects)
+      {
+        int result;
+        if (int.TryParse(gameObject.ID, out result) && !highlightIds.Contains(result))
+          throw new Exception(string.Format("Unknown id {0}", (object) result));
+      }
+      HashSet<int> bossesWithMultiFogGates = new HashSet<int>()
+      {
+        3010800,
+        3200800,
+        3200850,
+        3300850,
+        3300801,
+        3700850,
+        3700800,
+        4000800,
+        4000830,
+        5000801,
+        5000802
+      };
+      HashSet<string> highlightInstrs = new HashSet<string>()
+      {
+        "Set Player Respawn Point",
+        "Warp Player",
+        "Play Cutscene, Change Map Ceremony and Warp Player",
+        "Play Cutscene and Warp Player",
+        "Play Ongoing Cutscene and Warp Player",
+        "Play Cutscene and Warp Player + UNKNOWN 2002[12]"
+      };
+      SortedDictionary<int, Events.EventDebug> highlightedEvents = events.GetHighlightedEvents(dictionary1, highlightIds, (Predicate<Events.Instr>) (instr => highlightInstrs.Contains(instr.Name) || instr.Name == "Set Character AI State" && instr[1].ToString() == "1" && (instr[0] is int num && bossesWithMultiFogGates.Contains(num))));
+      HashSet<int> eventsOverride = new HashSet<int>()
+      {
+        15115860
+      };
+      HashSet<int> idsOverride = new HashSet<int>();
+      List<EventConfig.EventSpec> eventConfig = events.CreateEventConfig<EventConfig.EventSpec>(highlightedEvents, new Predicate<int>(isEligible), new Func<EventConfig.EventSpec>(produceSpec), new Func<int, string>(quickId), eventsOverride, idsOverride);
+      ISerializer serializer = new SerializerBuilder().DisableAliases().Build();
+      if (opt["eventsyaml"])
+      {
+        using (StreamWriter text = File.CreateText("newevents.txt"))
+          serializer.Serialize((TextWriter) text, (object) eventConfig);
+      }
+      else
+        serializer.Serialize(Console.Out, (object) eventConfig);
+
+      void deleteEmpty<K, V>(Dictionary<K, V> d)
+      {
+        foreach (K key in d.Keys.ToList<K>())
+        {
+          if ((object) d[key] == null)
+            d.Remove(key);
+        }
+      }
+
+      void addFMG(FMG fmg, string desc)
+      {
+        foreach (FMG.Entry entry in fmg.Entries)
+        {
+          if (entry.ID > 25000 && !string.IsNullOrWhiteSpace(entry.Text))
+          {
+            highlightIds.Add(entry.ID);
+            Util.AddMulti<string, string>((IDictionary<string, List<string>>) description, entry.ID.ToString(), desc + " \"" + entry.Text.Replace("\r", "").Replace("\n", "\\n") + "\"");
+          }
+        }
+      }
+
+      string quickId(int id)
+      {
+        List<string> stringList;
+        if (description.TryGetValue(id.ToString(), out stringList))
+          return string.Format("{0} - {1}", (object) id, (object) string.Join(" - ", (IEnumerable<string>) stringList));
+        return groupIds.ContainsKey(id) ? string.Format("{0} group [{1}]", (object) id, (object) string.Join(", ", groupIds[id].Select<int, string>((Func<int, string>) (i => quickId(i))))) : string.Format("{0} unknown", (object) id);
+      }
+
+      bool isEligible(int entityId)
+      {
+        return selectIds.Contains(entityId);
+      }
+
+      EventConfig.EventSpec produceSpec()
+      {
+        return new EventConfig.EventSpec();
+      }
+    }
+  }
+}

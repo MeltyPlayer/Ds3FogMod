@@ -1,0 +1,1687 @@
+﻿// Decompiled with JetBrains decompiler
+// Type: FogMod.GameDataWriter3
+// Assembly: FogMod, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+// MVID: D28026FD-A9AB-45EB-9CE9-27B9E67A6072
+// Assembly location: M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\FogMod.exe
+
+using SoulsFormats;
+using SoulsIds;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Numerics;
+using System.Text.RegularExpressions;
+
+namespace FogMod
+{
+  public class GameDataWriter3
+  {
+    private static readonly List<string> extraEmevd = new List<string>()
+    {
+      "common",
+      "common_func"
+    };
+    private static readonly Regex phraseRe = new Regex("\\s*;\\s*");
+    private static readonly Dictionary<int, int> fogSfx = new Dictionary<int, int>()
+    {
+      {
+        400,
+        2
+      },
+      {
+        401,
+        3
+      },
+      {
+        402,
+        3
+      }
+    };
+    private static readonly List<string> fileLangs = new List<string>()
+    {
+      "deude",
+      "engus",
+      "frafr",
+      "itait",
+      "jpnjp",
+      "korkr",
+      "polpl",
+      "porbr",
+      "rusru",
+      "spaar",
+      "spaes",
+      "thath",
+      "zhocn",
+      "zhotw"
+    };
+    private static readonly List<string> fileDirs = new List<string>()
+    {
+      ".",
+      "action",
+      "action\\script",
+      "chr",
+      "cutscene",
+      "event",
+      "map\\mapstudio",
+      "menu",
+      "menu\\hi",
+      "menu\\hi\\mapimage",
+      "menu\\low",
+      "menu\\low\\mapimage",
+      "menu\\knowledge",
+      "menu\\$lang",
+      "msg\\$lang",
+      "mtd",
+      "obj",
+      "other",
+      "param\\drawparam",
+      "param\\gameparam",
+      "param\\graphicsconfig",
+      "parts",
+      "script",
+      "script\\talk",
+      "sfx",
+      "shader",
+      "sound"
+    }.SelectMany<string, string>((Func<string, IEnumerable<string>>) (t =>
+    {
+      if (t.Contains("$lang"))
+        return GameDataWriter3.fileLangs.Select<string, string>((Func<string, string>) (l => t.Replace("$lang", l)));
+      return (IEnumerable<string>) new string[1]
+      {
+        t
+      };
+    })).ToList<string>();
+    private static List<string> extensions = new List<string>()
+    {
+      ".hks",
+      ".dcx",
+      ".gfx",
+      ".dds",
+      ".fsb",
+      ".fev",
+      ".itl",
+      ".tpf",
+      ".entryfilelist",
+      ".hkxbdt",
+      ".hkxbhd",
+      "Data0.bdt"
+    };
+    private static Regex extensionRe = new Regex(string.Join("|", GameDataWriter3.extensions.Select<string, string>((Func<string, string>) (e => e + "$"))));
+
+    public void Write(
+      RandomizerOptions opt,
+      AnnotationData ann,
+      Graph g,
+      string gameDir,
+      string outDir,
+      Events events,
+      EventConfig eventConfig)
+    {
+      GameEditor gameEditor = new GameEditor(GameSpec.FromGame.DS3);
+      gameEditor.Spec.GameDir = "fogdist";
+      gameEditor.Spec.LayoutDir = "fogdist\\Layouts";
+      gameEditor.Spec.NameDir = "fogdist\\Names";
+      Dictionary<string, PARAM.Layout> layouts = gameEditor.LoadLayouts();
+      string path1 = "fogdist\\Base\\Data0.bdt";
+      string path2 = gameDir + "\\Data0.bdt";
+      if (gameDir != null && File.Exists(path2))
+      {
+        Console.WriteLine("Using override " + path2);
+        path1 = path2;
+      }
+      Dictionary<string, PARAM> diffData1 = gameEditor.LoadParams(path1, layouts, true);
+      string path3 = "fogdist\\Base\\menu_dlc2.msgbnd.dcx";
+      string path4 = gameDir + "\\msg\\engus\\menu_dlc2.msgbnd.dcx";
+      if (gameDir != null && File.Exists(path4))
+      {
+        Console.WriteLine("Using override " + path4);
+        path3 = path4;
+      }
+      Dictionary<string, FMG> diffData2 = gameEditor.LoadBnd<FMG>(path3, (Func<byte[], string, FMG>) ((data, p) => SoulsFile<FMG>.Read(data)), (string) null);
+      Dictionary<string, MSB3> dictionary1 = new Dictionary<string, MSB3>();
+      foreach (string basePath in Directory.GetFiles("fogdist\\Base", "*.msb.dcx")) {
+        var path = basePath;
+        string key = GameEditor.BaseName(path);
+        if (ann.Specs.ContainsKey(key))
+        {
+          string path6 = gameDir + "\\map\\mapstudio\\" + key + ".msb.dcx";
+          if (gameDir != null && File.Exists(path6))
+          {
+            Console.WriteLine("Using override " + path6);
+            path = path6;
+          }
+          dictionary1[key] = SoulsFile<MSB3>.Read(path);
+        }
+      }
+      Dictionary<string, EMEVD> dictionary2 = new Dictionary<string, EMEVD>();
+      foreach (string basePath in Directory.GetFiles("fogdist\\Base", "*.emevd.dcx"))
+      {
+        var path = basePath;
+        string name = GameEditor.BaseName(path);
+        if (validEmevd(name))
+        {
+          string path6 = gameDir + "\\event\\" + name + ".emevd.dcx";
+          if (gameDir != null && File.Exists(path6))
+          {
+            Console.WriteLine("Using override " + path6);
+            path = path6;
+          }
+          dictionary2[name] = SoulsFile<EMEVD>.Read(path);
+        }
+      }
+      Dictionary<string, Dictionary<string, ESD>> dictionary3 = new Dictionary<string, Dictionary<string, ESD>>();
+      foreach (string basePath in Directory.GetFiles("fogdist\\Base", "*.talkesdbnd.dcx")) {
+        var path = basePath;
+        string key = GameEditor.BaseName(path);
+        if (ann.Specs.ContainsKey(key))
+        {
+          string path6 = gameDir + "\\script\\talk\\" + key + ".talkesdbnd.dcx";
+          if (gameDir != null && File.Exists(path6))
+          {
+            Console.WriteLine("Using override " + path6);
+            path = path6;
+          }
+          dictionary3[key] = gameEditor.LoadBnd<ESD>(path, (Func<byte[], string, ESD>) ((data, p) => SoulsFile<ESD>.Read(data)), (string) null);
+        }
+      }
+      Dictionary<string, MSB3> msbs = new Dictionary<string, MSB3>();
+      Dictionary<string, int> players = new Dictionary<string, int>();
+      foreach (KeyValuePair<string, MSB3> keyValuePair in dictionary1)
+      {
+        AnnotationData.MapSpec mapSpec;
+        if (ann.Specs.TryGetValue(keyValuePair.Key, out mapSpec))
+        {
+          MSB3 msB3 = keyValuePair.Value;
+          string name = mapSpec.Name;
+          msbs[name] = msB3;
+          players[name] = 0;
+          msB3.Regions.Events.RemoveAll((Predicate<MSB3.Region.Event>) (r =>
+          {
+            if (!r.Name.StartsWith("Boss start for ") && !r.Name.StartsWith("FR: ") && (!r.Name.StartsWith("BR: ") && !r.Name.StartsWith("Region for ")))
+              return false;
+            if (opt["msbinfo"])
+              Console.WriteLine(string.Format("Removing region in {0}: {1} #{2}", (object) name, (object) r.Name, (object) r.EventEntityID));
+            return true;
+          }));
+          msB3.Parts.Players.RemoveAll((Predicate<MSB3.Part.Player>) (p =>
+          {
+            int result;
+            if (!p.Name.StartsWith("c0000_") || !int.TryParse(p.Name.Substring(6), out result) || result < 50)
+              return false;
+            if (opt["msbinfo"])
+              Console.WriteLine(string.Format("Removing player in {0}: {1} #{2}", (object) name, (object) p.Name, (object) p.EventEntityID));
+            return true;
+          }));
+        }
+      }
+      Dictionary<string, GameDataWriter3.Ceremony> ceremonyAlias = new Dictionary<string, GameDataWriter3.Ceremony>()
+      {
+        ["firelink"] = new GameDataWriter3.Ceremony()
+        {
+          Map = "firelink",
+          ID = 0,
+          MapLayer = 1,
+          EventLayer = 1
+        },
+        ["untended"] = new GameDataWriter3.Ceremony()
+        {
+          Map = "firelink",
+          ID = 10,
+          MapLayer = 2,
+          EventLayer = 1022
+        }
+      };
+      int mk = 4105800;
+      HashSet<int> intSet1 = new HashSet<int>(ann.Entrances.Concat<AnnotationData.Entrance>((IEnumerable<AnnotationData.Entrance>) ann.Warps).Where<AnnotationData.Entrance>((Func<AnnotationData.Entrance, bool>) (e => !e.HasTag("unused") && !e.IsFixed)).Select<AnnotationData.Entrance, int>((Func<AnnotationData.Entrance, int>) (e => e.ID)));
+      Dictionary<string, List<(string, int)>> dictionary4 = new Dictionary<string, List<(string, int)>>();
+      foreach (AnnotationData.Entrance entrance in ann.Entrances)
+      {
+        AnnotationData.Entrance e = entrance;
+        if (!e.HasTag("unused") && !e.HasTag("norandom") && !e.HasTag("door"))
+        {
+          for (int index1 = 0; index1 <= 1; ++index1)
+          {
+            bool flag = index1 == 0;
+            AnnotationData.Side side = flag ? e.ASide : e.BSide;
+            if (side != null)
+            {
+              string area1 = side.DestinationMap ?? e.Area;
+              MSB3 map1 = getMap(area1);
+              MSB3.Part.Object clone = getMap(e.Area).Parts.Objects.Find((Predicate<MSB3.Part.Object>) (o => o.Name == e.Name));
+              clone.CollisionName = (string) null;
+              if (clone.EventEntityID == 4001101 || clone.EventEntityID == 4001102)
+                clone.MapStudioLayer = 1U;
+              int eventEntityId1 = clone.EventEntityID;
+              if (clone.EventEntityID == 3201801)
+              {
+                MSB3.Part.Object @object = msbs["archdragon"].Parts.Objects.Find((Predicate<MSB3.Part.Object>) (o => o.EventEntityID == 3201420));
+                if (@object != null)
+                {
+                  for (int index2 = 0; index2 < @object.DrawGroups.Length; ++index2)
+                    clone.DrawGroups[index2] |= @object.DrawGroups[index2];
+                }
+              }
+              Vector3 position = clone.Position;
+              float dist = 1f;
+              float num1 = clone.Rotation.Y + 180f;
+              float y = (double) num1 >= 180.0 ? num1 - 360f : num1;
+              Vector3 vector3_1 = new Vector3(clone.Rotation.X, y, clone.Rotation.Z);
+              int eventEntityId2;
+              if (flag && !e.IsFixed)
+              {
+                MSB3.Part.Object @object = new MSB3.Part.Object(clone);
+                @object.Name = newEntityId(area1, clone.ModelName);
+                @object.Rotation = vector3_1;
+                @object.EventEntityID = mk++;
+                eventEntityId2 = @object.EventEntityID;
+                map1.Parts.Objects.Add(@object);
+              }
+              else
+                eventEntityId2 = clone.EventEntityID;
+              int num2 = mk++;
+              string area2;
+              MSB3.Part.Player player;
+              if (side.CustomWarp == null)
+              {
+                Vector3 vector3_2;
+                Vector3 r;
+                if (flag)
+                {
+                  vector3_2 = vector3_1;
+                  r = clone.Rotation;
+                }
+                else
+                {
+                  vector3_2 = clone.Rotation;
+                  r = vector3_1;
+                }
+                Vector3 vector3_3 = MoveInDirection(position, r, dist);
+                if (side.HasTag("higher"))
+                  vector3_3 = new Vector3(vector3_3.X, vector3_3.Y + 1f, vector3_3.Z);
+                if ((double) e.AdjustHeight > 0.0)
+                  vector3_3 = new Vector3(vector3_3.X, vector3_3.Y + e.AdjustHeight, vector3_3.Z);
+                if ((double) side.AdjustHeight > 0.0)
+                  vector3_3 = new Vector3(vector3_3.X, vector3_3.Y + side.AdjustHeight, vector3_3.Z);
+                area2 = area1;
+                player = new MSB3.Part.Player(newEntityId(area2, "c0000"));
+                player.MapStudioLayer = uint.MaxValue;
+                player.ModelName = "c0000";
+                player.EventEntityID = num2;
+                player.Position = vector3_3;
+                player.Rotation = vector3_2;
+                player.Scale = new Vector3(1f, 1f, 1f);
+                map1.Parts.Players.Add(player);
+                side.Warp = new Graph.WarpPoint()
+                {
+                  ID = e.ID,
+                  Map = area2,
+                  Action = eventEntityId2,
+                  Player = num2,
+                  ToFront = !flag
+                };
+              }
+              else
+              {
+                string[] strArray = side.CustomWarp.Split(' ');
+                area2 = strArray[0];
+                MSB3 map2 = getMap(area2);
+                List<float> list = ((IEnumerable<string>) strArray).Skip<string>(1).Select<string, float>((Func<string, float>) (c => float.Parse(c, (IFormatProvider) CultureInfo.InvariantCulture))).ToList<float>();
+                player = new MSB3.Part.Player(newEntityId(area2, "c0000"));
+                player.MapStudioLayer = uint.MaxValue;
+                player.ModelName = "c0000";
+                player.EventEntityID = num2;
+                player.Position = new Vector3(list[0], list[1], list[2]);
+                player.Rotation = new Vector3(0.0f, list[3], 0.0f);
+                player.Scale = new Vector3(1f, 1f, 1f);
+                map2.Parts.Players.Add(player);
+                side.Warp = new Graph.WarpPoint()
+                {
+                  ID = e.ID,
+                  Map = area2,
+                  Action = eventEntityId2,
+                  Player = num2,
+                  ToFront = !flag
+                };
+              }
+              if (side.BossTriggerName != null)
+              {
+                string key = side.BossTriggerName == "area" ? side.Area : side.BossTriggerName;
+                MSB3.Region.Event @event = new MSB3.Region.Event(string.Format("Region for {0} {1}", (object) player.Name, (object) player.EventEntityID));
+                @event.EventEntityID = mk++;
+                @event.Position = new Vector3(player.Position.X, player.Position.Y - 1f, player.Position.Z);
+                @event.Rotation = player.Rotation;
+                @event.MapStudioLayer = uint.MaxValue;
+                @event.Shape = (MSB3.Shape) new MSB3.Shape.Box()
+                {
+                  Width = 1.5f,
+                  Depth = 1.5f,
+                  Height = 4f
+                };
+                msbs[area2].Regions.Events.Add(@event);
+                Util.AddMulti<string, (string, int)>((IDictionary<string, List<(string, int)>>) dictionary4, key, (area2, @event.EventEntityID));
+              }
+            }
+          }
+        }
+      }
+      foreach (AnnotationData.Entrance warp in ann.Warps)
+      {
+        if (!warp.HasTag("unused") && !warp.HasTag("norandom"))
+        {
+          warp.ASide.Warp = new Graph.WarpPoint()
+          {
+            ID = warp.ID,
+            Map = warp.ASide.DestinationMap ?? warp.Area,
+            Cutscene = warp.ASide.Cutscene
+          };
+          warp.BSide.Warp = new Graph.WarpPoint()
+          {
+            ID = warp.ID,
+            Map = warp.BSide.DestinationMap ?? warp.Area,
+            Cutscene = warp.BSide.Cutscene
+          };
+          if (warp.BSide.HasTag("player"))
+            warp.BSide.Warp.Player = warp.ID;
+          else
+            warp.BSide.Warp.Region = warp.ID;
+        }
+      }
+      Dictionary<string, AnnotationData.Side> dictionary5 = new Dictionary<string, AnnotationData.Side>();
+      foreach (Graph.Node node in g.Nodes.Values)
+      {
+        foreach (Graph.Edge edge in node.To)
+        {
+          Graph.Edge link = edge.Link;
+          if (link == null)
+            throw new Exception(string.Format("Internal error: Unlinked {0}", (object) edge));
+          Graph.WarpPoint warp1 = edge.Side.Warp;
+          Graph.WarpPoint warp2 = link.Side.Warp;
+          if (warp1 == null || warp2 == null)
+          {
+            if (!edge.IsFixed || !link.IsFixed)
+              throw new Exception(string.Format("Missing warps - {0} {1} for {2} -> {3}", (object) (warp1 == null), (object) (warp2 == null), (object) edge, (object) link));
+          }
+          else if (warp1.Action == 0 && (!(edge.Name == link.Name) || !edge.IsFixed || opt["alwaysshow"]))
+            dictionary5[edge.Name] = link.Side;
+        }
+      }
+      foreach (KeyValuePair<int, int> keyValuePair in new Dictionary<int, int>()
+      {
+        [4000970] = 4000960,
+        [4000971] = 4000961,
+        [4000972] = 4000962,
+        [4000973] = 4000963,
+        [4000974] = 4000964
+      })
+      {
+        KeyValuePair<int, int> copy = keyValuePair;
+        MSB3.Part.Player player = msbs["firelink"].Parts.Players.Find((Predicate<MSB3.Part.Player>) (e => e.EventEntityID == copy.Key));
+        MSB3.Region.Event @event = new MSB3.Region.Event(string.Format("Region for {0} {1}", (object) player.Name, (object) player.EventEntityID));
+        @event.EventEntityID = copy.Value;
+        @event.Position = player.Position;
+        @event.Rotation = player.Rotation;
+        @event.MapStudioLayer = uint.MaxValue;
+        @event.Shape = (MSB3.Shape) new MSB3.Shape.Sphere(1f);
+        msbs["firelink"].Regions.Events.Add(@event);
+      }
+      foreach (KeyValuePair<string, List<string>> keyValuePair in new Dictionary<string, List<string>>()
+      {
+        ["highwall"] = new List<string>()
+        {
+          "h900200",
+          "h900402",
+          "h900403",
+          "h900500"
+        },
+        ["lothric"] = new List<string>() { "h900400" },
+        ["settlement"] = new List<string>()
+        {
+          "h009001",
+          "h009005"
+        },
+        ["archdragon"] = new List<string>()
+        {
+          "h900500",
+          "h900600"
+        },
+        ["farronkeep"] = new List<string>()
+        {
+          "h025550",
+          "h025560"
+        },
+        ["archives"] = new List<string>()
+        {
+          "h900400",
+          "h900430"
+        },
+        ["cathedral"] = new List<string>() { "h001270" },
+        ["irithyll"] = new List<string>()
+        {
+          "h900200",
+          "h900500"
+        },
+        ["catacombs"] = new List<string>()
+        {
+          "h020002",
+          "h020003",
+          "h006002"
+        },
+        ["dungeon"] = new List<string>() { "h009000" },
+        ["firelink"] = new List<string>() { "h900200" },
+        ["kiln"] = new List<string>() { "h900600" },
+        ["ariandel"] = new List<string>()
+        {
+          "h900770",
+          "h900780"
+        },
+        ["dregheap"] = new List<string>()
+        {
+          "h900770",
+          "h900780"
+        },
+        ["ringedcity"] = new List<string>()
+        {
+          "h900800",
+          "h900900"
+        },
+        ["filianore"] = new List<string>()
+        {
+          "h900770",
+          "h900780"
+        }
+      })
+      {
+        KeyValuePair<string, List<string>> entry = keyValuePair;
+        msbs[entry.Key].Parts.Collisions.RemoveAll((Predicate<MSB3.Part.Collision>) (c => entry.Value.Contains(c.Name)));
+      }
+      Dictionary<int, EventConfig.EventSpec> dictionary6 = eventConfig.Events.ToDictionary<EventConfig.EventSpec, int, EventConfig.EventSpec>((Func<EventConfig.EventSpec, int>) (e => e.ID), (Func<EventConfig.EventSpec, EventConfig.EventSpec>) (e => e));
+      HashSet<EventConfig.EventTemplate> eventTemplateSet = new HashSet<EventConfig.EventTemplate>();
+      SortedDictionary<int, GameDataWriter3.FogEdit> fogEdits = new SortedDictionary<int, GameDataWriter3.FogEdit>();
+      HashSet<string> stringSet1 = new HashSet<string>();
+      foreach (KeyValuePair<string, EMEVD> keyValuePair in dictionary2) {
+        if (!validEmevd(keyValuePair.Key)) {
+          continue;
+        }
+
+        EMEVD emevd = keyValuePair.Value;
+        Dictionary<int, EMEVD.Event> dictionary7 = keyValuePair.Value.Events.ToDictionary<EMEVD.Event, int, EMEVD.Event>((Func<EMEVD.Event, int>) (e => (int) e.ID), (Func<EMEVD.Event, EMEVD.Event>) (e => e));
+        for (int index1 = 0; index1 < emevd.Events.Count; ++index1)
+        {
+          EMEVD.Event event1 = emevd.Events[index1];
+          for (int index2 = 0; index2 < event1.Instructions.Count; ++index2)
+          {
+            // ISSUE: reference to a compiler-generated field
+            var init = events.Parse(event1.Instructions[index2], false, false);
+
+            if (!init.Init) {
+              continue;
+            }
+
+            int getArg(string arg) {
+              int pos;
+              // ISSUE: reference to a compiler-generated field
+              // ISSUE: reference to a compiler-generated field
+              if (events.ParseArgSpec(arg, out pos) && pos < init.Offset + init.Args.Count) {
+                // ISSUE: reference to a compiler-generated field
+                // ISSUE: reference to a compiler-generated field
+                arg = init[init.Offset + pos].ToString();
+              }
+              int result;
+              if (int.TryParse(arg, out result))
+                return result;
+              throw new Exception("Internal error: Invalid arg spec " + arg);
+            }
+
+            // ISSUE: reference to a compiler-generated field
+            ((IEnumerable<int>) new int[3]
+                  {
+                      20005750,
+                      20005751,
+                      20005752
+                  }).Contains<int>(init.Callee);
+            EventConfig.EventSpec eventSpec;
+            // ISSUE: reference to a compiler-generated field
+            if (dictionary6.TryGetValue(init.Callee, out eventSpec) && eventSpec.Template != null)
+            {
+              foreach (EventConfig.EventTemplate eventTemplate in (IEnumerable<EventConfig.EventTemplate>) eventSpec.Template.OrderBy<EventConfig.EventTemplate, int>((Func<EventConfig.EventTemplate, int>) (t => t.CopyTo <= 0 ? 1 : 0)))
+              {
+                bool flag = false;
+                int fog1 = -1;
+                AnnotationData.Side side1 = (AnnotationData.Side) null;
+                if (eventTemplate.Fog != null)
+                {
+                  int fog2 = getArg(eventTemplate.Fog);
+                  if (intSet1.Contains(fog2) || opt["alwaysshow"])
+                  {
+                    GameDataWriter3.FogEdit fogEdit = getFogEdit(fog2);
+                    if (eventTemplate.Sfx != null)
+                      fogEdit.Sfx = getArg(eventTemplate.Sfx);
+                    if (eventTemplate.SetFlag != null)
+                    {
+                      if (eventTemplate.SetFlagIf == null || eventTemplate.SetFlagArea == null)
+                      {
+                        // ISSUE: reference to a compiler-generated field
+                        throw new Exception(string.Format("{0} has missing values [{1}], [{2}], [{3}]", (object) init.Callee, (object) eventTemplate.SetFlag, (object) eventTemplate.SetFlagIf, (object) eventTemplate.SetFlagArea));
+                      }
+                      fogEdit.SetFlag = getArg(eventTemplate.SetFlag);
+                      fogEdit.SetFlagIf = getArg(eventTemplate.SetFlagIf);
+                      fogEdit.SetFlagArea = getArg(eventTemplate.SetFlagArea);
+                    }
+                    if (eventTemplate.Remove == "event")
+                      flag = true;
+                  }
+                  else
+                    continue;
+                }
+                else if (eventTemplate.FogSfx != null)
+                {
+                  int fog2 = getArg(eventTemplate.FogSfx);
+                  if (intSet1.Contains(fog2))
+                    getFogEdit(fog2).CreateSfx = false;
+                  else
+                    continue;
+                }
+                else if (eventTemplate.Warp != null)
+                {
+                  AnnotationData.Side side2;
+                  if (dictionary5.TryGetValue(eventTemplate.Warp, out side2))
+                  {
+                    fog1 = int.Parse(eventTemplate.Warp.Split('_')[1]);
+                    if (eventTemplate.WarpReplace != null)
+                      side1 = side2;
+                    if (eventTemplate.RepeatWarpObject > 0)
+                    {
+                      if (eventTemplate.RepeatWarpFlag <= 0)
+                      {
+                        // ISSUE: reference to a compiler-generated field
+                        throw new Exception(string.Format("{0} has warp object {1} but no flag", (object) init.Callee, (object) eventTemplate.RepeatWarpObject));
+                      }
+                      GameDataWriter3.FogEdit fogEdit = getFogEdit(fog1);
+                      fogEdit.RepeatWarpObject = eventTemplate.RepeatWarpObject;
+                      fogEdit.RepeatWarpFlag = eventTemplate.RepeatWarpFlag;
+                    }
+                  }
+                  else
+                    continue;
+                }
+                if (flag)
+                  event1.Instructions[index2] = new EMEVD.Instruction(1014, 69);
+                else if (!eventTemplateSet.Contains(eventTemplate))
+                {
+                  eventTemplateSet.Add(eventTemplate);
+                  EMEVD.Event event2;
+                  // ISSUE: reference to a compiler-generated field
+                  if (!dictionary7.TryGetValue(init.Callee, out event2))
+                  {
+                    // ISSUE: reference to a compiler-generated field
+                    throw new Exception(string.Format("Attempted edit to event not in same file as its instantiation {0}", (object) init));
+                  }
+                  Events.EventEdits edits = new Events.EventEdits();
+                  if (eventTemplate.Remove != null && eventTemplate.Remove != "event")
+                  {
+                    foreach (string toFind in GameDataWriter3.phraseRe.Split(eventTemplate.Remove))
+                      events.RemoveMacro(edits, toFind);
+                  }
+                  if (eventTemplate.Replace != null)
+                  {
+                    foreach (string toFind in GameDataWriter3.phraseRe.Split(eventTemplate.Replace))
+                      events.ReplaceMacro(edits, toFind, (string) null);
+                  }
+                  if (eventTemplate.Add != null)
+                    events.AddMacro(edits, eventTemplate.Add);
+                  if (fog1 > 0 && side1 != null)
+                  {
+                    (byte num35, byte num36) = getDest(side1.Warp.Map);
+                    int player = getPlayer(side1.Warp);
+                    events.RemoveMacro(edits, eventTemplate.WarpReplace);
+                    GameDataWriter3.Ceremony ceremony;
+                    if (ceremonyAlias.TryGetValue(side1.Warp.Map, out ceremony))
+                      events.AddMacro(edits, eventTemplate.WarpReplace, false, string.Format("Set Map Ceremony ({0},{1},{2})", (object) num35, (object) num36, (object) ceremony.ID));
+                    events.AddMacro(edits, eventTemplate.WarpReplace, false, string.Format("Warp Player ({0},{1},{2})", (object) num35, (object) num36, (object) player));
+                    stringSet1.Add(eventTemplate.Warp);
+                  }
+                  if (eventTemplate.CopyTo > 0)
+                  {
+                    event2 = events.CopyEvent(event2, eventTemplate.CopyTo);
+                    emevd.Events.Add(event2);
+                    // ISSUE: reference to a compiler-generated field
+                    Events.Instr instr = events.CopyInit(init, event2);
+                    instr.Save();
+                    emevd.Events[0].Instructions.Add(instr.Val);
+                  }
+                  Events.OldParams oldParams = Events.OldParams.Preprocess(event2);
+                  for (int index3 = 0; index3 < event2.Instructions.Count; ++index3)
+                  {
+                    Events.Instr instr = events.Parse(event2.Instructions[index3], false, false);
+                    if (!instr.Init)
+                    {
+                      edits.ApplyEdits(instr, index3);
+                      instr.Save();
+                      event2.Instructions[index3] = instr.Val;
+                    }
+                  }
+                  events.ApplyAdds(edits, event2, (Events.OldParams) null);
+                  oldParams.Postprocess();
+                  if (edits.PendingEdits.Count != 0)
+                    throw new Exception(string.Format("{0} has unapplied edits: {1}", (object) event2.ID, (object) string.Join<Events.InstrEdit>("; ", (IEnumerable<Events.InstrEdit>) edits.PendingEdits)));
+                }
+              }
+            }
+          }
+        }
+      }
+      Dictionary<string, EventConfig.NewEvent> dictionary8 = new Dictionary<string, EventConfig.NewEvent>();
+      foreach (EventConfig.NewEvent newEvent in eventConfig.NewEvents)
+      {
+        List<EMEVD.Parameter> parameterList1 = new List<EMEVD.Parameter>();
+        EMEVD.Event @event = new EMEVD.Event((long) newEvent.ID, EMEVD.Event.RestBehaviorType.Default);
+        for (int addIndex = 0; addIndex < newEvent.Commands.Count; ++addIndex)
+        {
+          (EMEVD.Instruction instruction4, List<EMEVD.Parameter> parameterList5) = events.ParseAddArg(newEvent.Commands[addIndex], addIndex);
+          @event.Instructions.Add(instruction4);
+          @event.Parameters.AddRange((IEnumerable<EMEVD.Parameter>) parameterList5);
+        }
+        if (newEvent.Name == null)
+        {
+          dictionary2["common"].Events.Add(@event);
+          dictionary2["common"].Events[0].Instructions.Add(new EMEVD.Instruction(2000, 0, (IEnumerable<object>) new List<object>()
+          {
+            (object) 0,
+            (object) (int) @event.ID,
+            (object) 0
+          }));
+        }
+        else
+        {
+          dictionary2["common_func"].Events.Add(@event);
+          dictionary8[newEvent.Name] = newEvent;
+        }
+      }
+      List<int> intList = new List<int>();
+      int num37 = 15105610;
+      foreach (PARAM.Row row in diffData1["PlayRegionParam"].Rows)
+      {
+        int num1 = (int) row["EventFlagId1"].Value;
+        if (num1 > 0)
+        {
+          int num2 = intList.IndexOf(num1);
+          if (num2 == -1)
+          {
+            intList.Add(num1);
+            num2 = intList.Count - 1;
+          }
+          row["EventFlagId1"].Value = (object) (num37 + num2);
+          int id = (int) row.ID;
+          string key = string.Format("m{0:d2}_{1:d2}_00_00", (object) (id / 10000), (object) (id / 1000 % 10));
+          EMEVD emevd;
+          if (dictionary2.TryGetValue(key, out emevd) && emevd != null)
+          {
+            EventConfig.NewEvent newEvent = dictionary8["makestable"];
+            emevd.Events[0].Instructions.Add(new EMEVD.Instruction(2000, 6, (IEnumerable<object>) new List<object>()
+            {
+              (object) newEvent.ID,
+              (object) (num37 + num2),
+              (object) num1
+            }));
+          }
+        }
+      }
+      Dictionary<string, (float, float)> dictionary9 = new Dictionary<string, (float, float)>()
+      {
+        ["health"] = (1f, ann.HealthScaling),
+        ["status"] = (1f, (float) (1.29999995231628 * (double) ann.HealthScaling / 2.0)),
+        ["souls"] = (1f, ann.HealthScaling),
+        ["damage"] = (1f, ann.DamageScaling)
+      };
+      Dictionary<string, List<string>> dictionary10 = new Dictionary<string, List<string>>()
+      {
+        ["health"] = new List<string>()
+        {
+          "maxHpRate",
+          "maxStaminaCutRate"
+        },
+        ["defense"] = new List<string>()
+        {
+          "physDefRate",
+          "magicDefRate",
+          "fireDefRate",
+          "thunderDefRate",
+          "darkDefRate",
+          "staminaAttackRate"
+        },
+        ["status"] = new List<string>()
+        {
+          "staminaAttackRate",
+          "registPoisonChangeRate",
+          "registToxicChangeRate",
+          "registBloodChangeRate",
+          "registCurseChangeRate",
+          "registFrostChangeRate"
+        },
+        ["souls"] = new List<string>() { "haveSoulRate" },
+        ["damage"] = new List<string>()
+        {
+          "physAtkPowerRate",
+          "magicAtkPowerRate",
+          "fireAtkPowerRate",
+          "thunderAtkPowerRate",
+          "darkAttackPowerRate"
+        }
+      };
+      int spCount = 40;
+      int num38 = 7900;
+      int num39 = 7950;
+      PARAM.Row from1 = diffData1["SpEffectParam"][7000];
+      for (int index1 = 0; index1 <= 1; ++index1)
+      {
+        bool flag = index1 == 0;
+        List<string> stringList1;
+        if (!flag)
+        {
+          stringList1 = new List<string>() { "damage" };
+        }
+        else
+        {
+          stringList1 = new List<string>();
+          stringList1.Add("health");
+          stringList1.Add("status");
+          stringList1.Add("souls");
+        }
+        List<string> stringList2 = stringList1;
+        int num1 = flag ? num38 : num39;
+        float maxRatio = flag ? ann.HealthScaling : ann.DamageScaling;
+        for (int index2 = 0; index2 <= spCount; ++index2)
+        {
+          PARAM.Row to = new PARAM.Row((long) (num1 + index2), (string) null, diffData1["SpEffectParam"].AppliedParamdef);
+          GameEditor.CopyRow(from1, to);
+          diffData1["SpEffectParam"].Rows.Add(to);
+          float val1 = flag ? Math.Min((float) index2 / ((float) spCount * 0.3f), 1f) : 1f;
+          if (opt["dumpscale"])
+            Console.WriteLine(string.Format("{0} defense: {1}", (object) index2, (object) val1));
+          foreach (string index3 in dictionary10["defense"])
+            to[index3].Value = (object) Math.Min(val1, 1f);
+          foreach (string index3 in stringList2)
+          {
+            double num2 = (double) dictionary9[index3].Item2;
+            List<string> stringList3 = dictionary10[index3];
+            float ratio = rangeToRatio((float) index2 / (float) spCount, maxRatio);
+            double num3 = (double) maxRatio;
+            float num4 = (float) (num2 / num3) * ratio;
+            if (opt["dumpscale"])
+              Console.WriteLine(string.Format("{0} {1}: {2}", (object) index2, (object) index3, (object) num4));
+            foreach (string index4 in stringList3)
+              to[index4].Value = (object) num4;
+          }
+        }
+      }
+      Dictionary<(string, string), string> dictionary11 = new Dictionary<(string, string), string>();
+      foreach (AnnotationData.EnemyLoc enemy in ann.Locations.Enemies)
+      {
+        if (enemy.Area == null)
+          throw new Exception(enemy.ID);
+        string[] strArray = enemy.ID.Split(' ');
+        dictionary11[(strArray[0], strArray[1])] = enemy.Area;
+        dictionary11[(strArray[0], strArray[2])] = enemy.Area;
+      }
+      if (opt["scale"])
+      {
+        foreach (KeyValuePair<string, MSB3> keyValuePair in msbs)
+        {
+          string key1 = keyValuePair.Key;
+          MSB3 msB3 = keyValuePair.Value;
+          EMEVD.Event @event = dictionary2[mapFromName(key1)].Events[0];
+          foreach (MSB3.Part.Enemy enemy1 in msB3.Parts.Enemies)
+          {
+            string key2;
+            if (dictionary11.TryGetValue((key1, enemy1.Name), out key2) || enemy1.CollisionName != null && dictionary11.TryGetValue((key1, enemy1.CollisionName), out key2))
+            {
+              int num1 = enemy1.EventEntityID;
+              if (num1 <= 0)
+              {
+                MSB3.Part.Enemy enemy2 = enemy1;
+                int num2 = mk++;
+                int num3;
+                int num4 = num3 = num2;
+                enemy2.EventEntityID = num3;
+                num1 = num4;
+              }
+              (float, float) valueTuple1;
+              if (g.AreaRatios.TryGetValue(key2, out valueTuple1))
+              {
+                (float, float) valueTuple2 = valueTuple1;
+                float ratio = valueTuple2.Item1;
+                double num2 = (double) valueTuple2.Item2;
+                float range1 = ratioToRange(ratio, 3f);
+                double range2 = (double) ratioToRange((float) num2, 2f);
+                @event.Instructions.Add(new EMEVD.Instruction(2000, 6, (IEnumerable<object>) new List<object>()
+                {
+                  (object) dictionary8["scale"].ID,
+                  (object) num1,
+                  (object) (num38 + getSp(range1)),
+                  (object) (num39 + getSp(range1))
+                }));
+              }
+            }
+          }
+        }
+      }
+      EMEVD.Event event3 = dictionary2["common"].Events[0];
+      if (!g.EntranceIds["catacombs_3801800"].IsFixed)
+        event3.Instructions.Add(events.ParseAdd("Set Event Flag (63800561,1)"));
+      if (!g.EntranceIds["cathedral_3501850"].IsFixed)
+        event3.Instructions.Add(events.ParseAdd("Set Event Flag (63500202,1)"));
+      if (!g.EntranceIds["settlement_3101780"].IsFixed)
+        event3.Instructions.Add(events.ParseAdd("Set Event Flag (63100400,1)"));
+      HashSet<string> stringSet2 = new HashSet<string>()
+      {
+        "t400000",
+        "t400001",
+        "t400002"
+      };
+      HashSet<string> stringSet3 = new HashSet<string>()
+      {
+        "t400003",
+        "t400004"
+      };
+      foreach (KeyValuePair<string, Dictionary<string, ESD>> keyValuePair1 in dictionary3)
+      {
+        foreach (KeyValuePair<string, ESD> keyValuePair2 in keyValuePair1.Value)
+        {
+          string key = keyValuePair2.Key;
+          ESD esd = keyValuePair2.Value;
+          int result;
+          if (key.StartsWith("t") && int.TryParse(key.Substring(4), out result) && result < 10)
+          {
+            byte[] numArray1 = new byte[9]
+            {
+              (byte) 79,
+              (byte) 130,
+              (byte) 229,
+              (byte) 159,
+              (byte) 213,
+              (byte) 0,
+              (byte) 133,
+              (byte) 65,
+              (byte) 149
+            };
+            byte[] array = ((IEnumerable<byte>) numArray1).Concat<byte>((IEnumerable<byte>) new byte[1]
+            {
+              (byte) 161
+            }).ToArray<byte>();
+            array[array.Length - 2] = (byte) 150;
+            byte[] replace = new byte[1]{ (byte) 65 };
+            byte[] numArray2 = new byte[6]
+            {
+              (byte) 130,
+              (byte) 86,
+              (byte) 226,
+              (byte) 228,
+              (byte) 0,
+              (byte) 161
+            };
+            byte[] numArray3 = new byte[6]
+            {
+              (byte) 130,
+              (byte) 64,
+              (byte) 93,
+              (byte) 198,
+              (byte) 0,
+              (byte) 161
+            };
+            foreach (KeyValuePair<long, Dictionary<long, ESD.State>> stateGroup in esd.StateGroups)
+            {
+              bool flag1 = false;
+              ESD.State state1 = (ESD.State) null;
+              foreach (KeyValuePair<long, ESD.State> keyValuePair3 in stateGroup.Value)
+              {
+                ESD.State state2 = keyValuePair3.Value;
+                bool flag2 = false;
+                ESD.CommandCall commandCall = (ESD.CommandCall) null;
+                foreach (ESD.CommandCall entryCommand in state2.EntryCommands)
+                {
+                  if (entryCommand.CommandBank == 5 && entryCommand.CommandID == 19)
+                  {
+                    if (Util.SearchBytes(entryCommand.Arguments[0], array) == -1)
+                    {
+                      int search = Util.SearchBytes(entryCommand.Arguments[0], numArray1);
+                      if (search != -1)
+                      {
+                        if (!opt["instawarp"] && ((IEnumerable<byte>) entryCommand.Arguments[2]).SequenceEqual<byte>((IEnumerable<byte>) numArray2))
+                          flag2 = flag1 = true;
+                        else
+                          entryCommand.Arguments[0] = findReplace(entryCommand.Arguments[0], numArray1, replace, search);
+                      }
+                    }
+                    else
+                      break;
+                  }
+                  else if (flag1 && entryCommand.CommandBank == 1 && entryCommand.CommandID == 10)
+                    state1 = state2;
+                  else if (entryCommand.CommandBank == 1 && entryCommand.CommandID == 101)
+                    commandCall = entryCommand;
+                  else if (entryCommand.CommandBank == 1 && entryCommand.CommandID == 11 && (g.EntranceIds["firelink_3000980"].HasTag("unused") && ((IEnumerable<byte>) entryCommand.Arguments[0]).SequenceEqual<byte>((IEnumerable<byte>) numArray3)))
+                    entryCommand.Arguments[1] = new byte[2]
+                    {
+                      (byte) 64,
+                      (byte) 161
+                    };
+                }
+                if (commandCall != null)
+                {
+                  if (stringSet2.Contains(key))
+                    state2.EntryCommands.Add(new ESD.CommandCall(1, 11, new byte[2][]
+                    {
+                      new byte[6]
+                      {
+                        (byte) 130,
+                        (byte) 239,
+                        (byte) 0,
+                        (byte) 0,
+                        (byte) 0,
+                        (byte) 161
+                      },
+                      new byte[2]{ (byte) 64, (byte) 161 }
+                    }));
+                  else if (stringSet3.Contains(key))
+                    state2.EntryCommands.Add(new ESD.CommandCall(1, 11, new byte[2][]
+                    {
+                      new byte[6]
+                      {
+                        (byte) 130,
+                        (byte) 239,
+                        (byte) 0,
+                        (byte) 0,
+                        (byte) 0,
+                        (byte) 161
+                      },
+                      new byte[2]{ (byte) 65, (byte) 161 }
+                    }));
+                }
+                if (flag2)
+                  state2.EntryCommands.Insert(0, new ESD.CommandCall(5, 19, new byte[4][]
+                  {
+                    array,
+                    new byte[2]{ (byte) 72, (byte) 161 },
+                    numArray2,
+                    new byte[2]{ (byte) 63, (byte) 161 }
+                  }));
+              }
+              if (state1 != null)
+              {
+                stateGroup.Value[50L] = new ESD.State();
+                stateGroup.Value[50L].EntryCommands.Add(new ESD.CommandCall(1, 11, new byte[2][]
+                {
+                  intArg(14005159),
+                  intArg(1)
+                }));
+                stateGroup.Value[50L].Conditions.Add(new ESD.Condition(1L, new byte[9]
+                {
+                  (byte) 130,
+                  (byte) 103,
+                  (byte) 0,
+                  (byte) 0,
+                  (byte) 0,
+                  (byte) 132,
+                  (byte) 69,
+                  (byte) 146,
+                  (byte) 161
+                }));
+                stateGroup.Value[51L] = new ESD.State();
+                stateGroup.Value[51L].EntryCommands.Add(new ESD.CommandCall(1, 17, new byte[5][]
+                {
+                  intArg(8),
+                  intArg(10010712),
+                  intArg(1),
+                  intArg(2),
+                  intArg(2)
+                }));
+                stateGroup.Value[51L].Conditions.Add(new ESD.Condition(50L, new byte[11]
+                {
+                  (byte) 122,
+                  (byte) 64,
+                  (byte) 133,
+                  (byte) 64,
+                  (byte) 149,
+                  (byte) 86,
+                  (byte) 132,
+                  (byte) 65,
+                  (byte) 149,
+                  (byte) 152,
+                  (byte) 161
+                }));
+                stateGroup.Value[51L].Conditions.Add(new ESD.Condition(1L, new byte[6]
+                {
+                  (byte) 122,
+                  (byte) 64,
+                  (byte) 133,
+                  (byte) 64,
+                  (byte) 149,
+                  (byte) 161
+                }));
+                state1.Conditions.Add(new ESD.Condition(51L, new byte[4]
+                {
+                  (byte) 175,
+                  (byte) 72,
+                  (byte) 149,
+                  (byte) 161
+                }));
+              }
+            }
+          }
+        }
+      }
+      int index5 = 3301800;
+      int toAsideNew = 3301870;
+      List<int> actionHeights = new List<int>()
+      {
+        -5,
+        -1,
+        1,
+        3
+      };
+      for (int index1 = 0; index1 < actionHeights.Count; ++index1)
+      {
+        PARAM.Row from2 = diffData1["ActionButtonParam"][index5];
+        PARAM.Row row = new PARAM.Row((long) (toAsideNew + index1), (string) null, diffData1["ActionButtonParam"].AppliedParamdef);
+        PARAM.Row to = row;
+        GameEditor.CopyRow(from2, to);
+        row["InvalidFlag"].Value = (object) -1;
+        row["height"].Value = (object) 4f;
+        row["baseHeightOffset"].Value = (object) (float) actionHeights[index1];
+        row["AllowAngle"].Value = (object) 90;
+        row["depth"].Value = (object) 1.5f;
+        row["width"].Value = (object) 1.5f;
+        diffData1["ActionButtonParam"].Rows.Add(row);
+      }
+      diffData1["ActionButtonParam"].Rows.Sort((Comparison<PARAM.Row>) ((a, b) => a.ID.CompareTo(b.ID)));
+      diffData1["ActionButtonParam"][9322]["InvalidFlag"].Value = (object) -1;
+      diffData1["ActionButtonParam"][3201850]["InvalidFlag"].Value = (object) -1;
+      PARAM.Row row1 = diffData1["ActionButtonParam"][9351];
+      if (opt["instawarp"])
+        row1["grayoutFlag"].Value = (object) -1;
+      else if ((int) row1["grayoutFlag"].Value <= 0)
+      {
+        row1["grayoutFlag"].Value = (object) 14005108;
+        EMEVD.Event event1 = new EMEVD.Event(14005107L, EMEVD.Event.RestBehaviorType.Default);
+        event1.Instructions.AddRange(((IEnumerable<string>) new string[3]
+        {
+          "Set Event Flag (14005108,1)",
+          "IF Player Has/Doesn't Have Item (0,3,2137,1)",
+          "Set Event Flag (14005108,0)"
+        }).Select<string, EMEVD.Instruction>((Func<string, EMEVD.Instruction>) (t => events.ParseAdd(t))));
+        EMEVD emevd = dictionary2[mapFromName("firelink")];
+        emevd.Events.Add(event1);
+        emevd.Events[0].Instructions.Add(new EMEVD.Instruction(2000, 0, (IEnumerable<object>) new List<object>()
+        {
+          (object) 0,
+          (object) 14005107U,
+          (object) 0U
+        }));
+      }
+      PARAM.Row row2 = diffData1["ActionButtonParam"][3100000];
+      row2["regionType"].Value = (object) (byte) 0;
+      row2["Radius"].Value = (object) 5f;
+      row2["Angle"].Value = (object) 180;
+      row2["depth"].Value = (object) 0.0f;
+      row2["width"].Value = (object) 0.0f;
+      row2["height"].Value = (object) 15f;
+      row2["baseHeightOffset"].Value = (object) -10f;
+      row2["dummyPoly1"].Value = (object) -1;
+      row2["angleCheckType"].Value = (object) (byte) 0;
+      row2["AllowAngle"].Value = (object) 180;
+      foreach (KeyValuePair<int, GameDataWriter3.FogEdit> keyValuePair in fogEdits)
+      {
+        int id = keyValuePair.Key;
+        GameDataWriter3.FogEdit fogEdit = keyValuePair.Value;
+        AnnotationData.Entrance entrance = ann.Entrances.Find((Predicate<AnnotationData.Entrance>) (e => e.ID == id));
+        if (entrance == null)
+        {
+          if (!ann.Warps.Any<AnnotationData.Entrance>((Func<AnnotationData.Entrance, bool>) (e => e.ID == id)))
+            throw new Exception(string.Format("Unknown fog edit {0}", (object) id));
+        }
+        else
+        {
+          EMEVD emevd = dictionary2[mapFromName(entrance.Area)];
+          if (fogEdit.CreateSfx)
+          {
+            EventConfig.NewEvent newEvent = dictionary8["showsfx"];
+            int num1 = fogEdit.Sfx;
+            if (num1 == 0)
+              num1 = 3;
+            emevd.Events[0].Instructions.Add(new EMEVD.Instruction(2000, 6, (IEnumerable<object>) new List<object>()
+            {
+              (object) newEvent.ID,
+              (object) id,
+              (object) num1
+            }));
+          }
+          if (fogEdit.SetFlag > 0)
+          {
+            EventConfig.NewEvent newEvent = dictionary8["startboss"];
+            emevd.Events[0].Instructions.Add(new EMEVD.Instruction(2000, 6, (IEnumerable<object>) new List<object>()
+            {
+              (object) newEvent.ID,
+              (object) fogEdit.SetFlagIf,
+              (object) fogEdit.SetFlagArea,
+              (object) fogEdit.SetFlag
+            }));
+          }
+        }
+      }
+      foreach (KeyValuePair<string, List<(string, int)>> keyValuePair in dictionary4)
+      {
+        AnnotationData.Area area = g.Areas[keyValuePair.Key];
+        int defeatFlag = area.DefeatFlag;
+        int bossTrigger = area.BossTrigger;
+        if (defeatFlag == 0 || bossTrigger == 0)
+          throw new Exception("Internal error: no flag for " + keyValuePair.Key);
+        EventConfig.NewEvent newEvent = dictionary8["startboss"];
+        foreach ((string, int) valueTuple in keyValuePair.Value)
+          dictionary2[mapFromName(valueTuple.Item1)].Events[0].Instructions.Add(new EMEVD.Instruction(2000, 6, (IEnumerable<object>) new List<object>()
+          {
+            (object) newEvent.ID,
+            (object) defeatFlag,
+            (object) valueTuple.Item2,
+            (object) bossTrigger
+          }));
+      }
+      HashSet<string> stringSet4 = new HashSet<string>();
+      foreach (Graph.Node node in g.Nodes.Values)
+      {
+        foreach (Graph.Edge edge in node.To)
+        {
+          Graph.Edge link = edge.Link;
+          if (link == null)
+            throw new Exception(string.Format("Internal error: Unlinked {0}", (object) edge));
+          Graph.WarpPoint warp1 = edge.Side.Warp;
+          Graph.WarpPoint warp2 = link.Side.Warp;
+          if (warp1 == null || warp2 == null)
+          {
+            if (!edge.IsFixed || !link.IsFixed)
+              throw new Exception(string.Format("Missing warps - {0} {1} for {2} -> {3}", (object) (warp1 == null), (object) (warp2 == null), (object) edge, (object) link));
+          }
+          else if (edge.Name == link.Name && edge.IsFixed && !opt["alwaysshow"])
+          {
+            AnnotationData.Entrance entranceId = g.EntranceIds[edge.Name];
+            if (!stringSet4.Contains(entranceId.FullName))
+              stringSet4.Add(entranceId.FullName);
+          }
+          else
+          {
+            GameDataWriter3.FogEdit fogEdit = (GameDataWriter3.FogEdit) null;
+            if (warp1.Action == 0)
+            {
+              if (!stringSet1.Contains(edge.Name))
+                throw new Exception("Did not add warp " + link.Name + " in events pass (found " + string.Join(", ", (IEnumerable<string>) stringSet1) + ")");
+              fogEdits.TryGetValue(g.EntranceIds[edge.Name].ID, out fogEdit);
+              if (fogEdit == null || fogEdit.RepeatWarpObject == 0)
+                continue;
+            }
+            int player = getPlayer(warp2);
+            string map1 = warp1.Map;
+            string map2 = warp2.Map;
+            EMEVD emevd = dictionary2[mapFromName(map1)];
+            int num1 = getNameFlag(edge.Side.BossDefeatName, edge.Side.Area, (Func<AnnotationData.Area, int>) (ar => ar.DefeatFlag));
+            int num2 = getNameFlag(edge.Side.BossTrapName, edge.Side.Area, (Func<AnnotationData.Area, int>) (ar => ar.TrapFlag));
+            if (opt["pacifist"])
+            {
+              num1 = 0;
+              num2 = 0;
+            }
+            EventConfig.NewEvent newEvent = dictionary8["fogwarp"];
+            (byte num40, byte num41) = getDest(map2);
+            GameDataWriter3.Ceremony ceremony;
+            int num5 = ceremonyAlias.TryGetValue(map2, out ceremony) ? ceremony.ID : -1;
+            List<object> objectList;
+            if (fogEdit == null)
+            {
+              float height = edge.Side.AdjustHeight + g.EntranceIds[edge.Name].AdjustHeight;
+              int num6 = edge.Name == "archdragon_3201850" ? 3201850 : getActionForHeight(height);
+              objectList = new List<object>()
+              {
+                (object) newEvent.ID,
+                (object) warp1.Action,
+                (object) num6,
+                (object) player,
+                (object) num40,
+                (object) num41,
+                (object) num5,
+                (object) num1,
+                (object) num2
+              };
+            }
+            else
+              objectList = new List<object>()
+              {
+                (object) newEvent.ID,
+                (object) fogEdit.RepeatWarpObject,
+                (object) 9340,
+                (object) player,
+                (object) num40,
+                (object) num41,
+                (object) num5,
+                (object) fogEdit.RepeatWarpFlag,
+                (object) 0
+              };
+            if (ceremonyAlias.TryGetValue(map1, out ceremony))
+              emevd.Events[0].Instructions.Add(new EMEVD.Instruction(2000, 6, (uint) ceremony.EventLayer, (IEnumerable<object>) objectList));
+            else
+              emevd.Events[0].Instructions.Add(new EMEVD.Instruction(2000, 6, (IEnumerable<object>) objectList));
+          }
+        }
+      }
+      if (!g.EntranceIds["archdragon_3201850"].IsFixed)
+      {
+        foreach (MSB3.Part.Collision collision in msbs["archdragon"].Parts.Collisions)
+        {
+          if (((IEnumerable<string>) new string[3]
+          {
+            "h005002",
+            "h000600",
+            "h000610"
+          }).Contains<string>(collision.Name))
+            collision.MapStudioLayer = uint.MaxValue;
+        }
+      }
+      msbs["archdragon"].Parts.Enemies.Find((Predicate<MSB3.Part.Enemy>) (e => e.EventEntityID == 3200300)).MapStudioLayer = uint.MaxValue;
+      msbs["archdragon"].Parts.Objects.Find((Predicate<MSB3.Part.Object>) (e => e.Name == "o324010_1000")).EventEntityID = 3201458;
+      msbs["firelink"].Parts.MapPieces.Find((Predicate<MSB3.Part.MapPiece>) (e => e.Name == "m000400_1000")).EventEntityID = 4001405;
+      ((MSB3.Shape.Box) msbs["archdragon"].Regions.ActivationAreas.Find((Predicate<MSB3.Region.ActivationArea>) (e => e.EventEntityID == 3202270)).Shape).Height = 8f;
+      MSB3.Part.Player player1 = msbs["firelink"].Parts.Players.Find((Predicate<MSB3.Part.Player>) (e => e.EventEntityID == 4000110));
+      player1.Position = new Vector3(112.369f, -49.24f, 498.478f);
+      player1.Rotation = new Vector3(0.0f, 200.28f, 0.0f);
+      MSB3.Region.Event event4 = msbs["highwall"].Regions.Events.Find((Predicate<MSB3.Region.Event>) (e => e.EventEntityID == 3002896));
+      ((MSB3.Shape.Box) event4.Shape).Depth = 36.4f;
+      event4.Position = new Vector3(27.58f, -9.92f, 148.99f);
+      MSB3.Region.Event event5 = msbs["farronkeep"].Regions.Events.Find((Predicate<MSB3.Region.Event>) (e => e.EventEntityID == 3302850));
+      ((MSB3.Shape.Box) event5.Shape).Depth = 26.1f;
+      event5.Position = new Vector3(-178.135f, -248.86f, -423.79f);
+      PARAM.Row row3 = new PARAM.Row(3800055L, (string) null, diffData1["ItemLotParam"].AppliedParamdef);
+      diffData1["ItemLotParam"].Rows.Add(row3);
+      row3["ItemLotId1"].Value = (object) 292;
+      row3["LotItemCategory01"].Value = (object) 1073741824U;
+      row3["LotItemBasePoint01"].Value = (object) (short) 1000;
+      row3["getItemFlagId"].Value = (object) -1;
+      row3["LotItemNum1"].Value = (object) (byte) 3;
+      row3["ClearCount"].Value = (object) (sbyte) -1;
+      MSB3.Part.Object object1 = new MSB3.Part.Object("o000250_0150");
+      object1.CollisionName = "h014000";
+      object1.ModelName = "o000250";
+      object1.Position = new Vector3(362.045f, -300.618f, -642.429f);
+      object1.Rotation = new Vector3(-3f, -75f, 0.0f);
+      object1.MapStudioLayer = uint.MaxValue;
+      object1.EventEntityID = 3801575;
+      MSB3.Part.Object object2 = object1;
+      object2.AnimIDs[0] = (short) 60;
+      msbs["catacombs"].Parts.Objects.Add(object2);
+      List<MSB3.Event.Treasure> treasures = msbs["catacombs"].Events.Treasures;
+      MSB3.Event.Treasure treasure = new MSB3.Event.Treasure("Firebomb treasure");
+      treasure.PartName = "h014000";
+      treasure.PartName2 = object2.Name;
+      treasure.ItemLot1 = (int) row3.ID;
+      treasure.PickupAnimID = 60070;
+      treasures.Add(treasure);
+      dictionary2[mapFromName("catacombs")].Events[0].Instructions.Add(new EMEVD.Instruction(2000, 6, (IEnumerable<object>) new List<object>()
+      {
+        (object) dictionary8["firebomb"].ID
+      }));
+      MSB3.Region.Event event6 = msbs["highwall"].Regions.Events.Find((Predicate<MSB3.Region.Event>) (e => e.EventEntityID == 3002890));
+      MSB3.Region.Event event7 = msbs["highwall"].Regions.Events.Find((Predicate<MSB3.Region.Event>) (e => e.EventEntityID == 3002893));
+      event6.Position = event7.Position;
+      event6.Rotation = event7.Rotation;
+      msbs["archdragon"].Parts.Objects.Find((Predicate<MSB3.Part.Object>) (e => e.EventEntityID == 3201480)).Position = new Vector3(-15.413f, 69.113f, 197.68f);
+      if (opt["cheat"])
+      {
+        for (int index1 = 0; index1 < 10; ++index1)
+        {
+          PARAM.Row row4 = diffData1["CharaInitParam"][3000 + index1];
+          foreach (string str in new List<string>()
+          {
+            "Vit",
+            "Wil",
+            "End",
+            "Str",
+            "Dex",
+            "Mag",
+            "Fai",
+            "Luc",
+            "Durability"
+          })
+            row4["base" + str].Value = (object) (sbyte) 90;
+          HashSet<int> intSet2 = new HashSet<int>(diffData1["ReinforceParamWeapon"].Rows.Select<PARAM.Row, int>((Func<PARAM.Row, int>) (r => (int) r.ID)));
+          foreach (string index2 in new List<string>()
+          {
+            "equip_Wep_Right",
+            "equip_Subwep_Right",
+            "equip_Wep_Left",
+            "equip_Subwep_Left"
+          })
+          {
+            int num1 = (int) row4[index2].Value;
+            if (num1 != -1)
+            {
+              int index3 = num1 - num1 % 100;
+              PARAM.Row row5 = diffData1["EquipParamWeapon"][index3];
+              if (row5 != null)
+              {
+                int num2 = (int) (short) row5["reinforceTypeId"].Value;
+                while (intSet2.Contains(num2 + 5))
+                {
+                  num2 += 5;
+                  index3 += 5;
+                }
+                if (row5.ID == 16000000L)
+                  index3 += 200;
+                row4[index2].Value = (object) index3;
+              }
+            }
+          }
+        }
+      }
+      diffData2["イベントテキスト"][10010712] = "Until the Coiled Sword is placed, this bonfire is cut off\nfrom the others. Return to Cemetery?";
+      if (opt["dryrun"])
+      {
+        Console.WriteLine("Success (dry run)");
+      }
+      else
+      {
+        List<string> writtenFiles = new List<string>();
+        string path5 = "fogdist\\Base\\Data0.bdt";
+        string path6 = gameDir + "\\Data0.bdt";
+        if (File.Exists(path6))
+          path5 = path6;
+        string str1 = true ? outDir + "\\Data0.bdt" : outDir + "\\param\\gameparam\\gameparam.parambnd.dcx";
+        this.AddModFile(writtenFiles, str1);
+        gameEditor.OverrideBndRel<PARAM>(path5, str1, diffData1, (Func<PARAM, byte[]>) (f => f.Write()), (string) null);
+        string path7 = "fogdist\\Base\\menu_dlc2.msgbnd.dcx";
+        string path8 = gameDir + "\\msg\\engus\\menu_dlc2.msgbnd.dcx";
+        if (File.Exists(path8))
+          path7 = path8;
+        string str2 = outDir + "\\msg\\engus\\menu_dlc2.msgbnd.dcx";
+        this.AddModFile(writtenFiles, str2);
+        gameEditor.OverrideBndRel<FMG>(path7, str2, diffData2, (Func<FMG, byte[]>) (f => f.Write()), (string) null);
+        foreach (KeyValuePair<string, EMEVD> keyValuePair in dictionary2)
+        {
+          if (validEmevd(keyValuePair.Key))
+          {
+            string path9 = outDir + "\\event\\" + keyValuePair.Key + ".emevd.dcx";
+            this.AddModFile(writtenFiles, path9);
+            keyValuePair.Value.Write(path9);
+          }
+        }
+        foreach (KeyValuePair<string, MSB3> keyValuePair in msbs)
+        {
+          string map = ann.NameSpecs[keyValuePair.Key].Map;
+          string path9 = outDir + "\\map\\mapstudio\\" + map + ".msb.dcx";
+          this.AddModFile(writtenFiles, path9);
+          keyValuePair.Value.Write(path9);
+        }
+        foreach (KeyValuePair<string, Dictionary<string, ESD>> keyValuePair in dictionary3)
+        {
+          string path9 = "fogdist\\Base\\" + keyValuePair.Key + ".talkesdbnd.dcx";
+          string path10 = gameDir + "\\script\\talk\\" + keyValuePair.Key + ".talkesdbnd.dcx";
+          if (File.Exists(path10))
+            path9 = path10;
+          string str3 = outDir + "\\script\\talk\\" + keyValuePair.Key + ".talkesdbnd.dcx";
+          this.AddModFile(writtenFiles, str3);
+          gameEditor.OverrideBndRel<ESD>(path9, str3, keyValuePair.Value, (Func<ESD, byte[]>) (e => e.Write()), (string) null);
+        }
+        this.MergeMods(writtenFiles, gameDir, outDir);
+      }
+
+      Vector3 MoveInDirection(Vector3 v, Vector3 r, float dist)
+      {
+        float num = (float) ((double) r.Y * 3.14159274101257 / 180.0);
+        return new Vector3(v.X + (float) Math.Sin((double) num) * dist, v.Y, v.Z + (float) Math.Cos((double) num) * dist);
+      }
+
+      float ratioToRange(float ratio, float maxRatio)
+      {
+        float num = (float) ((Math.Log((double) ratio, (double) maxRatio) + 1.0) / 2.0);
+        return (double) num > 1.0 ? 1f : ((double) num < 0.0 ? 0.0f : num);
+      }
+
+      float rangeToRatio(float range, float maxRatio)
+      {
+        range = (double) range > 1.0 ? 1f : ((double) range < 0.0 ? 0.0f : range);
+        range = (float) ((double) range * 2.0 - 1.0);
+        range = (float) Math.Pow((double) maxRatio, (double) range);
+        return range;
+      }
+
+      byte[] findReplace(byte[] b, byte[] find, byte[] replace, int search)
+      {
+        if (search == -1)
+          return b;
+        byte[] numArray = new byte[b.Length - find.Length + replace.Length];
+        Array.Copy((Array) b, 0, (Array) numArray, 0, search);
+        Array.Copy((Array) replace, 0, (Array) numArray, search, replace.Length);
+        Array.Copy((Array) b, search + find.Length, (Array) numArray, search + replace.Length, b.Length - (search + find.Length));
+        return numArray;
+      }
+
+      byte[] intArg(int arg)
+      {
+        if (arg >= -64 && arg < 63)
+          return new byte[2]
+          {
+            (byte) (64 + arg),
+            (byte) 161
+          };
+        byte[] numArray = new byte[6]
+        {
+          (byte) 130,
+          (byte) 0,
+          (byte) 0,
+          (byte) 0,
+          (byte) 0,
+          (byte) 161
+        };
+        Array.Copy((Array) BitConverter.GetBytes(arg), 0, (Array) numArray, 1, 4);
+        return numArray;
+      }
+
+      bool validEmevd(string name)
+      {
+        return ann.Specs.ContainsKey(name) || GameDataWriter3.extraEmevd.Contains(name);
+      }
+
+      string mapFromName(string map)
+      {
+        GameDataWriter3.Ceremony ceremony;
+        if (ceremonyAlias.TryGetValue(map, out ceremony))
+          map = ceremony.Map;
+        AnnotationData.MapSpec mapSpec;
+        if (!ann.NameSpecs.TryGetValue(map, out mapSpec))
+          throw new Exception("Unknown map " + map);
+        return mapSpec.Map;
+      }
+
+      (byte, byte) getDest(string map)
+      {
+        string str = mapFromName(map);
+        return (byte.Parse(str.Substring(1, 2)), byte.Parse(str.Substring(4, 2)));
+      }
+
+      MSB3 getMap(string area)
+      {
+        GameDataWriter3.Ceremony ceremony;
+        if (ceremonyAlias.TryGetValue(area, out ceremony))
+          area = ceremony.Map;
+        MSB3 msB3;
+        if (!msbs.TryGetValue(area, out msB3))
+          throw new Exception("Unknown area for placing map object " + area);
+        return msB3;
+      }
+
+      string newEntityId(string area, string model)
+      {
+        GameDataWriter3.Ceremony ceremony;
+        if (ceremonyAlias.TryGetValue(area, out ceremony))
+          area = ceremony.Map;
+        return string.Format("{0}_{1:d4}", (object) model, (object) (50 + players[area]++));
+      }
+
+      int getNameFlag(string name, string sideArea, Func<AnnotationData.Area, int> field)
+      {
+        switch (name)
+        {
+          case "area":
+            name = sideArea;
+            break;
+          case null:
+            return 0;
+        }
+        AnnotationData.Area area;
+        if (g.Areas.TryGetValue(name, out area))
+        {
+          int num = field(area);
+          if (num != 0)
+            return num;
+          throw new Exception("Internal error: no flag " + name + " in " + sideArea);
+        }
+        int result;
+        if (int.TryParse(name, out result))
+          return result;
+        throw new Exception("Internal error: bad flag name " + name + " in " + sideArea);
+      }
+
+      int getPlayer(Graph.WarpPoint warp)
+      {
+        if (warp.Player != 0)
+          return warp.Player;
+        MSB3 msB3 = msbs[warp.Map];
+        MSB3.Region region = msB3.Regions.GetEntries().Where<MSB3.Region>((Func<MSB3.Region, bool>) (r => r.EventEntityID == warp.Region)).FirstOrDefault<MSB3.Region>();
+        if (region == null)
+          throw new Exception(string.Format("Cutscene warp destination {0} not found in {1}", (object) warp.Region, (object) warp.Map));
+        MSB3.Part.Player player = new MSB3.Part.Player(newEntityId(warp.Map, "c0000"));
+        player.ModelName = "c0000";
+        player.EventEntityID = mk++;
+        player.Position = region.Position;
+        player.Rotation = region.Rotation;
+        player.Scale = new Vector3(1f, 1f, 1f);
+        msB3.Parts.Players.Add(player);
+        warp.Player = player.EventEntityID;
+        return warp.Player;
+      }
+
+      GameDataWriter3.FogEdit getFogEdit(int fog)
+      {
+        GameDataWriter3.FogEdit fogEdit;
+        if (!fogEdits.TryGetValue(fog, out fogEdit))
+          fogEdit = fogEdits[fog] = new GameDataWriter3.FogEdit();
+        return fogEdit;
+      }
+
+      int getSp(float range)
+      {
+        int num = (int) Math.Round((double) range * (double) spCount);
+        return num < 0 ? 0 : (num > spCount ? spCount : num);
+      }
+
+      int getActionForHeight(float height)
+      {
+        List<int> list = actionHeights.Select<int, int>((Func<int, int, int>) ((h, i) => i)).Where<int>((Func<int, bool>) (i => (double) actionHeights[i] < (double) height)).ToList<int>();
+        return toAsideNew + (list.Count == 0 ? 1 : list.Max());
+      }
+    }
+
+    private static List<string> GetGameFiles(string dir)
+    {
+      List<string> stringList = new List<string>();
+      foreach (string fileDir in GameDataWriter3.fileDirs)
+      {
+        string path = dir + "\\" + fileDir;
+        if (Directory.Exists(path))
+        {
+          foreach (string file in Directory.GetFiles(path))
+          {
+            if (GameDataWriter3.extensionRe.IsMatch(file))
+            {
+              string fileName = Path.GetFileName(file);
+              stringList.Add(fileDir + "\\" + fileName);
+            }
+          }
+        }
+      }
+      return stringList;
+    }
+
+    private static string FullName(string path)
+    {
+      return new FileInfo(path).FullName;
+    }
+
+    private void AddModFile(List<string> writtenFiles, string path)
+    {
+      path = GameDataWriter3.FullName(path);
+      Console.WriteLine("Writing " + path);
+      writtenFiles.Add(path);
+    }
+
+    private void MergeMods(List<string> writtenFiles, string modDir, string outPath)
+    {
+      Console.WriteLine("Processing extra mod files...");
+      bool flag = false;
+      if (modDir != null)
+      {
+        foreach (string gameFile in GameDataWriter3.GetGameFiles(modDir))
+        {
+          string sourceFileName = GameDataWriter3.FullName(modDir + "\\" + gameFile);
+          string str = GameDataWriter3.FullName(outPath + "\\" + gameFile);
+          if (!writtenFiles.Contains(str))
+          {
+            Console.WriteLine("Copying " + sourceFileName);
+            Directory.CreateDirectory(Path.GetDirectoryName(str));
+            File.Copy(sourceFileName, str, true);
+            writtenFiles.Add(str);
+            flag = true;
+          }
+        }
+      }
+      foreach (string gameFile in GameDataWriter3.GetGameFiles(outPath))
+      {
+        string str = GameDataWriter3.FullName(outPath + "\\" + gameFile);
+        if (!writtenFiles.Contains(str))
+        {
+          Console.WriteLine("Found extra file (delete it if you don't want it): " + str);
+          flag = true;
+        }
+      }
+      if (flag)
+        return;
+      Console.WriteLine("No extra files found");
+    }
+
+    public class Ceremony
+    {
+      public string Map { get; set; }
+
+      public int ID { get; set; }
+
+      public int MapLayer { get; set; }
+
+      public int EventLayer { get; set; }
+    }
+
+    public class FogEdit
+    {
+      public bool CreateSfx = true;
+
+      public int Sfx { get; set; }
+
+      public int SetFlag { get; set; }
+
+      public int SetFlagIf { get; set; }
+
+      public int SetFlagArea { get; set; }
+
+      public int RepeatWarpObject { get; set; }
+
+      public int RepeatWarpFlag { get; set; }
+    }
+  }
+}

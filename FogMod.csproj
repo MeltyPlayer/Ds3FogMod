@@ -1,0 +1,200 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--Project was exported from assembly: M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\FogMod.exe-->
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{3202278F-0240-4089-BC22-D567F9D3FB24}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>FogMod</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <ApplicationVersion>1.0.0.0</ApplicationVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.ValueTuple.4.5.0\lib\net461\System.ValueTuple.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="YamlDotNet, Version=11.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
+      <HintPath>packages\YamlDotNet.11.1.3-nullable-enums-0003\lib\net45\YamlDotNet.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="FogMod\GameDataWriter3.cs" />
+    <Compile Include="FogMod\GenerateConfig.cs" />
+    <Compile Include="FogMod\GraphChecker.cs" />
+    <Compile Include="FogMod\GraphConnector.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="SoulsFormats\CCM.cs" />
+    <Compile Include="SoulsIds\EMEDF.cs" />
+    <None Include="SoulsIds\Events.cs.bkp" />
+    <Compile Include="SoulsIds\Events.cs" />
+    <Compile Include="SoulsIds\GameEditor.cs" />
+    <Compile Include="SoulsIds\GameSpec.cs" />
+    <Compile Include="SoulsIds\Scraper.cs" />
+    <Compile Include="SoulsIds\Universe.cs" />
+    <Compile Include="SoulsFormats\Binder.cs" />
+    <Compile Include="SoulsFormats\BinderFile.cs" />
+    <Compile Include="SoulsFormats\BinderFileHeader.cs" />
+    <Compile Include="SoulsFormats\BinderHashTable.cs" />
+    <Compile Include="SoulsFormats\BinderReader.cs" />
+    <Compile Include="SoulsFormats\BND3.cs" />
+    <Compile Include="SoulsFormats\BND3Reader.cs" />
+    <Compile Include="SoulsFormats\IBND3.cs" />
+    <Compile Include="SoulsFormats\BND4.cs" />
+    <Compile Include="SoulsFormats\BND4Reader.cs" />
+    <Compile Include="SoulsFormats\IBND4.cs" />
+    <Compile Include="SoulsFormats\BXF3.cs" />
+    <Compile Include="SoulsFormats\BXF3Reader.cs" />
+    <Compile Include="SoulsFormats\IBXF3.cs" />
+    <Compile Include="SoulsFormats\BXF4.cs" />
+    <Compile Include="SoulsFormats\BXF4Reader.cs" />
+    <Compile Include="SoulsFormats\IBXF4.cs" />
+    <Compile Include="SoulsFormats\IBinder.cs" />
+    <Compile Include="SoulsFormats\ACB.cs" />
+    <Compile Include="SoulsFormats\BHD5.cs" />
+    <Compile Include="SoulsFormats\BTAB.cs" />
+    <Compile Include="SoulsFormats\BTL.cs" />
+    <None Include="SoulsFormats\CCM.cs.bkp" />
+    <Compile Include="SoulsFormats\CLM2.cs" />
+    <Compile Include="SoulsFormats\DCX.cs" />
+    <Compile Include="SoulsFormats\DRB.cs" />
+    <Compile Include="SoulsFormats\EDD.cs" />
+    <Compile Include="SoulsFormats\EDGE.cs" />
+    <Compile Include="SoulsFormats\EMELD.cs" />
+    <Compile Include="SoulsFormats\EMEVD.cs" />
+    <Compile Include="SoulsFormats\ENFL.cs" />
+    <Compile Include="SoulsFormats\ESD.cs" />
+    <Compile Include="SoulsFormats\F2TR.cs" />
+    <Compile Include="SoulsFormats\FFXDLSE.cs" />
+    <Compile Include="SoulsFormats\FLVER.cs" />
+    <Compile Include="SoulsFormats\FLVER0.cs" />
+    <Compile Include="SoulsFormats\FLVER2.cs" />
+    <Compile Include="SoulsFormats\IFlver.cs" />
+    <Compile Include="SoulsFormats\IFlverMaterial.cs" />
+    <Compile Include="SoulsFormats\IFlverTexture.cs" />
+    <Compile Include="SoulsFormats\IFlverMesh.cs" />
+    <Compile Include="SoulsFormats\FMG.cs" />
+    <Compile Include="SoulsFormats\FXR3.cs" />
+    <Compile Include="SoulsFormats\GPARAM.cs" />
+    <Compile Include="SoulsFormats\GRASS.cs" />
+    <Compile Include="SoulsFormats\LUAGNL.cs" />
+    <Compile Include="SoulsFormats\LUAINFO.cs" />
+    <Compile Include="SoulsFormats\MCG.cs" />
+    <Compile Include="SoulsFormats\MCP.cs" />
+    <Compile Include="SoulsFormats\IMsb.cs" />
+    <Compile Include="SoulsFormats\IMsbParam`1.cs" />
+    <Compile Include="SoulsFormats\IMsbEntry.cs" />
+    <Compile Include="SoulsFormats\IMsbModel.cs" />
+    <Compile Include="SoulsFormats\IMsbPart.cs" />
+    <Compile Include="SoulsFormats\IMsbRegion.cs" />
+    <Compile Include="SoulsFormats\MSB.cs" />
+    <Compile Include="SoulsFormats\MSB1.cs" />
+    <Compile Include="SoulsFormats\MSB2.cs" />
+    <Compile Include="SoulsFormats\MSB3.cs" />
+    <Compile Include="SoulsFormats\MSBD.cs" />
+    <Compile Include="SoulsFormats\MSBN.cs" />
+    <Compile Include="SoulsFormats\MSBS.cs" />
+    <Compile Include="SoulsFormats\MTD.cs" />
+    <Compile Include="SoulsFormats\NGP.cs" />
+    <Compile Include="SoulsFormats\NVA.cs" />
+    <Compile Include="SoulsFormats\NVM.cs" />
+    <Compile Include="SoulsFormats\PARAM.cs" />
+    <Compile Include="SoulsFormats\PARAMDEF.cs" />
+    <Compile Include="SoulsFormats\PARAMTDF.cs" />
+    <Compile Include="SoulsFormats\ParamUtil.cs" />
+    <Compile Include="SoulsFormats\PMDCL.cs" />
+    <Compile Include="SoulsFormats\TAE3.cs" />
+    <Compile Include="SoulsFormats\DDS.cs" />
+    <Compile Include="SoulsFormats\Headerizer.cs" />
+    <Compile Include="SoulsFormats\TPF.cs" />
+    <Compile Include="SoulsFormats\BinaryReaderEx.cs" />
+    <Compile Include="SoulsFormats\BinaryWriterEx.cs" />
+    <Compile Include="SoulsFormats\Oodle26.cs" />
+    <Compile Include="SoulsFormats\SFEncoding.cs" />
+    <Compile Include="SoulsFormats\SFUtil.cs" />
+    <Compile Include="SoulsFormats\SoulsFile`1.cs" />
+    <Compile Include="SoulsFormats\SupportsAlphaAttribute.cs" />
+    <Compile Include="SoulsFormats\XmlExtensions\XmlNodeExtensions.cs" />
+    <Compile Include="SoulsFormats\XmlExtensions\XmlWriterExtensions.cs" />
+    <Compile Include="SoulsFormats\Otogi2\DAT.cs" />
+    <Compile Include="SoulsFormats\MWC\MDAT.cs" />
+    <Compile Include="SoulsFormats\MWC\TDAT.cs" />
+    <Compile Include="SoulsFormats\Other\MDL.cs" />
+    <Compile Include="SoulsFormats\Other\MDL0.cs" />
+    <Compile Include="SoulsFormats\Other\MDL4.cs" />
+    <Compile Include="SoulsFormats\Kuon\BND0.cs" />
+    <Compile Include="SoulsFormats\Kuon\DVDBND0.cs" />
+    <Compile Include="SoulsFormats\KF4\CHR.cs" />
+    <Compile Include="SoulsFormats\KF4\DAT.cs" />
+    <Compile Include="SoulsFormats\KF4\MAP.cs" />
+    <Compile Include="SoulsFormats\KF4\OM2.cs" />
+    <Compile Include="SoulsFormats\KF1\MDO.cs" />
+    <Compile Include="SoulsFormats\ACE3\BND0.cs" />
+    <Compile Include="SoulsFormats\AC4\Zero3.cs" />
+    <Compile Include="FogMod\AnnotationData.cs" />
+    <Compile Include="FogMod\EventConfig.cs" />
+    <Compile Include="FogMod\GameDataWriter.cs" />
+    <None Include="FogMod\GameDataWriter3.cs.bkp" />
+    <None Include="FogMod\GenerateConfig.cs.bkp" />
+    <Compile Include="FogMod\Graph.cs" />
+    <None Include="FogMod\GraphChecker.cs.bkp" />
+    <None Include="FogMod\GraphConnector.cs.bkp" />
+    <Compile Include="FogMod\ItemReader.cs" />
+    <Compile Include="FogMod\MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FogMod\MainForm3.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FogMod\Program.cs" />
+    <Compile Include="FogMod\Randomizer.cs" />
+    <Compile Include="FogMod\RandomizerOptions.cs" />
+    <Compile Include="FogMod\Util.cs" />
+    <Compile Include="FogMod\Properties\Resources.cs" />
+    <Compile Include="FogMod\Properties\Settings.cs" />
+    <Compile Include="AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="FogMod\MainForm.resx" />
+    <EmbeddedResource Include="FogMod\MainForm3.resx" />
+    <EmbeddedResource Include="FogMod\Properties\Resources.resx" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

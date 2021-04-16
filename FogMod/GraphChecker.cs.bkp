@@ -1,0 +1,234 @@
+﻿// Decompiled with JetBrains decompiler
+// Type: FogMod.GraphChecker
+// Assembly: FogMod, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+// MVID: D28026FD-A9AB-45EB-9CE9-27B9E67A6072
+// Assembly location: M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\FogMod.exe
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace FogMod
+{
+  public class GraphChecker
+  {
+    public GraphChecker.CheckRecord Check(RandomizerOptions opt, Graph g, string start)
+    {
+      Dictionary<string, Graph.Node> graph = g.Nodes;
+      foreach (Graph.Node node in graph.Values)
+      {
+        foreach (Graph.Edge edge in node.To)
+        {
+          if (edge.Link == null)
+            throw new Exception(string.Format("Unlinked {0} leaving {1}", (object) edge, (object) node.Area));
+        }
+        foreach (Graph.Edge edge in node.From)
+        {
+          if (edge.Link == null)
+            throw new Exception(string.Format("Unlinked {0} entering {1}", (object) edge, (object) node.Area));
+        }
+      }
+      Dictionary<string, AnnotationData.Expr> config = new Dictionary<string, AnnotationData.Expr>();
+      HashSet<string> visited = new HashSet<string>();
+      HashSet<Graph.Edge> edgeSet = new HashSet<Graph.Edge>();
+      Dictionary<string, GraphChecker.NodeRecord> recs = new Dictionary<string, GraphChecker.NodeRecord>();
+      visit(start);
+      recs[start] = new GraphChecker.NodeRecord()
+      {
+        Area = start,
+        Dist = 0.0f
+      };
+      bool flag = false;
+      Dictionary<Graph.Edge, float> dictionary = new Dictionary<Graph.Edge, float>();
+      Dictionary<string, int> areaCost = graph.Values.ToDictionary<Graph.Node, string, int>((Func<Graph.Node, string>) (n => n.Area), (Func<Graph.Node, int>) (n => n.Cost));
+      Dictionary<string, float> extraAreaCost = graph.Values.ToDictionary<Graph.Node, string, float>((Func<Graph.Node, string>) (n => n.Area), (Func<Graph.Node, float>) (n => 0.0f));
+      while (true)
+      {
+        int count;
+        do
+        {
+          if (opt["explain"])
+            Console.WriteLine("---");
+          count = visited.Count;
+          foreach (string index in visited.OrderBy<string, float>((Func<string, float>) (l => recs[l].Dist)).ToList<string>())
+          {
+            foreach (Graph.Edge e in graph[index].To)
+            {
+              if (e.To != null && !edgeSet.Contains(e) && !edgeSet.Contains(e.Link.Pair))
+              {
+                if (e.LinkedExpr != null)
+                {
+                  AnnotationData.Expr expr = e.LinkedExpr.Substitute(config).Simplify();
+                  if (!expr.IsTrue())
+                  {
+                    if (flag && opt["explain"])
+                    {
+                      Console.WriteLine(string.Format("Missing: {0} -> {1}. Condition {2} -> {3}", (object) index, (object) e.To, (object) e.LinkedExpr, (object) expr));
+                      continue;
+                    }
+                    continue;
+                  }
+                }
+                Graph.Node node = graph[e.To];
+                if (node.ScalingBase != null && !visited.Contains(node.ScalingBase))
+                {
+                  if (flag && opt["explain"])
+                    Console.WriteLine("Missing: " + index + " -> " + e.To + ". Condition " + node.ScalingBase + " for scaling");
+                }
+                else
+                {
+                  float num = addEdge(e, node.ScalingBase);
+                  edgeSet.Add(e);
+                  recs[e.To].InEdge[e] = num;
+                  if (visited.Contains(e.To))
+                  {
+                    if (e.Name != null && opt["explain"])
+                      Console.WriteLine(string.Format("    Additional path: {0} -> {1} ({2}) - {3} -> {4}", (object) index, (object) e.To, (object) num, (object) e.Text, e.Link == null ? (object) "" : (object) e.Link.Text));
+                  }
+                  else
+                  {
+                    visit(e.To);
+                    if (opt["explain"])
+                      Console.WriteLine(string.Format("{0} -> {1} ({2}) ({3} -> {4}{5})", (object) index, (object) e.To, (object) num, (object) e.Text, e.Link == null ? (object) "" : (object) e.Link.Text, e.LinkedExpr == null ? (object) "" : (object) string.Format(", if {0}", (object) e.LinkedExpr)));
+                  }
+                }
+              }
+            }
+          }
+          if (flag)
+            goto label_43;
+        }
+        while (visited.Count != count);
+        flag = true;
+      }
+label_43:
+      List<string> list = graph.Keys.Except<string>((IEnumerable<string>) visited).Except<string>(g.Areas.Values.Where<AnnotationData.Area>((Func<AnnotationData.Area, bool>) (a => a.HasTag("optional"))).Select<AnnotationData.Area, string>((Func<AnnotationData.Area, string>) (a => a.Name))).ToList<string>();
+      if (opt["explain"])
+        Console.WriteLine("Not visited: [" + string.Join(", ", (IEnumerable<string>) list) + "]");
+      if (opt["explain"])
+        Console.WriteLine();
+      return new GraphChecker.CheckRecord()
+      {
+        Records = recs,
+        Unvisited = list
+      };
+
+      void visit(string area)
+      {
+        if (!graph.ContainsKey(area))
+          throw new Exception("Unknown area to visit " + area);
+        visited.Add(area);
+        config[area] = AnnotationData.Expr.TRUE;
+        foreach (string index in graph[area].Items)
+        {
+          if (g.ItemAreas[index].All<string>((Func<string, bool>) (a => visited.Contains(a))))
+            config[index] = AnnotationData.Expr.TRUE;
+        }
+      }
+
+      List<string> getAreas(string dep)
+      {
+        List<string> stringList;
+        if (g.ItemAreas.TryGetValue(dep, out stringList))
+          return stringList;
+        return new List<string>() { dep };
+      }
+
+      bool getDepRecord(string dep, out GraphChecker.NodeRecord nr)
+      {
+        nr = (GraphChecker.NodeRecord) null;
+        if (!g.ItemAreas.ContainsKey(dep))
+          return recs.TryGetValue(dep, out nr);
+        List<string> areas = getAreas(dep);
+        if (areas.Count == 1)
+          return recs.TryGetValue(areas[0], out nr);
+        nr = new GraphChecker.NodeRecord() { Area = dep };
+        foreach (string key in areas)
+        {
+          GraphChecker.NodeRecord nodeRecord;
+          if (!recs.TryGetValue(key, out nodeRecord))
+            return false;
+          nr.Dist = Math.Max(nr.Dist, nodeRecord.Dist);
+          nr.Visited.AddRange((IEnumerable<string>) nodeRecord.Visited);
+        }
+        nr.Visited = nr.Visited.Distinct<string>().ToList<string>();
+        return true;
+      }
+
+      float addEdge(Graph.Edge e, string scalingBase)
+      {
+        GraphChecker.NodeRecord nodeRecord1;
+        if (!recs.TryGetValue(e.From, out nodeRecord1))
+          throw new Exception(string.Format("Internal error: {0} cannot calculate distance", (object) e));
+        GraphChecker.NodeRecord nodeRecord2;
+        if (!recs.TryGetValue(e.To, out nodeRecord2))
+        {
+          Dictionary<string, GraphChecker.NodeRecord> dictionary = recs;
+          string to = e.To;
+          GraphChecker.NodeRecord nodeRecord3 = new GraphChecker.NodeRecord();
+          nodeRecord3.Area = e.To;
+          GraphChecker.NodeRecord nodeRecord4 = nodeRecord3;
+          dictionary[to] = nodeRecord3;
+          nodeRecord2 = nodeRecord4;
+        }
+        List<string> list;
+        if (e.LinkedExpr == null)
+        {
+          list = nodeRecord1.Visited.ToList<string>();
+          if (e.From != e.To)
+            list.Add(e.From);
+        }
+        else
+        {
+          HashSet<string> source = new HashSet<string>((IEnumerable<string>) nodeRecord1.Visited);
+          GraphChecker.NodeRecord nr1;
+          List<string> stringList = e.LinkedExpr.Cost((Func<string, float>) (area => !getDepRecord(area, out nr1) ? 1E+07f : nr1.Dist)).Item1;
+          stringList.Add(nodeRecord1.Area);
+          foreach (string dep in stringList)
+          {
+            GraphChecker.NodeRecord nr2;
+            if (!getDepRecord(dep, out nr2))
+              throw new Exception(string.Format("Dependency in edge {0} not visited: {1}", (object) e, (object) dep));
+            source.UnionWith((IEnumerable<string>) getAreas(dep));
+            source.UnionWith((IEnumerable<string>) nr2.Visited);
+          }
+          list = source.ToList<string>();
+        }
+        float num = list.Select<string, float>((Func<string, float>) (c => (float) areaCost[c] + extraAreaCost[c])).Sum();
+        if ((double) nodeRecord2.Dist == 0.0 && nodeRecord2.Area != start || (double) num < (double) nodeRecord2.Dist)
+        {
+          nodeRecord2.Dist = num;
+          nodeRecord2.Visited = list;
+          if (scalingBase != null)
+          {
+            GraphChecker.NodeRecord nodeRecord3;
+            if (!recs.TryGetValue(scalingBase, out nodeRecord3))
+              throw new Exception(string.Format("Internal error: {0} can't find scaling base {1}", (object) e, (object) nodeRecord3));
+            float dist = nodeRecord3.Dist;
+            extraAreaCost[nodeRecord2.Area] = dist - nodeRecord2.Dist;
+            nodeRecord2.Dist = dist;
+            Console.WriteLine(string.Format("TTT Setting scaling base of {0} to {1} {2}", (object) nodeRecord2.Area, (object) scalingBase, (object) dist));
+          }
+        }
+        return num;
+      }
+    }
+
+    public class CheckRecord
+    {
+      public Dictionary<string, GraphChecker.NodeRecord> Records { get; set; }
+
+      public List<string> Unvisited { get; set; }
+    }
+
+    public class NodeRecord
+    {
+      public List<string> Visited = new List<string>();
+      public Dictionary<Graph.Edge, float> InEdge = new Dictionary<Graph.Edge, float>();
+
+      public string Area { get; set; }
+
+      public float Dist { get; set; }
+    }
+  }
+}

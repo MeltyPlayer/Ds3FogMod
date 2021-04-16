@@ -1,0 +1,872 @@
+﻿// Decompiled with JetBrains decompiler
+// Type: SoulsIds.Events
+// Assembly: FogMod, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+// MVID: D28026FD-A9AB-45EB-9CE9-27B9E67A6072
+// Assembly location: M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\FogMod.exe
+
+using SoulsFormats;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Text.RegularExpressions;
+
+namespace SoulsIds
+{
+  public class Events
+  {
+    private static Dictionary<int, int> ArgLength = new Dictionary<int, int>()
+    {
+      [0] = 1,
+      [1] = 2,
+      [2] = 4,
+      [3] = 1,
+      [4] = 2,
+      [5] = 4,
+      [6] = 4,
+      [8] = 4
+    };
+    private EMEDF doc;
+    private Dictionary<string, (int, int)> docByName;
+    private Dictionary<EMEDF.InstrDoc, List<int>> funcBytePositions;
+
+    private static object ParseArg(string arg, EMEVD.Instruction.ArgType type)
+    {
+      switch (type)
+      {
+        case EMEVD.Instruction.ArgType.Byte:
+          return (object) byte.Parse(arg);
+        case EMEVD.Instruction.ArgType.UInt16:
+          return (object) ushort.Parse(arg);
+        case EMEVD.Instruction.ArgType.UInt32:
+          return (object) uint.Parse(arg);
+        case EMEVD.Instruction.ArgType.SByte:
+          return (object) sbyte.Parse(arg);
+        case EMEVD.Instruction.ArgType.Int16:
+          return (object) short.Parse(arg);
+        case EMEVD.Instruction.ArgType.Int32:
+          return (object) int.Parse(arg);
+        case EMEVD.Instruction.ArgType.Single:
+          return (object) float.Parse(arg, (IFormatProvider) CultureInfo.InvariantCulture);
+        default:
+          throw new Exception(string.Format("Unrecognized arg type {0}", (object) type));
+      }
+    }
+
+    private static string TextArg(object arg)
+    {
+      object obj;
+      return (obj = arg) is float ? ((float) obj).ToString((IFormatProvider) CultureInfo.InvariantCulture) : arg.ToString();
+    }
+
+    public Events(string emedfPath)
+    {
+      this.doc = EMEDF.ReadFile(emedfPath);
+      this.docByName = this.doc.Classes.SelectMany<EMEDF.ClassDoc, (EMEDF.InstrDoc, int)>((Func<EMEDF.ClassDoc, IEnumerable<(EMEDF.InstrDoc, int)>>) (c => c.Instructions.Select<EMEDF.InstrDoc, (EMEDF.InstrDoc, int)>((Func<EMEDF.InstrDoc, (EMEDF.InstrDoc, int)>) (i => (i, (int) c.Index))))).ToDictionary<(EMEDF.InstrDoc, int), string, (int, int)>((Func<(EMEDF.InstrDoc, int), string>) (i => i.i.Name), (Func<(EMEDF.InstrDoc, int), (int, int)>) (i => (i.Item2, (int) i.i.Index)));
+      this.funcBytePositions = new Dictionary<EMEDF.InstrDoc, List<int>>();
+      foreach (EMEDF.ClassDoc classDoc in this.doc.Classes)
+      {
+        foreach (EMEDF.InstrDoc instruction in classDoc.Instructions)
+        {
+          int num1 = 0;
+          foreach (EMEDF.ArgDoc argDoc in instruction.Arguments)
+          {
+            int num2 = Events.ArgLength[(int) argDoc.Type];
+            if (num1 % num2 > 0)
+              num1 += num2 - num1 % num2;
+            Events.AddMulti<EMEDF.InstrDoc, int>((IDictionary<EMEDF.InstrDoc, List<int>>) this.funcBytePositions, instruction, num1);
+            num1 += num2;
+          }
+        }
+      }
+    }
+
+    public Events.Instr Parse(EMEVD.Instruction instr, bool onlyCmd = false, bool onlyInit = false)
+    {
+      bool flag = instr.Bank == 2000 && (instr.ID == 0 || instr.ID == 6);
+      if (onlyCmd & flag)
+        return (Events.Instr) null;
+      if (onlyInit && !flag)
+        return (Events.Instr) null;
+      EMEDF.InstrDoc instrDoc = this.doc[instr.Bank][instr.ID];
+      List<EMEVD.Instruction.ArgType> argTypeList = flag || instrDoc == null ? Enumerable.Repeat<EMEVD.Instruction.ArgType>(EMEVD.Instruction.ArgType.Int32, instr.ArgData.Length / 4).ToList<EMEVD.Instruction.ArgType>() : ((IEnumerable<EMEDF.ArgDoc>) instrDoc.Arguments).Select<EMEDF.ArgDoc, EMEVD.Instruction.ArgType>((Func<EMEDF.ArgDoc, EMEVD.Instruction.ArgType>) (arg => arg.Type != 8L ? (EMEVD.Instruction.ArgType) arg.Type : EMEVD.Instruction.ArgType.UInt32)).ToList<EMEVD.Instruction.ArgType>();
+      List<object> objectList = instr.UnpackArgs((IEnumerable<EMEVD.Instruction.ArgType>) argTypeList, false);
+      Events.Instr instr1 = new Events.Instr()
+      {
+        Val = instr,
+        Doc = instrDoc,
+        Types = argTypeList,
+        Args = objectList,
+        Init = flag
+      };
+      if (flag)
+      {
+        instr1.Offset = instr.ID == 0 ? 2 : 1;
+        instr1.Callee = (int) objectList[instr.ID == 0 ? 1 : 0];
+      }
+      return instr1;
+    }
+
+    private int IndexFromByteOffset(Events.Instr instr, int offset)
+    {
+      int num = this.funcBytePositions[instr.Doc].IndexOf(offset);
+      if (num != -1)
+        return num;
+      throw new Exception(string.Format("Finding {0}, target {1}, available {2}", (object) instr.Name, (object) offset, (object) string.Join<int>(",", (IEnumerable<int>) this.funcBytePositions[instr.Doc])));
+    }
+
+    public static bool IsTemp(int flag)
+    {
+      return flag / 1000 % 10 == 5;
+    }
+
+    public EMEVD.Instruction CopyInstruction(EMEVD.Instruction i)
+    {
+      return !i.Layer.HasValue ? new EMEVD.Instruction(i.Bank, i.ID, i.ArgData) : new EMEVD.Instruction(i.Bank, i.ID, i.Layer.Value, i.ArgData);
+    }
+
+    public EMEVD.Event CopyEvent(EMEVD.Event src, int newId)
+    {
+      EMEVD.Event @event = new EMEVD.Event((long) newId, src.RestBehavior);
+      if (src.Parameters.Count > 0)
+        @event.Parameters = src.Parameters.Select<EMEVD.Parameter, EMEVD.Parameter>((Func<EMEVD.Parameter, EMEVD.Parameter>) (p => new EMEVD.Parameter(p.InstructionIndex, p.TargetStartByte, p.SourceStartByte, p.ByteCount))).ToList<EMEVD.Parameter>();
+      @event.Instructions = src.Instructions.Select<EMEVD.Instruction, EMEVD.Instruction>((Func<EMEVD.Instruction, EMEVD.Instruction>) (i => this.CopyInstruction(i))).ToList<EMEVD.Instruction>();
+      return @event;
+    }
+
+    public Events.Instr CopyInit(Events.Instr instr, EMEVD.Event newEvent)
+    {
+      Events.Instr instr1 = this.Parse(this.CopyInstruction(instr.Val), false, false);
+      if (instr1.Val.Bank == 2000 && instr1.Val.ID == 0)
+      {
+        if (newEvent == null)
+          throw new Exception("Internal error: Event not provided for copying " + string.Join<object>(",", (IEnumerable<object>) instr.Args));
+        instr1[0] = (object) 0;
+        instr1[1] = (object) (uint) newEvent.ID;
+      }
+      return instr1;
+    }
+
+    public void AddMacro(Events.EventEdits edits, List<Events.EventAddCommand> adds)
+    {
+      foreach (Events.EventAddCommand eventAddCommand in adds.Reverse<Events.EventAddCommand>())
+      {
+        if (eventAddCommand.Before == null && eventAddCommand.After == null)
+          this.AddMacro(edits, (string) null, true, eventAddCommand.Cmd);
+        else
+          this.AddMacro(edits, eventAddCommand.After ?? (eventAddCommand.Before == "start" ? (string) null : eventAddCommand.Before), eventAddCommand.After != null, eventAddCommand.Cmd);
+      }
+    }
+
+    public void ApplyAdds(Events.EventEdits edits, EMEVD.Event e, Events.OldParams oldParams = null)
+    {
+      foreach (KeyValuePair<int, List<Events.InstrEdit>> keyValuePair in (IEnumerable<KeyValuePair<int, List<Events.InstrEdit>>>) edits.PendingAdds.OrderByDescending<KeyValuePair<int, List<Events.InstrEdit>>, int>((Func<KeyValuePair<int, List<Events.InstrEdit>>, int>) (item => item.Key)))
+      {
+        if (keyValuePair.Key == -1)
+        {
+          foreach (Events.InstrEdit instrEdit in keyValuePair.Value.Reverse<Events.InstrEdit>())
+          {
+            e.Instructions.Add(instrEdit.Add);
+            if (instrEdit.AddParams != null)
+            {
+              if (oldParams == null)
+                throw new ArgumentException(string.Format("Can't add instruction with parameters if old params cannot be added in {0}", (object) edits));
+              oldParams.AddParameters(instrEdit.Add, instrEdit.AddParams);
+            }
+            edits.PendingEdits.Remove(instrEdit);
+          }
+        }
+        else
+        {
+          foreach (Events.InstrEdit instrEdit in keyValuePair.Value)
+          {
+            if (instrEdit.Add != null && instrEdit.AddAfter)
+            {
+              e.Instructions.Insert(keyValuePair.Key + 1, instrEdit.Add);
+              if (instrEdit.AddParams != null)
+              {
+                if (oldParams == null)
+                  throw new ArgumentException(string.Format("Can't add instruction with parameters if old params cannot be added in {0}", (object) edits));
+                oldParams.AddParameters(instrEdit.Add, instrEdit.AddParams);
+              }
+              edits.PendingEdits.Remove(instrEdit);
+            }
+          }
+          foreach (Events.InstrEdit instrEdit in keyValuePair.Value)
+          {
+            if (instrEdit.Add != null && !instrEdit.AddAfter)
+            {
+              e.Instructions.Insert(keyValuePair.Key, instrEdit.Add);
+              if (instrEdit.AddParams != null)
+              {
+                if (oldParams == null)
+                  throw new ArgumentException(string.Format("Can't add instruction with parameters if old params cannot be added in {0}", (object) edits));
+                oldParams.AddParameters(instrEdit.Add, instrEdit.AddParams);
+              }
+              edits.PendingEdits.Remove(instrEdit);
+            }
+          }
+        }
+      }
+    }
+
+    public void AddMacro(Events.EventEdits edits, string toFind, bool addAfter, string add)
+    {
+      List<EMEVD.Parameter> parameterList = (List<EMEVD.Parameter>) null;
+      EMEVD.Instruction add1;
+      if (add.Contains("X"))
+      {
+        (add1, parameterList) = this.ParseAddArg(add, 0);
+        if (parameterList.Count == 0)
+          parameterList = (List<EMEVD.Parameter>) null;
+      }
+      else
+        add1 = this.ParseAdd(add);
+      Events.InstrEdit edit = new Events.InstrEdit()
+      {
+        Add = add1,
+        AddParams = parameterList,
+        AddAfter = addAfter
+      };
+      if (toFind == null)
+      {
+        edits.PendingEdits.Add(edit);
+        Events.AddMulti<int, Events.InstrEdit>((IDictionary<int, List<Events.InstrEdit>>) edits.PendingAdds, addAfter ? -1 : 0, edit);
+      }
+      else
+        edits.AddEdit(toFind, (Predicate<string>) (n => this.docByName.ContainsKey(n)), edit);
+    }
+
+    public void RemoveMacro(Events.EventEdits edits, string toFind)
+    {
+      edits.AddEdit(toFind, (Predicate<string>) (n => this.docByName.ContainsKey(n)), new Events.InstrEdit()
+      {
+        Remove = true
+      });
+    }
+
+    public void ReplaceMacro(Events.EventEdits edits, string toFind, string toVal = null)
+    {
+      edits.AddReplace(toFind, toVal);
+    }
+
+    public void RewriteInts(Events.Instr instr, Dictionary<int, int> changes)
+    {
+      for (int index = 0; index < instr.Args.Count; ++index)
+      {
+        int num;
+        if (instr.Args[index] is int key && changes.TryGetValue(key, out num))
+          instr[index] = (object) num;
+      }
+    }
+
+    private static (string, List<string>) ParseCommandString(string add)
+    {
+      int length = add.LastIndexOf('(');
+      int num = add.LastIndexOf(')');
+      if (length == -1 || num == -1)
+        throw new Exception("Bad command string " + add);
+      return (add.Substring(0, length).Trim(), ((IEnumerable<string>) add.Substring(length + 1, num - length - 1).Split(',')).Where<string>((Func<string, bool>) (arg => !string.IsNullOrWhiteSpace(arg))).ToList<string>());
+    }
+
+    public EMEVD.Instruction ParseAdd(string add)
+    {
+      (string key, List<string> source) = Events.ParseCommandString(add);
+      (int, int) valueTuple;
+      if (!this.docByName.TryGetValue(key, out valueTuple))
+        throw new Exception("Unrecognized command '" + key + "'");
+      List<EMEVD.Instruction.ArgType> argTypes = ((IEnumerable<EMEDF.ArgDoc>) this.doc[valueTuple.Item1][valueTuple.Item2].Arguments).Select<EMEDF.ArgDoc, EMEVD.Instruction.ArgType>((Func<EMEDF.ArgDoc, EMEVD.Instruction.ArgType>) (arg => arg.Type != 8L ? (EMEVD.Instruction.ArgType) arg.Type : EMEVD.Instruction.ArgType.UInt32)).ToList<EMEVD.Instruction.ArgType>();
+      if (source.Count != argTypes.Count)
+        throw new Exception(string.Format("Expected {0} arguments for {1}, given {2} in {3}", (object) argTypes.Count, (object) key, (object) source.Count, (object) add));
+      return new EMEVD.Instruction(valueTuple.Item1, valueTuple.Item2, source.Select<string, object>((Func<string, int, object>) ((a, j) => Events.ParseArg(a, argTypes[j]))));
+    }
+
+    public (EMEVD.Instruction, List<EMEVD.Parameter>) ParseAddArg(
+      string add,
+      int addIndex)
+    {
+      (string key1, List<string> stringList) = Events.ParseCommandString(add);
+      (int, int) valueTuple;
+      if (!this.docByName.TryGetValue(key1, out valueTuple))
+        throw new Exception("Unrecognized command '" + key1 + "'");
+      EMEDF.InstrDoc key2 = this.doc[valueTuple.Item1][valueTuple.Item2];
+      List<EMEVD.Instruction.ArgType> list1 = ((IEnumerable<EMEDF.ArgDoc>) key2.Arguments).Select<EMEDF.ArgDoc, EMEVD.Instruction.ArgType>((Func<EMEDF.ArgDoc, EMEVD.Instruction.ArgType>) (arg => arg.Type != 8L ? (EMEVD.Instruction.ArgType) arg.Type : EMEVD.Instruction.ArgType.UInt32)).ToList<EMEVD.Instruction.ArgType>();
+      if (stringList.Count != list1.Count)
+        throw new Exception(string.Format("Expected {0} arguments for {1}, given {2} in {3}", (object) list1.Count, (object) key1, (object) stringList.Count, (object) add));
+      List<int> intList1;
+      List<int> intList2 = this.funcBytePositions.TryGetValue(key2, out intList1) ? intList1 : (List<int>) null;
+      List<object> objectList = new List<object>();
+      List<EMEVD.Parameter> parameterList = new List<EMEVD.Parameter>();
+      for (int index = 0; index < stringList.Count; ++index)
+      {
+        string str = stringList[index];
+        if (str.StartsWith("X"))
+        {
+          List<int> list2 = ((IEnumerable<string>) str.Substring(1).Split('_')).Select<string, int>((Func<string, int>) (pv => int.Parse(pv))).ToList<int>();
+          if (intList2 == null || index >= intList2.Count)
+            throw new Exception(string.Format("Can't substitute at pos {0} in {1} (found indices [{2})])", (object) index, (object) add, intList2 == null ? (object) "none" : (object) string.Join<int>(",", (IEnumerable<int>) intList2)));
+          if (list2.Count != 2)
+            throw new Exception(string.Format("Invalid parameter format at pos {0} of {1}", (object) index, (object) add));
+          EMEVD.Parameter parameter = new EMEVD.Parameter((long) addIndex, (long) intList2[index], (long) list2[0], list2[1]);
+          parameterList.Add(parameter);
+          objectList.Add(Events.ParseArg("0", list1[index]));
+        }
+        else
+          objectList.Add(Events.ParseArg(str, list1[index]));
+      }
+      return (new EMEVD.Instruction(valueTuple.Item1, valueTuple.Item2, (IEnumerable<object>) objectList), parameterList);
+    }
+
+    public List<int> FindCond(EMEVD.Event e, string req)
+    {
+      List<int> intList = new List<int>();
+      bool flag = int.TryParse(req, out int _);
+      for (int index = 0; index < e.Instructions.Count; ++index)
+      {
+        Events.Instr instr = this.Parse(e.Instructions[index], false, false);
+        if (flag && instr.Name.StartsWith("IF") && instr[0].ToString() == req)
+        {
+          intList.Add(index);
+        }
+        else
+        {
+          if (flag && instr.Name == "IF Condition Group" && instr[2].ToString() == req)
+          {
+            intList.Add(index);
+            return intList;
+          }
+          if (!flag && instr.Name == req && instr[0].ToString() == "0")
+          {
+            intList.Add(index);
+            return intList;
+          }
+        }
+      }
+      throw new Exception(string.Format("Couldn't find ending condition '{0}', group {1}, in event {2}", (object) req, (object) flag, (object) e.ID));
+    }
+
+    public List<EMEVD.Instruction> RewriteCondGroup(
+      List<EMEVD.Instruction> after,
+      Dictionary<int, int> reloc,
+      int target)
+    {
+      sbyte targetCond = (sbyte) target;
+      sbyte sourceCond = 0;
+      return after.Select<EMEVD.Instruction, EMEVD.Instruction>((Func<EMEVD.Instruction, EMEVD.Instruction>) (afterInstr =>
+      {
+        Events.Instr instr = this.Parse(this.CopyInstruction(afterInstr), false, false);
+        if (instr.Name == "IF Condition Group")
+        {
+          if (sourceCond == (sbyte) 0)
+            throw new Exception(string.Format("Internal error: can't infer condition group for {0}", (object) instr));
+          instr[0] = (object) targetCond;
+          instr[2] = (object) (sbyte) (sourceCond > (sbyte) 0 ? 12 : -12);
+        }
+        else
+        {
+          if (sourceCond == (sbyte) 0)
+            sourceCond = (sbyte) instr[0];
+          instr[0] = (object) (sbyte) (after.Count == 1 ? (int) targetCond : (sourceCond > (sbyte) 0 ? 12 : -12));
+        }
+        this.RewriteInts(instr, reloc);
+        instr.Save();
+        return instr.Val;
+      })).ToList<EMEVD.Instruction>();
+    }
+
+    public bool ParseArgSpec(string arg, out int pos)
+    {
+      pos = 0;
+      if (!arg.StartsWith("X") || !int.TryParse(arg.Substring(1), out pos))
+        return false;
+      pos /= 4;
+      return true;
+    }
+
+    public SortedDictionary<int, Events.EventDebug> GetHighlightedEvents(
+      Dictionary<string, EMEVD> emevds,
+      HashSet<int> ids,
+      Predicate<Events.Instr> alwaysHighlight = null)
+    {
+      Dictionary<(int, int), List<Events.InstructionDebug>> dictionary = new Dictionary<(int, int), List<Events.InstructionDebug>>();
+      SortedDictionary<int, Events.EventDebug> sortedDictionary = new SortedDictionary<int, Events.EventDebug>();
+      foreach (KeyValuePair<string, EMEVD> emevd in emevds)
+      {
+        foreach (EMEVD.Event @event in emevd.Value.Events)
+        {
+          Events.EventDebug eventDebug = new Events.EventDebug()
+          {
+            Event = (int) @event.ID
+          };
+          sortedDictionary[eventDebug.Event] = eventDebug;
+          for (int index1 = 0; index1 < @event.Instructions.Count; ++index1)
+          {
+            Events.Instr instr = this.Parse(@event.Instructions[index1], false, false);
+            List<(int, int)> valueTupleList = new List<(int, int)>();
+            foreach (EMEVD.Parameter parameter in @event.Parameters)
+            {
+              if (parameter.InstructionIndex == (long) index1)
+              {
+                int index2 = this.IndexFromByteOffset(instr, (int) parameter.TargetStartByte);
+                instr[index2] = (object) string.Format("X{0}_{1}", (object) parameter.SourceStartByte, (object) parameter.ByteCount);
+                valueTupleList.Add(((int) @event.ID, (int) parameter.SourceStartByte));
+              }
+            }
+            HashSet<int> intSet = new HashSet<int>();
+            List<int> intList = new List<int>();
+            for (int index2 = 0; index2 < instr.Args.Count; ++index2)
+            {
+              if (instr[index2] is int num && ids.Contains(num))
+              {
+                intList.Add(num);
+                intSet.Add(index2);
+                eventDebug.Highlight = true;
+                eventDebug.IDs.Add(num);
+              }
+            }
+            if (alwaysHighlight != null && alwaysHighlight(instr))
+            {
+              eventDebug.Highlight = true;
+              eventDebug.HighlightInstr = true;
+            }
+            Events.InstructionDebug instructionDebug = new Events.InstructionDebug()
+            {
+              Event = (int) @event.ID,
+              Name = instr.Name,
+              Args = ((IEnumerable<EMEDF.ArgDoc>) instr.Doc.Arguments).Select<EMEDF.ArgDoc, string>((Func<EMEDF.ArgDoc, int, string>) ((arg, j) => string.Format("{0} = {1}", (object) arg.Name, instr[j]))).ToList<string>(),
+              HighlightArgs = intSet
+            };
+            if (instr.Args.Count > instr.Doc.Arguments.Length)
+              instructionDebug.Args.AddRange(instr.Args.Skip<object>(instr.Doc.Arguments.Length).Select<object, string>((Func<object, string>) (arg => arg.ToString())));
+            foreach ((int, int) key in valueTupleList)
+              Events.AddMulti<(int, int), Events.InstructionDebug>((IDictionary<(int, int), List<Events.InstructionDebug>>) dictionary, key, instructionDebug);
+            eventDebug.Instructions.Add(instructionDebug);
+          }
+        }
+      }
+      foreach (KeyValuePair<string, EMEVD> emevd in emevds)
+      {
+        foreach (EMEVD.Event @event in emevd.Value.Events)
+        {
+          Events.EventDebug eventDebug1 = sortedDictionary[(int) @event.ID];
+          for (int index1 = 0; index1 < @event.Instructions.Count; ++index1)
+          {
+            Events.Instr instr = this.Parse(@event.Instructions[index1], false, false);
+            if (instr.Init)
+            {
+              List<int> list1 = Enumerable.Range(0, instr.Args.Count - instr.Offset).Where<int>((Func<int, bool>) (j => instr[instr.Offset + j] is int num && ids.Contains(num))).ToList<int>();
+              if (list1.Count > 0)
+              {
+                Events.EventDebug eventDebug2 = sortedDictionary[instr.Callee];
+                eventDebug2.Highlight = true;
+                Events.InstructionDebug instructionDebug1 = new Events.InstructionDebug()
+                {
+                  Event = (int) @event.ID,
+                  Name = instr.Name,
+                  Args = instr.Args.Select<object, string>((Func<object, int, string>) ((a, pos) => pos < instr.Offset ? string.Format("{0}", a) : string.Format("X{0}_4 = {1}", (object) ((pos - instr.Offset) * 4), a))).ToList<string>()
+                };
+                eventDebug2.Callers.Add(instructionDebug1);
+                eventDebug2.IDs.AddRange(list1.Select<int, int>((Func<int, int>) (j => instr[instr.Offset + j] is int num ? num : 0)));
+                List<string> list2 = list1.Select<int, string>((Func<int, string>) (j => string.Format("X{0}_4", (object) (j * 4)))).ToList<string>();
+                foreach (int num in list1)
+                {
+                  instructionDebug1.HighlightArgs.Add(instr.Offset + num);
+                  List<Events.InstructionDebug> instructionDebugList;
+                  dictionary.TryGetValue((instr.Callee, num * 4), out instructionDebugList);
+                  if (instructionDebugList != null)
+                  {
+                    foreach (Events.InstructionDebug instructionDebug2 in instructionDebugList)
+                    {
+                      for (int index2 = 0; index2 < instructionDebug2.Args.Count; ++index2)
+                      {
+                        if (list2.Contains(((IEnumerable<string>) instructionDebug2.Args[index2].Split(' ')).Last<string>()))
+                          instructionDebug2.HighlightArgs.Add(index2);
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      return sortedDictionary;
+    }
+
+    public List<T> CreateEventConfig<T>(
+      SortedDictionary<int, Events.EventDebug> eventInfos,
+      Predicate<int> eligibleFilter,
+      Func<T> createSpec,
+      Func<int, string> quickId,
+      HashSet<int> eventsOverride = null,
+      HashSet<int> idsOverride = null)
+      where T : Events.AbstractEventSpec
+    {
+      List<T> objList = new List<T>();
+      foreach (KeyValuePair<int, Events.EventDebug> keyValuePair in (IEnumerable<KeyValuePair<int, Events.EventDebug>>) eventInfos.OrderBy<KeyValuePair<int, Events.EventDebug>, int>((Func<KeyValuePair<int, Events.EventDebug>, int>) (e => e.Key)))
+      {
+        Events.EventDebug eventDebug = keyValuePair.Value;
+        if (keyValuePair.Key != 0 && keyValuePair.Key != 50)
+        {
+          bool flag = eventDebug.Highlight && (eventDebug.HighlightInstr || eventDebug.IDs.Any<int>((Func<int, bool>) (id => eligibleFilter(id))));
+          // ISSUE: explicit non-virtual call
+          if (eventsOverride != null && __nonvirtual (eventsOverride.Count) > 0)
+          {
+            flag = eventsOverride.Contains(keyValuePair.Key);
+          }
+          else
+          {
+            // ISSUE: explicit non-virtual call
+            if (idsOverride != null && __nonvirtual (idsOverride.Count) > 0)
+              flag = idsOverride.Intersect<int>((IEnumerable<int>) eventDebug.IDs).Count<int>() > 0;
+          }
+          if (flag)
+          {
+            T obj = createSpec();
+            obj.ID = keyValuePair.Key;
+            obj.Comment = "none";
+            obj.DebugInfo = eventDebug.IDs.Select<int, string>((Func<int, string>) (id => quickId(id))).Distinct<string>().ToList<string>();
+            obj.DebugInit = eventDebug.Callers.Count > 0 ? eventDebug.Callers.Select<Events.InstructionDebug, string>((Func<Events.InstructionDebug, string>) (c => c.CallString())).ToList<string>() : (List<string>) null;
+            obj.DebugCommands = eventDebug.Instructions.Select<Events.InstructionDebug, string>((Func<Events.InstructionDebug, string>) (c => (c.HighlightArgs.Count > 0 ? "+ " : "") + c.CallString())).ToList<string>();
+            objList.Add(obj);
+          }
+        }
+      }
+      return objList;
+    }
+
+    private static void AddMulti<K, V>(IDictionary<K, List<V>> dict, K key, V value)
+    {
+      if (!dict.ContainsKey(key))
+        dict[key] = new List<V>();
+      dict[key].Add(value);
+    }
+
+    public class Instr
+    {
+      public EMEVD.Instruction Val { get; set; }
+
+      public EMEDF.InstrDoc Doc { get; set; }
+
+      public string Name
+      {
+        get
+        {
+          return this.Doc?.Name;
+        }
+      }
+
+      public List<EMEVD.Instruction.ArgType> Types { get; set; }
+
+      public List<object> Args { get; set; }
+
+      public bool Init { get; set; }
+
+      public int Callee { get; set; }
+
+      public int Offset { get; set; }
+
+      public bool Modified { get; set; }
+
+      public void Save()
+      {
+        if (!this.Modified)
+          return;
+        this.Val.PackArgs((IEnumerable<object>) this.Args, false);
+        this.Modified = false;
+      }
+
+      public object this[int i]
+      {
+        get
+        {
+          return this.Args[i];
+        }
+        set
+        {
+          this.Args[i] = !(value is string str) ? value : (!str.StartsWith("X") ? Events.ParseArg(str, this.Types[i]) : value);
+          this.Modified = true;
+        }
+      }
+
+      public override string ToString()
+      {
+        return this.Name + " (" + string.Join(",", this.Args.Select<object, string>((Func<object, string>) (a => Events.TextArg(a)))) + ")";
+      }
+    }
+
+    public class OldParams
+    {
+      public Dictionary<EMEVD.Instruction, List<EMEVD.Parameter>> NewInstructions = new Dictionary<EMEVD.Instruction, List<EMEVD.Parameter>>();
+
+      public EMEVD.Event Event { get; set; }
+
+      public List<EMEVD.Instruction> Original { get; set; }
+
+      public static Events.OldParams Preprocess(EMEVD.Event e)
+      {
+        if (e.Parameters.Count == 0)
+          return new Events.OldParams();
+        return new Events.OldParams()
+        {
+          Event = e,
+          Original = e.Instructions.ToList<EMEVD.Instruction>()
+        };
+      }
+
+      public void AddParameters(EMEVD.Instruction instr, List<EMEVD.Parameter> ps)
+      {
+        if (ps == null || ps.Count <= 0)
+          return;
+        this.NewInstructions[instr] = ps;
+      }
+
+      public void Postprocess()
+      {
+        if (this.Event == null || this.Event.Parameters.Count == 0 && this.NewInstructions.Count == 0)
+          return;
+        Dictionary<EMEVD.Instruction, int> currentIndices = this.Event.Instructions.Select<EMEVD.Instruction, (EMEVD.Instruction, int)>((Func<EMEVD.Instruction, int, (EMEVD.Instruction, int)>) ((a, i) => (a, i))).ToDictionary<(EMEVD.Instruction, int), EMEVD.Instruction, int>((Func<(EMEVD.Instruction, int), EMEVD.Instruction>) (p => p.a), (Func<(EMEVD.Instruction, int), int>) (p => p.i));
+        this.Event.Parameters = this.Event.Parameters.Select<EMEVD.Parameter, EMEVD.Parameter>((Func<EMEVD.Parameter, EMEVD.Parameter>) (p =>
+        {
+          int num;
+          if (!currentIndices.TryGetValue(this.Original[(int) p.InstructionIndex], out num))
+            return (EMEVD.Parameter) null;
+          p.InstructionIndex = (long) num;
+          return p;
+        })).Where<EMEVD.Parameter>((Func<EMEVD.Parameter, bool>) (p => p != null)).ToList<EMEVD.Parameter>();
+        foreach (KeyValuePair<EMEVD.Instruction, List<EMEVD.Parameter>> newInstruction in this.NewInstructions)
+        {
+          int num;
+          if (currentIndices.TryGetValue(newInstruction.Key, out num))
+          {
+            foreach (EMEVD.Parameter parameter in newInstruction.Value)
+            {
+              parameter.InstructionIndex = (long) num;
+              if (!this.Event.Parameters.Contains(parameter))
+                this.Event.Parameters.Add(parameter);
+            }
+          }
+        }
+      }
+    }
+
+    public class EventEdits
+    {
+      public HashSet<Events.InstrEdit> PendingEdits = new HashSet<Events.InstrEdit>();
+      public Dictionary<int, List<Events.InstrEdit>> PendingAdds = new Dictionary<int, List<Events.InstrEdit>>();
+
+      public Dictionary<string, List<Events.InstrEdit>> NameEdits { get; set; }
+
+      public Dictionary<string, List<Events.InstrEdit>> ArgEdits { get; set; }
+
+      public Dictionary<(string, string), List<Events.InstrEdit>> NameArgEdits { get; set; }
+
+      public List<Events.InstrEdit> GetMatches(Events.Instr instr)
+      {
+        List<Events.InstrEdit> instrEditList1 = (List<Events.InstrEdit>) null;
+        if (this.NameEdits != null && !this.NameEdits.TryGetValue(instr.Name, out instrEditList1) && (this.ArgEdits == null && this.NameArgEdits == null))
+          return (List<Events.InstrEdit>) null;
+        List<string> list = instr.Args.Select<object, string>((Func<object, string>) (a => Events.TextArg(a))).ToList<string>();
+        List<Events.InstrEdit> instrEditList2 = new List<Events.InstrEdit>();
+        if (this.ArgEdits != null)
+        {
+          List<Events.InstrEdit> instrEditList3;
+          instrEditList2.AddRange(list.SelectMany<string, Events.InstrEdit>((Func<string, IEnumerable<Events.InstrEdit>>) (s => !this.ArgEdits.TryGetValue(s, out instrEditList3) ? (IEnumerable<Events.InstrEdit>) new List<Events.InstrEdit>() : (IEnumerable<Events.InstrEdit>) instrEditList3)));
+        }
+        if (instrEditList1 != null)
+          instrEditList2.AddRange((IEnumerable<Events.InstrEdit>) instrEditList1);
+        List<Events.InstrEdit> instrEditList4;
+        if (this.NameArgEdits != null && this.NameArgEdits.TryGetValue((instr.Name, string.Join(",", (IEnumerable<string>) list)), out instrEditList4))
+          instrEditList2.AddRange((IEnumerable<Events.InstrEdit>) instrEditList4);
+        return instrEditList2;
+      }
+
+      public void ApplyEdits(Events.Instr instr, int index)
+      {
+        List<Events.InstrEdit> matches = this.GetMatches(instr);
+        if (matches == null)
+          return;
+        bool removed = false;
+        matches.ForEach((System.Action<Events.InstrEdit>) (edit =>
+        {
+          if (edit.Remove)
+          {
+            instr.Val = new EMEVD.Instruction(1014, 69);
+            instr.Init = false;
+            instr.Doc = (EMEDF.InstrDoc) null;
+            instr.Args.Clear();
+            instr.Types.Clear();
+            removed = true;
+          }
+          if (edit.Add != null)
+            Events.AddMulti<int, Events.InstrEdit>((IDictionary<int, List<Events.InstrEdit>>) this.PendingAdds, index, edit);
+          if (!removed)
+          {
+            if (edit.PosEdit != null)
+            {
+              foreach (KeyValuePair<int, string> keyValuePair in edit.PosEdit)
+                instr[keyValuePair.Key] = (object) keyValuePair.Value;
+            }
+            if (edit.ValEdit != null)
+            {
+              for (int index1 = 0; index1 < instr.Args.Count; ++index1)
+              {
+                string str;
+                if (edit.ValEdit.TryGetValue(Events.TextArg(instr[index1]), out str))
+                  instr[index1] = (object) str;
+              }
+            }
+          }
+          if (edit.Add != null)
+            return;
+          this.PendingEdits.Remove(edit);
+        }));
+      }
+
+      public void AddEdit(string toFind, Predicate<string> docName, Events.InstrEdit edit)
+      {
+        if (int.TryParse(toFind, out int _))
+        {
+          if (this.ArgEdits == null)
+            this.ArgEdits = new Dictionary<string, List<Events.InstrEdit>>();
+          Events.AddMulti<string, Events.InstrEdit>((IDictionary<string, List<Events.InstrEdit>>) this.ArgEdits, toFind, edit);
+        }
+        else if (docName(toFind))
+        {
+          if (this.NameEdits == null)
+            this.NameEdits = new Dictionary<string, List<Events.InstrEdit>>();
+          Events.AddMulti<string, Events.InstrEdit>((IDictionary<string, List<Events.InstrEdit>>) this.NameEdits, toFind, edit);
+        }
+        else
+        {
+          (string str3, List<string> stringList3) = Events.ParseCommandString(toFind);
+          if (this.NameArgEdits == null)
+            this.NameArgEdits = new Dictionary<(string, string), List<Events.InstrEdit>>();
+          Events.AddMulti<(string, string), Events.InstrEdit>((IDictionary<(string, string), List<Events.InstrEdit>>) this.NameArgEdits, (str3, string.Join(",", (IEnumerable<string>) stringList3)), edit);
+        }
+        this.PendingEdits.Add(edit);
+      }
+
+      public void AddReplace(string toFind, string toVal = null)
+      {
+        Events.InstrEdit instrEdit = new Events.InstrEdit();
+        if (toVal != null || Regex.IsMatch(toFind, "^\\d+\\s*->\\s*\\d+$"))
+        {
+          string[] strArray1;
+          if (toVal != null)
+            strArray1 = new string[2]{ toFind, toVal };
+          else
+            strArray1 = Regex.Split(toFind, "\\s*->\\s*");
+          string[] strArray2 = strArray1;
+          instrEdit.ValEdit = new Dictionary<string, string>();
+          instrEdit.ValEdit[strArray2[0]] = strArray2[1];
+          if (this.ArgEdits == null)
+            this.ArgEdits = new Dictionary<string, List<Events.InstrEdit>>();
+          Events.AddMulti<string, Events.InstrEdit>((IDictionary<string, List<Events.InstrEdit>>) this.ArgEdits, strArray2[0], instrEdit);
+        }
+        else
+        {
+          if (toVal != null)
+            throw new Exception();
+          (string str2, List<string> stringList2) = Events.ParseCommandString(toFind);
+          instrEdit.PosEdit = new Dictionary<int, string>();
+          for (int index = 0; index < stringList2.Count; ++index)
+          {
+            if (stringList2[index].Contains("->"))
+            {
+              string[] strArray = Regex.Split(stringList2[index], "\\s*->\\s*");
+              stringList2[index] = strArray[0];
+              instrEdit.PosEdit[index] = strArray[1];
+            }
+          }
+          if (this.NameArgEdits == null)
+            this.NameArgEdits = new Dictionary<(string, string), List<Events.InstrEdit>>();
+          Events.AddMulti<(string, string), Events.InstrEdit>((IDictionary<(string, string), List<Events.InstrEdit>>) this.NameArgEdits, (str2, string.Join(",", (IEnumerable<string>) stringList2)), instrEdit);
+        }
+        this.PendingEdits.Add(instrEdit);
+      }
+    }
+
+    public class InstrEdit
+    {
+      public EMEVD.Instruction Add { get; set; }
+
+      public List<EMEVD.Parameter> AddParams { get; set; }
+
+      public bool AddAfter { get; set; }
+
+      public bool Remove { get; set; }
+
+      public Dictionary<int, string> PosEdit { get; set; }
+
+      public Dictionary<string, string> ValEdit { get; set; }
+
+      public override string ToString()
+      {
+        return string.Format("Edit (Add {0}, Remove {1}, PosEdit {2}, ValEdit {3})", (object) this.Add, (object) this.Remove, this.PosEdit == null ? (object) "" : (object) string.Join<KeyValuePair<int, string>>(",", (IEnumerable<KeyValuePair<int, string>>) this.PosEdit), this.ValEdit == null ? (object) "" : (object) string.Join<KeyValuePair<string, string>>(",", (IEnumerable<KeyValuePair<string, string>>) this.ValEdit));
+      }
+    }
+
+    public abstract class AbstractEventSpec
+    {
+      public int ID { get; set; }
+
+      public string Comment { get; set; }
+
+      public List<string> DebugInfo { get; set; }
+
+      public List<string> DebugInit { get; set; }
+
+      public List<string> DebugCommands { get; set; }
+    }
+
+    public class EventAddCommand
+    {
+      public string Cmd { get; set; }
+
+      public string Before { get; set; }
+
+      public string After { get; set; }
+    }
+
+    public class EventDebug
+    {
+      public List<int> IDs = new List<int>();
+      public List<Events.InstructionDebug> Callers = new List<Events.InstructionDebug>();
+      public List<Events.InstructionDebug> Instructions = new List<Events.InstructionDebug>();
+
+      public int Event { get; set; }
+
+      public bool Highlight { get; set; }
+
+      public bool HighlightInstr { get; set; }
+    }
+
+    public class InstructionDebug
+    {
+      public List<string> Args = new List<string>();
+      public HashSet<int> HighlightArgs = new HashSet<int>();
+
+      public int Event { get; set; }
+
+      public string Name { get; set; }
+
+      public Events.InstructionDebug Caller { get; set; }
+
+      public Events.InstructionDebug Copy()
+      {
+        return (Events.InstructionDebug) this.MemberwiseClone();
+      }
+
+      public string CallString()
+      {
+        return this.Name + " (" + string.Join(", ", this.Args.Select<string, string>((Func<string, int, string>) ((a, i) => !this.HighlightArgs.Contains(i) ? a : a + "*"))) + ")";
+      }
+
+      public override string ToString()
+      {
+        return this.Caller != null ? this.Caller.CallString() + " - " + this.CallString() : string.Format("[Event {0}] {1}", (object) this.Event, (object) this.CallString());
+      }
+    }
+  }
+}

@@ -1,0 +1,539 @@
+﻿// Decompiled with JetBrains decompiler
+// Type: FogMod.GraphConnector
+// Assembly: FogMod, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+// MVID: D28026FD-A9AB-45EB-9CE9-27B9E67A6072
+// Assembly location: M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\FogMod.exe
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+
+namespace FogMod
+{
+  public class GraphConnector
+  {
+    public void Connect(RandomizerOptions opt, Graph g, AnnotationData ann)
+    {
+      Dictionary<string, Graph.Node> graph = g.Nodes;
+      List<Graph.Edge> list1 = graph.Values.SelectMany<Graph.Node, Graph.Edge>((Func<Graph.Node, IEnumerable<Graph.Edge>>) (node => node.From.Where<Graph.Edge>((Func<Graph.Edge, bool>) (e => e.From == null)))).ToList<Graph.Edge>();
+      List<Graph.Edge> list2 = graph.Values.SelectMany<Graph.Node, Graph.Edge>((Func<Graph.Node, IEnumerable<Graph.Edge>>) (node => node.To.Where<Graph.Edge>((Func<Graph.Edge, bool>) (e => e.To == null)))).ToList<Graph.Edge>();
+      Random random = new Random(opt.Seed);
+      Util.Shuffle<Graph.Edge>(random, (IList<Graph.Edge>) list1);
+      Util.Shuffle<Graph.Edge>(random, (IList<Graph.Edge>) list2);
+      foreach (GraphConnector.EdgeSilo edgeSilo in Enum.GetValues(typeof (GraphConnector.EdgeSilo)))
+      {
+        GraphConnector.EdgeSilo siloType = edgeSilo;
+        List<Graph.Edge> list3 = list1.Where<Graph.Edge>((Func<Graph.Edge, bool>) (e => e.Pair == null == (siloType == GraphConnector.EdgeSilo.UNPAIRED))).ToList<Graph.Edge>();
+        List<Graph.Edge> list4 = list2.Where<Graph.Edge>((Func<Graph.Edge, bool>) (e => e.Pair == null == (siloType == GraphConnector.EdgeSilo.UNPAIRED))).ToList<Graph.Edge>();
+        if (opt["explain"])
+          Console.WriteLine(string.Format("Connecting silo {0}: {1} with no from, and {2} with no to", (object) siloType, (object) list3.Count, (object) list4.Count));
+        while (!opt["vanilla"])
+        {
+          Graph.Edge entrance = (Graph.Edge) null;
+          int index1 = 0;
+          if (index1 < list3.Count)
+          {
+            entrance = list3[index1];
+            if (entrance.From != null)
+              throw new Exception(string.Format("Connected edge still left: {0}", (object) entrance));
+            list3.RemoveAt(index1);
+            list4.Remove(entrance.Pair);
+          }
+          if (entrance != null)
+          {
+            Graph.Edge exit = (Graph.Edge) null;
+            if (list4.Count == 0)
+            {
+              if (entrance.Pair == null)
+                throw new Exception("Ran out of eligible edges");
+              exit = entrance.Pair;
+            }
+            for (int index2 = 0; index2 < list4.Count; ++index2)
+            {
+              Graph.Edge edge = list4[index2];
+              if (edge.To != null)
+                throw new Exception(string.Format("Connected edge still left: {0}", (object) edge));
+              if (entrance.Pair != edge && entrance.Pair == null == (edge.Pair == null))
+              {
+                exit = edge;
+                list4.RemoveAt(index2);
+                list3.Remove(exit.Pair);
+                break;
+              }
+            }
+            if (exit != null)
+            {
+              if (entrance.IsFixed || exit.IsFixed)
+                throw new Exception(string.Format("Internal error: found fixed edges in randomization {0} ({1}) and {2} ({3})", (object) entrance, (object) entrance.IsFixed, (object) exit, (object) exit.IsFixed));
+              g.Connect(exit, entrance);
+            }
+            else
+              break;
+          }
+          else
+            break;
+        }
+        if (list3.Count > 0 || list4.Count > 0)
+          throw new Exception("Internal error: unconnected edges after randomization:\nFrom edges: " + string.Join<Graph.Edge>(", ", (IEnumerable<Graph.Edge>) list3) + "\nTo edges: " + string.Join<Graph.Edge>(", ", (IEnumerable<Graph.Edge>) list4));
+      }
+      if (opt["start"])
+        g.Start = ann.CustomStarts[new Random(opt.Seed - 1).Next(ann.CustomStarts.Count)];
+      else if (g.Areas.ContainsKey("asylum"))
+        g.Start = new AnnotationData.CustomStart()
+        {
+          Name = "Asylum",
+          Area = "asylum",
+          Respawn = "asylum 1812961"
+        };
+      else if (g.Areas.ContainsKey("firelink_cemetery"))
+        g.Start = new AnnotationData.CustomStart()
+        {
+          Name = "Cemetery of Ash",
+          Area = "firelink_cemetery",
+          Respawn = "firelink 1812961"
+        };
+      string area1 = g.Start.Area;
+      int num1 = 0;
+      GraphChecker graphChecker = new GraphChecker();
+      GraphChecker.CheckRecord check = (GraphChecker.CheckRecord) null;
+      bool pairedOnly = !opt["unconnected"];
+      List<string> triedSwaps = new List<string>();
+      while (num1++ < 100)
+      {
+        if (opt["explain"])
+          Console.WriteLine(string.Format("------------------------ Try {0}", (object) num1));
+        check = graphChecker.Check(opt, g, area1);
+        if (check.Unvisited.Count == 0 && g.Areas.ContainsKey("firelink_cemetery"))
+        {
+          bool didSwap = false;
+          List<string> list3 = check.Records.Values.OrderBy<GraphChecker.NodeRecord, float>((Func<GraphChecker.NodeRecord, float>) (r => r.Dist)).Select<GraphChecker.NodeRecord, string>((Func<GraphChecker.NodeRecord, string>) (r => r.Area)).ToList<string>();
+          if (opt["explain"])
+            Console.WriteLine("Trying to place Firelink now. Overall order: [" + string.Join(",", list3.Select<string, string>((Func<string, int, string>) ((a, i) => string.Format("{0}:{1}", (object) a, (object) i)))) + "]");
+          Dictionary<string, int> areaIndex = list3.Select<string, (string, int)>((Func<string, int, (string, int)>) ((a, i) => (a, i))).ToDictionary<(string, int), string, int>((Func<(string, int), string>) (a => a.a), (Func<(string, int), int>) (a => a.i));
+          int num2 = list3.Count<string>(closure_11 ?? (closure_11 = (Func<string, bool>) (a => !g.Areas[a].HasTag("trivial"))));
+          string str = list3.Where<string>(closure_12 ?? (closure_12 = (Func<string, bool>) (a => !g.Areas[a].HasTag("trivial")))).Skip<string>(num2 * 15 / 100).FirstOrDefault<string>();
+          int reasonableIndex = str == null ? list3.Count : list3.IndexOf(str);
+          if (opt["explain"])
+            Console.WriteLine(string.Format("Last reasonable area for Firelink requisites: {0}. Total count {1}", (object) str, (object) list3.Where<string>(closure_13 ?? (closure_13 = (Func<string, bool>) (a => !g.Areas[a].HasTag("trivial")))).Count<string>()));
+          Dictionary<string, int> randomIn = new Dictionary<string, int>();
+          Dictionary<int, List<string>> byRandomIn = new Dictionary<int, List<string>>();
+          foreach (string index in list3)
+          {
+            int key = graph[index].From.Count<Graph.Edge>(closure_14 ?? (closure_14 = (Func<Graph.Edge, bool>) (e =>
+            {
+              if (e.IsFixed)
+                return false;
+              return opt["unconnected"] || e.Pair != null;
+            })));
+            randomIn[index] = key;
+            Util.AddMulti<int, string>((IDictionary<int, List<string>>) byRandomIn, key, index);
+          }
+          if (opt["latewarp"] || opt["instawarp"])
+          {
+            tryPlace("firelink", true, (List<string>) null);
+          }
+          else
+          {
+            bool flag1 = tryPlace("firelink", true, (List<string>) null);
+            List<string> accessibleAreas = new List<string>()
+            {
+              "firelink_cemetery"
+            };
+            if (flag1)
+              accessibleAreas.Add("firelink");
+            List<string> stringList1 = new List<string>()
+            {
+              "coiledsword"
+            };
+            List<string> stringList2 = new List<string>();
+            List<string> source = new List<string>();
+            bool flag2;
+            do
+            {
+              foreach (string index in stringList1)
+              {
+                if (!stringList2.Contains(index))
+                {
+                  stringList2.Add(index);
+                  source.AddRange(g.ItemAreas[index].Except<string>((IEnumerable<string>) source));
+                }
+              }
+              flag2 = false;
+              foreach (string area2 in source.ToList<string>())
+              {
+                Graph.Node node = graph[area2];
+                if (randomIn[area2] <= 0)
+                {
+                  Dictionary<string, List<string>> fixedIn = getFixedIn(area2);
+                  if (fixedIn.Count != 0)
+                  {
+                    string index = fixedIn.Keys.OrderBy<string, int>((Func<string, int>) (a => fixedIn[a].Count)).First<string>();
+                    if (!source.Contains(index) && !accessibleAreas.Contains(index))
+                    {
+                      source.Add(index);
+                      flag2 = true;
+                    }
+                    foreach (string key in fixedIn[index])
+                    {
+                      if (g.ItemAreas.ContainsKey(key) && !stringList1.Contains(key))
+                      {
+                        stringList1.Add(key);
+                        flag2 = true;
+                      }
+                      else if (graph.ContainsKey(key) && !source.Contains(key))
+                      {
+                        source.Add(key);
+                        flag2 = true;
+                      }
+                    }
+                  }
+                }
+              }
+              if (opt["explain"])
+                Console.WriteLine("At end of iteration, have items " + string.Join(",", (IEnumerable<string>) stringList1) + " and areas " + string.Join(",", (IEnumerable<string>) source) + ", with adjustable " + string.Join(",", source.Where<string>((Func<string, bool>) (a => !accessibleAreas.Contains(a) && randomIn[a] > 0))));
+            }
+            while (flag2);
+            List<string> list4 = source.Where<string>((Func<string, bool>) (a => !accessibleAreas.Contains(a) && randomIn[a] > 0)).ToList<string>();
+            if (!flag1)
+              list4.Insert(0, "firelink");
+            foreach (string subst in list4)
+            {
+              tryPlace(subst, false, accessibleAreas);
+              accessibleAreas.Add(subst);
+            }
+          }
+          if (!didSwap)
+            break;
+          // ISSUE: variable of a compiler-generated type
+          GraphConnector.\u003C\u003Ec__DisplayClass1_0 cDisplayClass10;
+
+          bool tryPlace(string subst, bool reasonableOnly, List<string> root)
+          {
+            if (areaIndex[subst] <= reasonableIndex)
+              return true;
+            List<string> list1 = byRandomIn[randomIn[subst]].ToList<string>();
+            list1.Remove(subst);
+            if (root != null)
+              list1.RemoveAll((Predicate<string>) (c => root.Contains(c) && areaIndex[c] < areaIndex[subst]));
+            if (opt["explain"])
+              Console.WriteLine(string.Format("Candidates for {0} ({1}): {2}", (object) subst, (object) areaIndex[subst], (object) string.Join(",", list1.Select<string, string>((Func<string, string>) (c => string.Format("{0}:{1}", (object) c, (object) areaIndex[c]))))));
+            list1.RemoveAll((Predicate<string>) (c => triedSwaps.Contains(string.Join(",", (IEnumerable<string>) new SortedSet<string>()
+            {
+              subst,
+              c
+            }))));
+            if (opt["explain"])
+              Console.WriteLine("Candidates for " + subst + " without tried: " + string.Join(",", (IEnumerable<string>) list1));
+            // ISSUE: reference to a compiler-generated method
+            list1.RemoveAll(closure_15 ?? (closure_15 = new Predicate<string>(cDisplayClass10.\u003CConnect\u003Eb__36)));
+            if (opt["explain"])
+              Console.WriteLine("Candidates for " + subst + " with out edge: " + string.Join(",", (IEnumerable<string>) list1));
+            if (list1.Count == 0)
+              return false;
+            List<string> list2 = list1.Where<string>((Func<string, bool>) (c => areaIndex[c] <= reasonableIndex)).ToList<string>();
+            if (list2.Count == 0 & reasonableOnly)
+              return false;
+            string name2 = list2.Count <= 1 || areaIndex[list1[0]] > 1 ? list1[0] : list1[1];
+            if (opt["explain"])
+              Console.WriteLine("Final choice: " + name2);
+            g.SwapConnectedAreas(subst, name2);
+            triedSwaps.Add(string.Join(",", (IEnumerable<string>) new SortedSet<string>()
+            {
+              subst,
+              name2
+            }));
+            didSwap = true;
+            return true;
+          }
+        }
+        else
+        {
+          Graph.Edge newEntranceEdge = (Graph.Edge) null;
+          List<string> list3 = check.Unvisited.ToList<string>();
+          Util.Shuffle<string>(new Random(opt.Seed + num1), (IList<string>) list3);
+          bool flag = true;
+          foreach (string index in list3)
+          {
+            foreach (Graph.Edge edge in graph[index].From)
+            {
+              if (!edge.IsFixed && edge.Pair != null == pairedOnly)
+              {
+                if (edge.LinkedExpr == null)
+                {
+                  newEntranceEdge = edge;
+                  flag = false;
+                  break;
+                }
+                if (newEntranceEdge == null)
+                  newEntranceEdge = edge;
+              }
+            }
+            if (newEntranceEdge != null)
+            {
+              if (!flag)
+                break;
+            }
+          }
+          if (newEntranceEdge == null)
+          {
+            if (!pairedOnly || !opt["warp"])
+              throw new Exception("Could not find edge into unreachable areas [" + string.Join(", ", (IEnumerable<string>) check.Unvisited) + "] starting from " + area1);
+            pairedOnly = false;
+          }
+          else
+          {
+            (Graph.Edge, float) valueTuple = ((Graph.Edge) null, 0.0f);
+            Graph.Edge edge = (Graph.Edge) null;
+            int num2 = 0;
+            foreach (GraphChecker.NodeRecord nodeRecord in (IEnumerable<GraphChecker.NodeRecord>) check.Records.Values.OrderBy<GraphChecker.NodeRecord, float>((Func<GraphChecker.NodeRecord, float>) (r => r.Dist)))
+            {
+              if (opt["explain"])
+                Console.WriteLine(string.Format("{0}: {1}", (object) nodeRecord.Area, (object) nodeRecord.Dist));
+              foreach (KeyValuePair<Graph.Edge, float> keyValuePair in (IEnumerable<KeyValuePair<Graph.Edge, float>>) nodeRecord.InEdge.OrderBy<KeyValuePair<Graph.Edge, float>, float>((Func<KeyValuePair<Graph.Edge, float>, float>) (e => e.Value)))
+              {
+                Graph.Edge key = keyValuePair.Key;
+                if (opt["explain"])
+                  Console.WriteLine(string.Format("  From {0}{1}: {2}", (object) key.From, key.IsFixed ? (object) " (world)" : (object) "", (object) keyValuePair.Value));
+              }
+              KeyValuePair<Graph.Edge, float> keyValuePair1 = nodeRecord.InEdge.OrderBy<KeyValuePair<Graph.Edge, float>, float>((Func<KeyValuePair<Graph.Edge, float>, float>) (e => e.Value)).Where<KeyValuePair<Graph.Edge, float>>((Func<KeyValuePair<Graph.Edge, float>, bool>) (e => !e.Key.IsFixed && e.Key.Pair != null == pairedOnly)).LastOrDefault<KeyValuePair<Graph.Edge, float>>();
+              if (keyValuePair1.Key != null)
+              {
+                int count = graph[nodeRecord.Area].From.Count;
+                if (count > num2)
+                {
+                  edge = keyValuePair1.Key;
+                  num2 = count;
+                }
+                KeyValuePair<Graph.Edge, float> keyValuePair2 = nodeRecord.InEdge.OrderBy<KeyValuePair<Graph.Edge, float>, float>((Func<KeyValuePair<Graph.Edge, float>, float>) (e => e.Value)).First<KeyValuePair<Graph.Edge, float>>();
+                if (keyValuePair2.Key != keyValuePair1.Key)
+                {
+                  if (opt["explain"])
+                    Console.WriteLine(string.Format("  Min {0}, Max editable {1}", (object) keyValuePair2.Value, (object) keyValuePair1.Value));
+                  if ((double) keyValuePair1.Value >= (double) valueTuple.Item2)
+                    valueTuple = (keyValuePair1.Key, keyValuePair1.Value);
+                }
+              }
+            }
+            Graph.Edge oldExitEdge = valueTuple.Item1;
+            if (oldExitEdge == null)
+            {
+              if (edge != null)
+              {
+                if (opt["explain"])
+                  Console.WriteLine("!!!!!!!!!!! Picking non-redundant edge, but last reachable");
+                oldExitEdge = edge;
+              }
+              else
+              {
+                oldExitEdge = check.Records.Keys.SelectMany<string, Graph.Edge>((Func<string, IEnumerable<Graph.Edge>>) (a => (IEnumerable<Graph.Edge>) graph[a].To)).Where<Graph.Edge>((Func<Graph.Edge, bool>) (e => !e.IsFixed && e.Pair != null == pairedOnly)).LastOrDefault<Graph.Edge>();
+                if (opt["explain"])
+                  Console.WriteLine("!!!!!!!!!!! Picking any edge whatsoever");
+                if (oldExitEdge == null)
+                  throw new Exception("No swappable edge found to inaccessible areas. This can happen a lot with low # of randomized entrances.");
+              }
+            }
+            if (opt["explain"])
+            {
+              Console.WriteLine(string.Format("Swap unreached: {0}", (object) newEntranceEdge));
+              Console.WriteLine(string.Format("Swap redundant: {0}", (object) oldExitEdge));
+            }
+            g.SwapConnectedEdges(oldExitEdge, newEntranceEdge);
+            pairedOnly = !opt["unconnected"];
+          }
+        }
+      }
+      if (check == null || check.Unvisited.Count > 0)
+        throw new Exception(string.Format("Couldn't solve seed {0} - try a different one", (object) opt.DisplaySeed));
+      float max = check.Records.Values.Where<GraphChecker.NodeRecord>((Func<GraphChecker.NodeRecord, bool>) (r => !r.Area.StartsWith("kiln"))).Select<GraphChecker.NodeRecord, float>((Func<GraphChecker.NodeRecord, float>) (r => r.Dist)).Max();
+      Dictionary<string, float> dictionary = check.Records.Values.OrderBy<GraphChecker.NodeRecord, float>((Func<GraphChecker.NodeRecord, float>) (r => r.Dist)).ToDictionary<GraphChecker.NodeRecord, string, float>((Func<GraphChecker.NodeRecord, string>) (r => r.Area), (Func<GraphChecker.NodeRecord, float>) (r => getAreaCost(r.Dist)));
+      getCumCost(dictionary);
+      getCumCost(ann.DefaultCost);
+      List<float> list5 = ann.DefaultCost.Select<KeyValuePair<string, float>, float>((Func<KeyValuePair<string, float>, float>) (t => t.Value)).OrderBy<float, float>((Func<float, float>) (t => t)).ToList<float>();
+      List<float> floatList = new List<float>();
+      bool flag3 = g.Areas.ContainsKey("asylum");
+      List<string> stringList3;
+      if (!flag3)
+      {
+        stringList3 = new List<string>() { "firelink" };
+      }
+      else
+      {
+        stringList3 = new List<string>();
+        stringList3.Add("parish_andre");
+        stringList3.Add("catacombs");
+        stringList3.Add("anorlondo_blacksmith");
+      }
+      List<string> source1 = stringList3;
+      List<GraphChecker.NodeRecord> list6 = source1.Select<string, GraphChecker.NodeRecord>((Func<string, GraphChecker.NodeRecord>) (area => check.Records[area])).OrderBy<GraphChecker.NodeRecord, int>((Func<GraphChecker.NodeRecord, int>) (r => r.Visited.Count)).ToList<GraphChecker.NodeRecord>();
+      GraphChecker.NodeRecord nodeRecord1;
+      if (list6[0].Visited.Count < 5)
+      {
+        nodeRecord1 = list6[0];
+      }
+      else
+      {
+        HashSet<string> commonAreas = new HashSet<string>((IEnumerable<string>) g.Areas.Keys);
+        foreach (GraphChecker.NodeRecord nodeRecord2 in list6)
+          commonAreas.IntersectWith((IEnumerable<string>) nodeRecord2.Visited);
+        GraphChecker.NodeRecord nodeRecord3 = list6.Find((Predicate<GraphChecker.NodeRecord>) (rec => commonAreas.IsSupersetOf(rec.Visited.Where<string>(closure_8 ?? (closure_8 = (Func<string, bool>) (a => g.Areas[a].HasTag("boss")))))));
+        nodeRecord1 = nodeRecord3 == null ? list6[0] : nodeRecord3;
+      }
+      List<string> visited = nodeRecord1.Visited;
+      if (!opt["skipprint"])
+      {
+        Console.WriteLine("Areas required before " + maybeName(nodeRecord1.Area) + ": " + string.Join("; ", visited.Select<string, string>(new Func<string, string>(maybeName))));
+        Console.WriteLine("Other areas are not necessary to get there.");
+        Console.WriteLine();
+      }
+      foreach (string index in source1)
+      {
+        if (opt["explain"])
+          Console.WriteLine("Blacksmith " + index + ": " + string.Join(", ", (IEnumerable<string>) check.Records[index].Visited));
+      }
+      g.AreaRatios = new Dictionary<string, (float, float)>();
+      int index3 = 0;
+      foreach (GraphChecker.NodeRecord nodeRecord2 in (IEnumerable<GraphChecker.NodeRecord>) check.Records.Values.OrderBy<GraphChecker.NodeRecord, float>((Func<GraphChecker.NodeRecord, float>) (r => r.Dist)))
+      {
+        float cost1 = index3 < list5.Count ? list5[index3] : 1f;
+        if (!g.Areas[nodeRecord2.Area].HasTag("optional"))
+          ++index3;
+        bool flag1 = g.Areas[nodeRecord2.Area].HasTag("boss");
+        if (visited.Contains(nodeRecord2.Area) & flag1 && (double) cost1 > 0.05)
+          cost1 = 0.05f;
+        float num2 = 1f;
+        float num3 = 1f;
+        float cost2;
+        if (!g.Areas[nodeRecord2.Area].HasTag("end") && ann.DefaultCost.TryGetValue(nodeRecord2.Area, out cost2))
+        {
+          num2 = getRatioMeasure(cost1, ann.HealthScaling) / getRatioMeasure(cost2, ann.HealthScaling);
+          if ((double) num2 < 1.0 && (double) index3 / (double) check.Records.Count > 0.7)
+          {
+            num2 = 1f;
+          }
+          else
+          {
+            float num4;
+            if ((double) cost2 <= (ann.DefaultCost.TryGetValue(flag3 ? "parish_church" : "settlement", out num4) ? (double) num4 : 0.25) && (double) num2 < 1.0)
+              num2 = 1f;
+            else
+              num3 = getRatioMeasure(cost1, ann.DamageScaling) / getRatioMeasure(cost2, ann.DamageScaling);
+          }
+        }
+        g.AreaRatios[nodeRecord2.Area] = (num2, num3);
+        if (!opt["skipprint"])
+        {
+          if (nodeRecord2.Area == (flag3 ? "anorlondo_os" : "firelink"))
+            Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+          string str1 = opt["debugareas"] ? " [" + string.Join(",", (IEnumerable<string>) new SortedSet<string>((IEnumerable<string>) nodeRecord2.Visited)) + "]" : "";
+          string str2 = opt["scale"] ? string.Format(" (scaling: {0:0.}%)", (object) (float) ((double) num2 * 100.0)) : "";
+          string str3 = opt["explain"] ? string.Format(" {0:0.}%", (object) (float) ((double) cost1 * 100.0)) : "";
+          Console.WriteLine(maybeName(nodeRecord2.Area) + str3 + str2 + str1 + (flag1 ? " <----" : ""));
+          foreach (KeyValuePair<Graph.Edge, float> keyValuePair in (IEnumerable<KeyValuePair<Graph.Edge, float>>) nodeRecord2.InEdge.OrderBy<KeyValuePair<Graph.Edge, float>, float>((Func<KeyValuePair<Graph.Edge, float>, float>) (e => e.Value)))
+          {
+            Graph.Edge key = keyValuePair.Key;
+            List<string> stringList1;
+            List<string> source2 = key.LinkedExpr == null ? new List<string>() : key.LinkedExpr.FreeVars().SelectMany<string, string>((Func<string, IEnumerable<string>>) (a => !g.ItemAreas.TryGetValue(a, out stringList1) ? (IEnumerable<string>) new List<string>() : (IEnumerable<string>) stringList1)).Distinct<string>().ToList<string>();
+            string str4 = source2.Count == 0 ? "" : ", an item from " + string.Join(" and ", source2.Select<string, string>((Func<string, string>) (a => maybeName(a))));
+            if (key.Text == key.Link.Text)
+              Console.WriteLine("  Preexisting: From " + maybeName(key.From) + " to " + maybeName(nodeRecord2.Area) + " (" + key.Text + str4 + ")");
+            else
+              Console.WriteLine("  Random: From " + maybeName(key.From) + " (" + key.Text + ") to " + maybeName(nodeRecord2.Area) + " (" + key.Link.Text + str4 + ")");
+          }
+        }
+      }
+      if (opt["dumpdist"])
+      {
+        foreach (KeyValuePair<string, float> keyValuePair in dictionary)
+        {
+          if (!g.Areas[keyValuePair.Key].HasTag("optional"))
+            Console.WriteLine(string.Format("{0}: {1}  # SL {2}", (object) keyValuePair.Key, (object) keyValuePair.Value, (object) (int) (10.0 + (flag3 ? 60.0 : 70.0) * (double) keyValuePair.Value)));
+        }
+      }
+      Console.WriteLine(string.Format("Finished {0} at try {1}", (object) opt.DisplaySeed, (object) num1));
+      if (opt["explain"])
+        Console.WriteLine("Pre-Blacksmith areas (" + nodeRecord1.Area + "): " + string.Join(", ", (IEnumerable<string>) visited));
+      if (!opt["dumpgraph"])
+        return;
+      Console.WriteLine("Writing ../fog.dot");
+      bool flag4 = false;
+      TextWriter text = (TextWriter) File.CreateText("..\\fog.dot");
+      text.WriteLine((flag4 ? "di" : "") + "graph {");
+      foreach (Graph.Node node in graph.Values)
+      {
+        string area2 = node.Area;
+        string str = area2 == "" ? "(empty)" : area2;
+        text.WriteLine("    \"" + node.Area + "\" [ shape=box,label=\"" + escape((object) str) + "\" ];");
+      }
+      HashSet<Graph.Connection> connectionSet = new HashSet<Graph.Connection>();
+      foreach (Graph.Node node in graph.Values)
+      {
+        foreach (Graph.Edge edge in node.To)
+        {
+          Graph.Connection connection = new Graph.Connection(edge.From, edge.To);
+          if (!connectionSet.Contains(connection))
+          {
+            if (!flag4)
+              connectionSet.Add(connection);
+            string to = edge.To;
+            string str1 = "solid";
+            string str2 = (string) null;
+            text.WriteLine("  \"" + node.Area + "\" -" + (flag4 ? ">" : "-") + " \"" + to + "\" [ style=" + str1 + ",labelloc=t,label=\"" + escape((object) str2) + "\" ];");
+          }
+        }
+      }
+      text.WriteLine("}");
+      text.Close();
+
+      Dictionary<string, float> getCumCost(Dictionary<string, float> d)
+      {
+        Dictionary<string, float> dictionary = new Dictionary<string, float>();
+        float num = 0.0f;
+        foreach (KeyValuePair<string, float> keyValuePair in d)
+        {
+          num += keyValuePair.Value;
+          dictionary[keyValuePair.Key] = num;
+        }
+        return dictionary;
+      }
+
+      float getRatioMeasure(float cost, float maxRatio)
+      {
+        return (float) (1.0 + ((double) maxRatio - 1.0) * (double) cost);
+      }
+
+      string escape(object o)
+      {
+        return o == null ? "" : o.ToString().Replace("\n", "\\l").Replace("\"", "\\\"") + "\\l";
+      }
+
+      Dictionary<string, List<string>> getFixedIn(string area)
+      {
+        Dictionary<string, List<string>> dictionary = new Dictionary<string, List<string>>();
+        foreach (Graph.Edge edge in graph[area].From.Where<Graph.Edge>((Func<Graph.Edge, bool>) (e => e.IsFixed)))
+        {
+          List<string> stringList = edge.LinkedExpr == null ? new List<string>() : edge.LinkedExpr.FreeVars().ToList<string>();
+          dictionary[edge.From] = stringList;
+        }
+        return dictionary;
+      }
+
+      float getAreaCost(float dist)
+      {
+        return Math.Min(dist / max, 1f);
+      }
+
+      string maybeName(string area)
+      {
+        AnnotationData.Area area1;
+        return !g.Areas.TryGetValue(area, out area1) ? area : area1.Text ?? area;
+      }
+    }
+
+    private enum EdgeSilo
+    {
+      PAIRED,
+      UNPAIRED,
+    }
+  }
+}

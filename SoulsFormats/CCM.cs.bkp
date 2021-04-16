@@ -1,0 +1,324 @@
+﻿// Decompiled with JetBrains decompiler
+// Type: SoulsFormats.CCM
+// Assembly: FogMod, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+// MVID: D28026FD-A9AB-45EB-9CE9-27B9E67A6072
+// Assembly location: M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\FogMod.exe
+
+using System;
+using System.Collections.Generic;
+using System.Numerics;
+using System.Runtime.InteropServices;
+
+namespace SoulsFormats
+{
+  [ComVisible(true)]
+  public class CCM : SoulsFile<CCM>
+  {
+    public CCM.CCMVer Version { get; set; }
+
+    public short FullWidth { get; set; }
+
+    public short TexWidth { get; set; }
+
+    public short TexHeight { get; set; }
+
+    public short Unk0E { get; set; }
+
+    public byte Unk1C { get; set; }
+
+    public byte Unk1D { get; set; }
+
+    public byte TexCount { get; set; }
+
+    public Dictionary<int, CCM.Glyph> Glyphs { get; set; }
+
+    protected override void Read(BinaryReaderEx br)
+    {
+      br.BigEndian = false;
+      this.Version = br.ReadEnum32<CCM.CCMVer>();
+      if (this.Version == CCM.CCMVer.DemonsSouls)
+        br.BigEndian = true;
+      br.ReadInt32();
+      this.FullWidth = br.ReadInt16();
+      this.TexWidth = br.ReadInt16();
+      this.TexHeight = br.ReadInt16();
+      short num1;
+      short num2;
+      short num3;
+      if (this.Version == CCM.CCMVer.DemonsSouls || this.Version == CCM.CCMVer.DarkSouls1)
+      {
+        this.Unk0E = br.ReadInt16();
+        num1 = br.ReadInt16();
+        num2 = (short) -1;
+        num3 = br.ReadInt16();
+      }
+      else
+      {
+        this.Unk0E = (short) 0;
+        num1 = (short) -1;
+        num2 = br.ReadInt16();
+        num3 = br.ReadInt16();
+        int num4 = (int) br.AssertInt16(new short[1]);
+      }
+      br.AssertInt32(32);
+      br.ReadInt32();
+      this.Unk1C = br.ReadByte();
+      this.Unk1D = br.ReadByte();
+      this.TexCount = br.ReadByte();
+      int num5 = (int) br.AssertByte(new byte[1]);
+      this.Glyphs = new Dictionary<int, CCM.Glyph>((int) num3);
+      if (this.Version == CCM.CCMVer.DemonsSouls || this.Version == CCM.CCMVer.DarkSouls1)
+      {
+        List<CCM.CodeGroup> codeGroupList = new List<CCM.CodeGroup>((int) num1);
+        for (int index = 0; index < (int) num1; ++index)
+          codeGroupList.Add(new CCM.CodeGroup(br));
+        List<CCM.Glyph> glyphList = new List<CCM.Glyph>((int) num3);
+        for (int index = 0; index < (int) num3; ++index)
+        {
+          Vector2 uv1 = br.ReadVector2();
+          Vector2 uv2 = br.ReadVector2();
+          short preSpace = br.ReadInt16();
+          short width = br.ReadInt16();
+          short advance = br.ReadInt16();
+          short texIndex = br.ReadInt16();
+          glyphList.Add(new CCM.Glyph(uv1, uv2, preSpace, width, advance, texIndex));
+        }
+        foreach (CCM.CodeGroup codeGroup in codeGroupList)
+        {
+          int num4 = codeGroup.EndCode - codeGroup.StartCode + 1;
+          for (int index = 0; index < num4; ++index)
+            this.Glyphs[codeGroup.StartCode + index] = glyphList[codeGroup.GlyphIndex + index];
+        }
+      }
+      else
+      {
+        if (this.Version != CCM.CCMVer.DarkSouls2)
+          return;
+        Dictionary<int, CCM.TexRegion> dictionary = new Dictionary<int, CCM.TexRegion>((int) num2);
+        for (int index = 0; index < (int) num2; ++index)
+          dictionary[(int) br.Position] = new CCM.TexRegion(br);
+        for (int index1 = 0; index1 < (int) num3; ++index1)
+        {
+          int index2 = br.ReadInt32();
+          int index3 = br.ReadInt32();
+          short texIndex = br.ReadInt16();
+          short preSpace = br.ReadInt16();
+          short width = br.ReadInt16();
+          short advance = br.ReadInt16();
+          br.AssertInt32(new int[1]);
+          br.AssertInt32(new int[1]);
+          CCM.TexRegion texRegion = dictionary[index3];
+          Vector2 uv1 = new Vector2((float) texRegion.X1 / (float) this.TexWidth, (float) texRegion.Y1 / (float) this.TexHeight);
+          Vector2 uv2 = new Vector2((float) texRegion.X2 / (float) this.TexWidth, (float) texRegion.Y2 / (float) this.TexHeight);
+          this.Glyphs[index2] = new CCM.Glyph(uv1, uv2, preSpace, width, advance, texIndex);
+        }
+      }
+    }
+
+    protected override void Write(BinaryWriterEx bw)
+    {
+      bw.BigEndian = false;
+      bw.WriteUInt32((uint) this.Version);
+      bw.BigEndian = this.Version == CCM.CCMVer.DemonsSouls;
+      bw.ReserveInt32("FileSize");
+      bw.WriteInt16(this.FullWidth);
+      bw.WriteInt16(this.TexWidth);
+      bw.WriteInt16(this.TexHeight);
+      if (this.Version == CCM.CCMVer.DemonsSouls || this.Version == CCM.CCMVer.DarkSouls1)
+      {
+        bw.WriteInt16(this.Unk0E);
+        bw.ReserveInt16("CodeGroupCount");
+        bw.WriteInt16((short) this.Glyphs.Count);
+      }
+      else if (this.Version == CCM.CCMVer.DarkSouls2)
+      {
+        bw.ReserveInt16("TexRegionCount");
+        bw.WriteInt16((short) this.Glyphs.Count);
+        bw.WriteInt16((short) 0);
+      }
+      bw.WriteInt32(32);
+      bw.ReserveInt32("GlyphOffset");
+      bw.WriteByte(this.Unk1C);
+      bw.WriteByte(this.Unk1D);
+      bw.WriteByte(this.TexCount);
+      bw.WriteByte((byte) 0);
+      List<int> intList = new List<int>((IEnumerable<int>) this.Glyphs.Keys);
+      intList.Sort();
+      if (this.Version == CCM.CCMVer.DemonsSouls || this.Version == CCM.CCMVer.DarkSouls1)
+      {
+        List<CCM.CodeGroup> codeGroupList = new List<CCM.CodeGroup>();
+        int index1 = 0;
+        while (index1 < this.Glyphs.Count)
+        {
+          int startCode = intList[index1];
+          int glyphIndex = index1;
+          ++index1;
+          while (index1 < this.Glyphs.Count && intList[index1] == intList[index1 - 1] + 1)
+            ++index1;
+          int endCode = intList[index1 - 1];
+          codeGroupList.Add(new CCM.CodeGroup(startCode, endCode, glyphIndex));
+        }
+        bw.FillInt16("CodeGroupCount", (short) codeGroupList.Count);
+        foreach (CCM.CodeGroup codeGroup in codeGroupList)
+          codeGroup.Write(bw);
+        bw.FillInt32("GlyphOffset", (int) bw.Position);
+        foreach (int index2 in intList)
+        {
+          CCM.Glyph glyph = this.Glyphs[index2];
+          bw.WriteVector2(glyph.UV1);
+          bw.WriteVector2(glyph.UV2);
+          bw.WriteInt16(glyph.PreSpace);
+          bw.WriteInt16(glyph.Width);
+          bw.WriteInt16(glyph.Advance);
+          bw.WriteInt16(glyph.TexIndex);
+        }
+      }
+      else if (this.Version == CCM.CCMVer.DarkSouls2)
+      {
+        Dictionary<int, CCM.TexRegion> dictionary1 = new Dictionary<int, CCM.TexRegion>(this.Glyphs.Count);
+        HashSet<CCM.TexRegion> texRegionSet = new HashSet<CCM.TexRegion>();
+        foreach (int index in intList)
+        {
+          CCM.Glyph glyph = this.Glyphs[index];
+          CCM.TexRegion texRegion = new CCM.TexRegion((short) Math.Round((double) glyph.UV1.X * (double) this.TexWidth), (short) Math.Round((double) glyph.UV1.Y * (double) this.TexHeight), (short) Math.Round((double) glyph.UV2.X * (double) this.TexWidth), (short) Math.Round((double) glyph.UV2.Y * (double) this.TexHeight));
+          dictionary1[index] = texRegion;
+          texRegionSet.Add(texRegion);
+        }
+        bw.FillInt16("TexRegionCount", (short) texRegionSet.Count);
+        Dictionary<CCM.TexRegion, int> dictionary2 = new Dictionary<CCM.TexRegion, int>(texRegionSet.Count);
+        foreach (CCM.TexRegion index in texRegionSet)
+        {
+          dictionary2[index] = (int) bw.Position;
+          index.Write(bw);
+        }
+        bw.FillInt32("GlyphOffset", (int) bw.Position);
+        foreach (int index in intList)
+        {
+          CCM.Glyph glyph = this.Glyphs[index];
+          bw.WriteInt32(index);
+          bw.WriteInt32(dictionary2[dictionary1[index]]);
+          bw.WriteInt16(glyph.TexIndex);
+          bw.WriteInt16(glyph.PreSpace);
+          bw.WriteInt16(glyph.Width);
+          bw.WriteInt16(glyph.Advance);
+          bw.WriteInt32(0);
+          bw.WriteInt32(0);
+        }
+      }
+      bw.FillInt32("FileSize", (int) bw.Position);
+    }
+
+    public enum CCMVer : uint
+    {
+      DemonsSouls = 256, // 0x00000100
+      DarkSouls1 = 65537, // 0x00010001
+      DarkSouls2 = 131072, // 0x00020000
+    }
+
+    public class Glyph
+    {
+      public Vector2 UV1 { get; set; }
+
+      public Vector2 UV2 { get; set; }
+
+      public short PreSpace { get; set; }
+
+      public short Width { get; set; }
+
+      public short Advance { get; set; }
+
+      public short TexIndex { get; set; }
+
+      public Glyph(
+        Vector2 uv1,
+        Vector2 uv2,
+        short preSpace,
+        short width,
+        short advance,
+        short texIndex)
+      {
+        this.UV1 = uv1;
+        this.UV2 = uv2;
+        this.PreSpace = preSpace;
+        this.Width = width;
+        this.Advance = advance;
+        this.TexIndex = texIndex;
+      }
+    }
+
+    private struct CodeGroup
+    {
+      public int StartCode;
+      public int EndCode;
+      public int GlyphIndex;
+
+      public CodeGroup(BinaryReaderEx br)
+      {
+        this.StartCode = br.ReadInt32();
+        this.EndCode = br.ReadInt32();
+        this.GlyphIndex = br.ReadInt32();
+      }
+
+      public CodeGroup(int startCode, int endCode, int glyphIndex)
+      {
+        this.StartCode = startCode;
+        this.EndCode = endCode;
+        this.GlyphIndex = glyphIndex;
+      }
+
+      public void Write(BinaryWriterEx bw)
+      {
+        bw.WriteInt32(this.StartCode);
+        bw.WriteInt32(this.EndCode);
+        bw.WriteInt32(this.GlyphIndex);
+      }
+    }
+
+    private struct TexRegion : IEquatable<CCM.TexRegion>
+    {
+      public short X1;
+      public short Y1;
+      public short X2;
+      public short Y2;
+
+      public TexRegion(BinaryReaderEx br)
+      {
+        this.X1 = br.ReadInt16();
+        this.Y1 = br.ReadInt16();
+        this.X2 = br.ReadInt16();
+        this.Y2 = br.ReadInt16();
+      }
+
+      public TexRegion(short x1, short y1, short x2, short y2)
+      {
+        this.X1 = x1;
+        this.Y1 = y1;
+        this.X2 = x2;
+        this.Y2 = y2;
+      }
+
+      public void Write(BinaryWriterEx bw)
+      {
+        bw.WriteInt16(this.X1);
+        bw.WriteInt16(this.Y1);
+        bw.WriteInt16(this.X2);
+        bw.WriteInt16(this.Y2);
+      }
+
+      public override bool Equals(object obj)
+      {
+        return obj is CCM.TexRegion other && this.Equals(other);
+      }
+
+      public bool Equals(CCM.TexRegion other)
+      {
+        return (int) this.X1 == (int) other.X1 && (int) this.Y1 == (int) other.Y1 && (int) this.X2 == (int) other.X2 && (int) this.Y2 == (int) other.Y2;
+      }
+
+      public override int GetHashCode()
+      {
+        return (((268039418 * -1521134295 + this.X1.GetHashCode()) * -1521134295 + this.Y1.GetHashCode()) * -1521134295 + this.X2.GetHashCode()) * -1521134295 + this.Y2.GetHashCode();
+      }
+    }
+  }
+}
