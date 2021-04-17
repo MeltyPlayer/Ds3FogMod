@@ -40,10 +40,10 @@ namespace FogMod {
     }
 
     // Modify scaling values before they're actually used
-    private void PostProcessScaling(ref float healthScaling, ref float damageScaling) {
-      if (Flags.IsDs3) {
-        healthScaling = Math.Min(healthScaling, 2);
-        damageScaling = Math.Min(damageScaling, 2);
+    private void PostProcessScaling(string area, ref float healthScaling, ref float damageScaling) {
+      if (annotationData_.MaxScaling != null && annotationData_.MaxScaling.TryGetValue(area, out float maxScaling)) {
+        healthScaling = Math.Min(healthScaling, maxScaling);
+        damageScaling = Math.Min(damageScaling, maxScaling);
       }
     }
     
@@ -574,7 +574,7 @@ namespace FogMod {
           }
         }
 
-        PostProcessScaling(ref ratio, ref dmgRatio);
+        PostProcessScaling(rec.Area, ref ratio, ref dmgRatio);
         this.graph_.AreaRatios[rec.Area] = (ratio, dmgRatio);
 
         if (options_["skipprint"]) continue;

@@ -74,6 +74,8 @@ namespace FogMod
 
     public Dictionary<string, float> DefaultCost { get; set; }
 
+    public Dictionary<string, float> MaxScaling { get; set; }
+
     public List<AnnotationData.EnemyCol> Enemies { get; set; }
 
     public Dictionary<int, string> LotLocations { get; set; }
