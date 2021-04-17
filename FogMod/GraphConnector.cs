@@ -39,6 +39,14 @@ namespace FogMod {
       this.Randomize_();
     }
 
+    // Modify scaling values before they're actually used
+    private void PostProcessScaling(ref float healthScaling, ref float damageScaling) {
+      if (Flags.IsDs3) {
+        healthScaling = Math.Min(healthScaling, 2);
+        damageScaling = Math.Min(damageScaling, 2);
+      }
+    }
+    
     private void Randomize_() {
       // TODO: Move this line?
       // TODO: Set this as an enum instead.
@@ -565,6 +573,8 @@ namespace FogMod {
                 getRatioMeasure(defaultCost, annotationData_.DamageScaling);
           }
         }
+
+        PostProcessScaling(ref ratio, ref dmgRatio);
         this.graph_.AreaRatios[rec.Area] = (ratio, dmgRatio);
 
         if (options_["skipprint"]) continue;
