@@ -11,6 +11,8 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
+using FogMod.util.time;
+
 namespace SoulsFormats {
   [ComVisible(true)]
   public class MSB3 : SoulsFile<MSB3>, IMsb {
@@ -100,6 +102,9 @@ namespace SoulsFormats {
     }
 
     protected override void Write(BinaryWriterEx bw) {
+      var stopwatch = new Stopwatch();
+      stopwatch.Start();
+
       bw.BigEndian = false;
       MSB3.Entries entries;
       entries.Models = this.Models.GetEntries();
@@ -110,16 +115,27 @@ namespace SoulsFormats {
       entries.Parts = this.Parts.GetEntries();
       entries.PartsPoses = this.PartsPoses.GetEntries();
       entries.BoneNames = this.BoneNames.GetEntries();
+      
       foreach (MSB3.Model model in entries.Models)
         model.CountInstances(entries.Parts);
+      stopwatch.ResetAndPrint("      Got model indices");
+      
       foreach (MSB3.Event @event in entries.Events)
         @event.GetIndices(this, entries);
+      stopwatch.ResetAndPrint("      Got event indices");
+      
       foreach (MSB3.Region region in entries.Regions)
         region.GetIndices(this, entries);
+      stopwatch.ResetAndPrint("      Got region indices");
+
       foreach (MSB3.Part part in entries.Parts)
         part.GetIndices(this, entries);
+      stopwatch.ResetAndPrint("      Got part indices");
+      
       foreach (MSB3.PartsPose partsPose in entries.PartsPoses)
         partsPose.GetIndices(this, entries);
+      stopwatch.ResetAndPrint("      Got partPose indices");
+
       bw.WriteASCII("MSB ", false);
       bw.WriteInt32(1);
       bw.WriteInt32(16);
@@ -128,20 +144,36 @@ namespace SoulsFormats {
       bw.WriteByte((byte) 1);
       bw.WriteByte(byte.MaxValue);
       this.Models.Write(bw, entries.Models);
+      stopwatch.ResetAndPrint("      Wrote models");
+
       bw.FillInt64("NextParamOffset", bw.Position);
       this.Events.Write(bw, entries.Events);
+      stopwatch.ResetAndPrint("      Wrote events");
+
       bw.FillInt64("NextParamOffset", bw.Position);
       this.Regions.Write(bw, entries.Regions);
+      stopwatch.ResetAndPrint("      Wrote regions");
+
       bw.FillInt64("NextParamOffset", bw.Position);
       this.Routes.Write(bw, entries.Routes);
+      stopwatch.ResetAndPrint("      Wrote routes");
+
       bw.FillInt64("NextParamOffset", bw.Position);
       this.Layers.Write(bw, entries.Layers);
+      stopwatch.ResetAndPrint("      Wrote layers");
+
       bw.FillInt64("NextParamOffset", bw.Position);
       this.Parts.Write(bw, entries.Parts);
+      stopwatch.ResetAndPrint("      Wrote parts");
+
       bw.FillInt64("NextParamOffset", bw.Position);
       this.PartsPoses.Write(bw, entries.PartsPoses);
+      stopwatch.ResetAndPrint("      Wrote partPoses");
+
       bw.FillInt64("NextParamOffset", bw.Position);
       this.BoneNames.Write(bw, entries.BoneNames);
+      stopwatch.ResetAndPrint("      Wrote boneNames");
+
       bw.FillInt64("NextParamOffset", 0L);
     }
 
