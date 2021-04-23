@@ -67,15 +67,16 @@ namespace FogMod {
                                  tempDir.FullName);
       Writers.SpoilerLogs.Close();
 
-      /*var directories = new[] {"event", "map", "msg", "script"};
+      //var directories = new[] {"event", "map", "msg", "script"};
+      var directories = new[] {"map"};
       foreach (var directory in directories) {
-        var goldenSubdir = GetSubdir_(goldenDirectory, directory);
-        var tempSubdir = GetSubdir_(tempDir, directory);
+        var goldenSubdir = goldenDirectory.GetSubdir(directory);
+        var tempSubdir = tempDir.GetSubdir(directory);
 
         foreach (var file in goldenSubdir.GetFiles()) {
-          AssertFilesTextInDirs_(goldenSubdir, tempSubdir, file.Name);
+          this.AssertFilesTextInDirs_(goldenSubdir, tempSubdir, file.Name);
         }
-      }*/
+      }
 
       //AssertFilesEqualInDirs_(goldenDirectory, tempDir, "Data0.bdt");
 

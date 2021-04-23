@@ -59,6 +59,16 @@ namespace SoulsFormats {
       throw new KeyNotFoundException("Name not found: " + name);
     }
 
+    public static int FindIndex<T>(IDictionary<string, int> indexByName, string name)
+        where T : IMsbEntry {
+      if (name == null)
+        return -1;
+      int index = indexByName.TryGetValue(name, out var i) ? i : -1;
+      if (index != -1)
+        return index;
+      throw new KeyNotFoundException("Name not found: " + name);
+    }
+
     public static int[] FindIndices<T>(List<T> list, string[] names)
         where T : IMsbEntry {
       int[] numArray = new int[names.Length];
