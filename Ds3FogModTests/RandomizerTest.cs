@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 
@@ -9,9 +10,14 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using FogMod.Properties;
 
+using SoulsFormats;
+
 namespace FogMod {
   [TestClass]
   public class RandomizerTest {
+    private static readonly IDirectory TEMP_DIR =
+        IoDirectory.GetCwd().GetSubdir("temp", true);
+
     [TestMethod]
     public void VerifyAgainstGoldens() {
       var testExeDirectory = IoDirectory.GetCwd();
@@ -51,7 +57,7 @@ namespace FogMod {
       //opt["fixedseed"] = true;
       opt.Seed = int.Parse(goldenDirectory.Name);
 
-      var tempDir = IoDirectory.GetCwd().GetSubdir("temp", true);
+      var tempDir = RandomizerTest.TEMP_DIR;
 
       var gameDir = "M:\\Games\\Steam\\steamapps\\common\\DARK SOULS III\\Game";
 
@@ -67,29 +73,38 @@ namespace FogMod {
                                  tempDir.FullName);
       Writers.SpoilerLogs.Close();
 
-      /*var directories = new[] {"event", "map", "msg", "script"};
+      var directories = new[] {"event", "map", "msg", "script"};
       foreach (var directory in directories) {
-        var goldenSubdir = GetSubdir_(goldenDirectory, directory);
-        var tempSubdir = GetSubdir_(tempDir, directory);
+        var goldenSubdir = goldenDirectory.GetSubdir(directory);
+        var tempSubdir = tempDir.GetSubdir(directory);
 
-        foreach (var file in goldenSubdir.GetFiles()) {
-          AssertFilesTextInDirs_(goldenSubdir, tempSubdir, file.Name);
-        }
-      }*/
+        this.AssertDirectoriesEqual_(goldenSubdir, tempSubdir);
+      }
 
-      //AssertFilesEqualInDirs_(goldenDirectory, tempDir, "Data0.bdt");
+      // this.AssertFilesBytesInDirs_(goldenDirectory, tempDir, "Data0.bdt");
 
       // Verifies spoiler logs.
       this.AssertSpoilerLogsEqual_(
           goldenDirectory.GetSubdir("spoiler_logs").GetFiles().First(),
           tempDir.GetSubdir("spoiler_logs").GetFiles().First());
-
-      //tempDir.Delete();
     }
 
-    /*private void AssertDirectoriesEqual() {
+    private void AssertDirectoriesEqual_(
+        IDirectory expectedDirectory,
+        IDirectory actualDirectory) {
+      foreach (var expectedSubdir in expectedDirectory.GetSubdirs()) {
+        Console.WriteLine($"Comparing {expectedSubdir.FullName}");
+        this.AssertDirectoriesEqual_(expectedSubdir,
+                                     actualDirectory.GetSubdir(
+                                         expectedSubdir.Name));
+      }
 
-    }*/
+      foreach (var expectedFile in expectedDirectory.GetFiles()) {
+        Console.WriteLine($"Comparing {expectedFile.FullName}");
+        this.AssertFilesBytes_(expectedFile,
+                               actualDirectory.GetFile(expectedFile.Name));
+      }
+    }
 
     private void AssertFilesBytesInDirs_(
         IDirectory expected,
@@ -104,15 +119,74 @@ namespace FogMod {
       => this.AssertFilesText_(expected.GetFile(name), actual.GetFile(name));
 
 
-    private void AssertFilesBytes_(IFile expected, IFile actual)
-      => Assert.AreEqual(File.ReadAllBytes(expected.FullName),
-                         File.ReadAllBytes(actual.FullName),
-                         $"Expected {actual} to have same contents as {expected}.");
+    private void AssertFilesBytes_(IFile expected, IFile actual) {
+      var expectedBytes = this.ReadFileBytes_(expected);
+      var actualBytes = this.ReadFileBytes_(actual);
 
-    private void AssertFilesText_(IFile expected, IFile actual)
-      => Assert.IsTrue(File.ReadAllText(expected.FullName) ==
-                       File.ReadAllText(actual.FullName),
-                       $"Expected {actual} to have same contents as {expected}.");
+      var expectedLength = expectedBytes.Length;
+      Assert.AreEqual(expectedLength,
+                      actualBytes.Length,
+                      "Expected files to be the same length.");
+
+      var differences = 0;
+      for (var i = 0; i < expectedLength; ++i) {
+        if (expectedBytes[i] != actualBytes[i]) {
+          ++differences;
+        }
+      }
+
+      if (differences != 0) {
+        this.DecompressFiles_(expected, actual);
+
+        var changePlural = differences == 1 ? "change" : "changes";
+        Assert.Fail(
+            $"Expected {actual.FullName} to have same contents as " +
+            $"{expected.FullName}, but found {differences} {changePlural} " + 
+            $"out of {expectedLength} bytes");
+      }
+    }
+
+    private void AssertFilesText_(IFile expected, IFile actual) {
+      var areDifferent = File.ReadAllText(expected.FullName) !=
+                         File.ReadAllText(actual.FullName);
+
+      if (areDifferent) {
+        this.DecompressFiles_(expected, actual);
+        Assert.Fail(
+            $"Expected {actual.FullName} to have same contents as " +
+            $"{expected.FullName}.");
+      }
+    }
+
+    private void DecompressFiles_(IFile expected, IFile actual) {
+      this.DecompressFile_(expected,
+                           RandomizerTest.TEMP_DIR.FullName + "\\expected.txt");
+      this.DecompressFile_(actual,
+                           RandomizerTest.TEMP_DIR.FullName + "\\actual.txt");
+    }
+
+    private byte[] ReadFileBytes_(IFile file) {
+      try {
+        return DCX.Decompress(file.FullName);
+      } catch {
+        return File.ReadAllBytes(file.FullName);
+      }
+    }
+
+    private void DecompressFile_(IFile input, string output) {
+      /*using var inputStream = new DeflateStream(
+          new FileStream(input.FullName, FileMode.Open),
+          CompressionMode.Decompress);
+      using var outputStream = new DeflateStream(
+          new FileStream(output, FileMode.Create),
+          CompressionMode.Compress);
+
+      inputStream.CopyTo(outputStream);*/
+
+      var bytes = this.ReadFileBytes_(input);
+      using var outputStream = new FileStream(output, FileMode.Create);
+      outputStream.Write(bytes, 0, bytes.Length);
+    }
 
     private void AssertSpoilerLogsEqual_(IFile expected, IFile actual) {
       Func<IFile, string> readFromSpoilerLogs = f
