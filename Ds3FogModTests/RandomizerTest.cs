@@ -124,9 +124,13 @@ namespace FogMod {
       var actualBytes = this.ReadFileBytes_(actual);
 
       var expectedLength = expectedBytes.Length;
-      Assert.AreEqual(expectedLength,
-                      actualBytes.Length,
-                      "Expected files to be the same length.");
+      if (expectedLength != actualBytes.Length) {
+        this.DecompressFiles_(expected, actual);
+        Assert.AreEqual(expectedLength,
+                        actualBytes.Length,
+                        "Expected files to be the same length.");
+        return;
+      }
 
       var differences = 0;
       for (var i = 0; i < expectedLength; ++i) {

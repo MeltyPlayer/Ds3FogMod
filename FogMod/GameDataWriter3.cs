@@ -240,11 +240,11 @@ namespace FogMod {
         if (e.HasTag("unused") || e.HasTag("norandom") || e.HasTag("door"))
           continue;
 
-        Vector3 MoveInDirection(Vector3 v, Vector3 r, float dist) {
-          float angle = r.Y * (float) Math.PI / 180;
-          return new Vector3(v.X + (float) Math.Sin(angle) * dist,
+        Vector3 MoveInDirection(Vector3 v, Vector3 r, double dist) {
+          var angle = r.Y * Math.PI / 180;
+          return new Vector3((float) (v.X + Math.Sin(angle) * dist),
                              v.Y,
-                             v.Z + (float) Math.Cos(angle) * dist);
+                             (float) (v.Z + Math.Cos(angle) * dist));
         }
 
         for (int i = 0; i <= 1; i++) {
