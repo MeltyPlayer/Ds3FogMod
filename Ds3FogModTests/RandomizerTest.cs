@@ -12,25 +12,21 @@ using FogMod.Properties;
 namespace FogMod {
   [TestClass]
   public class RandomizerTest {
-    private static DirectoryInfo TEMP_DIRECTORY_ =
-        new DirectoryInfo(Directory.GetCurrentDirectory());
-
     [TestMethod]
     public void VerifyAgainstGoldens() {
-      var testExeDirectory = new DirectoryInfo(Directory.GetCurrentDirectory());
-      var testProjectDirectory = testExeDirectory.Parent.Parent;
+      var testExeDirectory = IoDirectory.GetCwd();
+      var testProjectDirectory = testExeDirectory.GetSubdir("../..");
 
       var testProjectGoldensDirectory = testProjectDirectory
-                                        .GetDirectories()
-                                        .First(d => d.Name == "goldens");
+          .GetSubdir("goldens");
 
-      foreach (var goldenDirectory in
-          testProjectGoldensDirectory.GetDirectories()) {
+      var goldenDirectories = testProjectGoldensDirectory.GetSubdirs();
+      foreach (var goldenDirectory in goldenDirectories) {
         this.VerifyAgainstGolden_(goldenDirectory);
       }
     }
 
-    private void VerifyAgainstGolden_(DirectoryInfo goldenDirectory) {
+    private void VerifyAgainstGolden_(IDirectory goldenDirectory) {
       var opt = new RandomizerOptions {
           Game = SoulsIds.GameSpec.FromGame.DS3
       };
@@ -55,11 +51,11 @@ namespace FogMod {
       //opt["fixedseed"] = true;
       opt.Seed = int.Parse(goldenDirectory.Name);
 
-      var tempDir = TEMP_DIRECTORY_.CreateSubdirectory("temp");
+      var tempDir = IoDirectory.GetCwd().GetSubdir("temp", true);
 
       var gameDir = "M:\\Games\\Steam\\steamapps\\common\\DARK SOULS III\\Game";
 
-      var spoilerLogs = tempDir.CreateSubdirectory("spoiler_logs");
+      var spoilerLogs = tempDir.GetSubdir("spoiler_logs", true);
       string path = string.Format($"{spoilerLogs.FullName}\\temp.txt");
 
       Writers.SpoilerLogs = File.CreateText(path);
@@ -84,48 +80,42 @@ namespace FogMod {
       //AssertFilesEqualInDirs_(goldenDirectory, tempDir, "Data0.bdt");
 
       // Verifies spoiler logs.
-      AssertSpoilerLogsEqual_(
-          GetSubdir_(goldenDirectory, "spoiler_logs").GetFiles().First(),
-          GetSubdir_(tempDir, "spoiler_logs").GetFiles().First());
+      this.AssertSpoilerLogsEqual_(
+          goldenDirectory.GetSubdir("spoiler_logs").GetFiles().First(),
+          tempDir.GetSubdir("spoiler_logs").GetFiles().First());
 
       //tempDir.Delete();
     }
-
-    private DirectoryInfo GetSubdir_(DirectoryInfo dir, string name)
-      => dir.GetDirectories().First(d => d.Name == name);
-
-    private FileInfo GetFile_(DirectoryInfo dir, string name)
-      => dir.GetFiles().First(f => f.Name == name);
 
     /*private void AssertDirectoriesEqual() {
 
     }*/
 
     private void AssertFilesBytesInDirs_(
-        DirectoryInfo expected,
-        DirectoryInfo actual,
+        IDirectory expected,
+        IDirectory actual,
         string name)
-      => AssertFilesBytes_(GetFile_(expected, name), GetFile_(actual, name));
+      => this.AssertFilesBytes_(expected.GetFile(name), actual.GetFile(name));
 
     private void AssertFilesTextInDirs_(
-        DirectoryInfo expected,
-        DirectoryInfo actual,
+        IDirectory expected,
+        IDirectory actual,
         string name)
-      => AssertFilesText_(GetFile_(expected, name), GetFile_(actual, name));
+      => this.AssertFilesText_(expected.GetFile(name), actual.GetFile(name));
 
 
-    private void AssertFilesBytes_(FileInfo expected, FileInfo actual)
+    private void AssertFilesBytes_(IFile expected, IFile actual)
       => Assert.AreEqual(File.ReadAllBytes(expected.FullName),
                          File.ReadAllBytes(actual.FullName),
                          $"Expected {actual} to have same contents as {expected}.");
 
-    private void AssertFilesText_(FileInfo expected, FileInfo actual)
+    private void AssertFilesText_(IFile expected, IFile actual)
       => Assert.IsTrue(File.ReadAllText(expected.FullName) ==
                        File.ReadAllText(actual.FullName),
                        $"Expected {actual} to have same contents as {expected}.");
 
-    private void AssertSpoilerLogsEqual_(FileInfo expected, FileInfo actual) {
-      Func<FileInfo, string> readFromSpoilerLogs = f
+    private void AssertSpoilerLogsEqual_(IFile expected, IFile actual) {
+      Func<IFile, string> readFromSpoilerLogs = f
           => File.ReadAllLines(f.FullName)
                  .Where(l => !l.StartsWith("Writing "))
                  .Aggregate(new StringBuilder(),
@@ -135,8 +125,8 @@ namespace FogMod {
                                    .Append(next))
                  .ToString();
       Assert.AreEqual(
-                readFromSpoilerLogs(expected),
-                readFromSpoilerLogs(actual));
+          readFromSpoilerLogs(expected),
+          readFromSpoilerLogs(actual));
     }
   }
 }

@@ -58,7 +58,10 @@
     <Compile Include="FogMod\GenerateConfig.cs" />
     <Compile Include="FogMod\GraphChecker.cs" />
     <Compile Include="FogMod\GraphConnector.cs" />
+    <Compile Include="FogMod\io\IoInterfaces.cs" />
+    <Compile Include="FogMod\io\IoDirectory.cs" />
     <Compile Include="FogMod\io\FileWriterManager.cs" />
+    <Compile Include="FogMod\io\IoFile.cs" />
     <Compile Include="FogMod\io\Writers.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="SoulsFormats\CCM.cs" />
@@ -199,6 +202,8 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="FogMod\util\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
