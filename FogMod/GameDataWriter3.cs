@@ -24,6 +24,7 @@ using static FogMod.EventConfig;
 
 using static SoulsIds.Events;
 using static SoulsIds.GameSpec;
+using FogMod.util.time;
 
 namespace FogMod {
   public class GameDataWriter3 {
@@ -38,6 +39,9 @@ namespace FogMod {
         string outDir,
         Events events,
         EventConfig eventConfig) {
+      var stopwatch = new Stopwatch();
+      stopwatch.Start();
+
       GameEditor editor = new GameEditor(FromGame.DS3);
       editor.Spec.GameDir = $@"fogdist";
       editor.Spec.LayoutDir = $@"fogdist\Layouts";
@@ -47,6 +51,8 @@ namespace FogMod {
 
       bool validEmevd(string name)
         => ann.Specs.ContainsKey(name) || extraEmevd.Contains(name);
+
+      stopwatch.ResetAndPrint("  Prework");
 
       Dictionary<string, PARAM> Params;
       {
@@ -58,6 +64,7 @@ namespace FogMod {
         }
         Params = editor.LoadParams(path, layouts, true);
       }
+      stopwatch.ResetAndPrint("  Loading params");
 
       Dictionary<string, FMG> menuFMGs;
       {
@@ -69,6 +76,7 @@ namespace FogMod {
         }
         menuFMGs = editor.LoadBnd(path, (data, p) => FMG.Read(data));
       }
+      stopwatch.ResetAndPrint("  Loading menuFMGs");
 
       // Overrides where only one copy is needed
       Dictionary<string, MSB3> maps = new Dictionary<string, MSB3>();
@@ -85,6 +93,7 @@ namespace FogMod {
         }
         maps[name] = MSB3.Read(path);
       }
+      stopwatch.ResetAndPrint("  Loading maps");
 
       Dictionary<string, EMEVD> emevds = new Dictionary<string, EMEVD>();
       foreach (string basePath in Directory.GetFiles(
@@ -100,6 +109,7 @@ namespace FogMod {
         }
         emevds[name] = EMEVD.Read(path);
       }
+      stopwatch.ResetAndPrint("  Loading emevds");
 
       Dictionary<string, Dictionary<string, ESD>> esds =
           new Dictionary<string, Dictionary<string, ESD>>();
@@ -116,6 +126,7 @@ namespace FogMod {
         }
         esds[name] = editor.LoadBnd(path, (data, p) => ESD.Read(data));
       }
+      stopwatch.ResetAndPrint("  Loading esds");
 
       // TODO: Backup? Not really modifying the game files, but still in-place modification of something else
 
@@ -153,6 +164,8 @@ namespace FogMod {
           return false;
         });
       }
+      stopwatch.ResetAndPrint("  Loading msbs");
+
       Dictionary<string, Ceremony> ceremonyAlias =
           new Dictionary<string, Ceremony> {
               ["firelink"] = new Ceremony {
@@ -168,6 +181,7 @@ namespace FogMod {
                   EventLayer = 1022,
               },
           };
+      stopwatch.ResetAndPrint("  Loading ceremony");
 
       // Write stuff
       int mk = 4105800;
@@ -381,6 +395,8 @@ namespace FogMod {
           }
         }
       }
+      stopwatch.ResetAndPrint("  Loading entrances");
+
       foreach (Entrance e in ann.Warps) {
         if (e.HasTag("unused") || e.HasTag("norandom")) continue;
         e.ASide.Warp = new WarpPoint {
@@ -397,6 +413,7 @@ namespace FogMod {
           e.BSide.Warp.Region = e.ID;
         }
       }
+      stopwatch.ResetAndPrint("  Loading warps");
 
       // Preprocess connections for warps, so that they can be replaced in first event pass
       Dictionary<string, Side> warpDests = new Dictionary<string, Side>();
@@ -421,6 +438,7 @@ namespace FogMod {
           warpDests[exit.Name] = entrance.Side;
         }
       }
+      stopwatch.ResetAndPrint("  Loading warpDests");
 
       int getPlayer(WarpPoint warp) {
         if (warp.Player != 0) return warp.Player;
@@ -464,6 +482,7 @@ namespace FogMod {
         r.Shape = new MSB3.Shape.Sphere(1f);
         msbs["firelink"].Regions.Events.Add(r);
       }
+      stopwatch.ResetAndPrint("  Loading firelink player regions");
 
       Dictionary<string, List<string>> badCols =
           new Dictionary<string, List<string>> {
@@ -497,6 +516,7 @@ namespace FogMod {
         msbs[entry.Key]
             .Parts.Collisions.RemoveAll(c => entry.Value.Contains(c.Name));
       }
+      stopwatch.ResetAndPrint("  Loading badcols");
 
       // Rewrite collision flags in PlayRegionParam, read from base params, write to modified params
       // Also add common_func for it
@@ -671,6 +691,7 @@ namespace FogMod {
           }
         }
       }
+      stopwatch.ResetAndPrint("  Loading emevds");
 
 #if DEBUG
       // For previewing emevd after enemy rando, which writes malformed stuff, unfortunately
@@ -703,6 +724,7 @@ namespace FogMod {
           customEvents[e.Name] = e;
         }
       }
+      stopwatch.ResetAndPrint("  Loading customEvents");
 
       List<int> colFlags = new List<int>();
       // Unused flag range from kiln. There are a bit over 30 of these
@@ -736,6 +758,7 @@ namespace FogMod {
                                          {custom.ID, colBase + index, flag}));
         }
       }
+      stopwatch.ResetAndPrint("  Loading colFlags");
 
       // Scaling
       // Create scaling speffects in all runs
@@ -834,6 +857,8 @@ namespace FogMod {
           }
         }
       }
+      stopwatch.ResetAndPrint("  Loading sptypes");
+
       Dictionary<(string, string), string> enemyAreas =
           new Dictionary<(string, string), string>();
       foreach (EnemyLoc eloc in ann.Locations.Enemies) {
@@ -886,7 +911,9 @@ namespace FogMod {
             }
           }
         }
+        stopwatch.ResetAndPrint("  Loading scales");
       }
+
 
       // Open doors on fog gates to avoid phasing through fog gates
       // Should probably have this in config
@@ -1132,6 +1159,7 @@ namespace FogMod {
           }
         }
       }
+      stopwatch.ResetAndPrint("  Loading esds");
 
       // Fog gates
 
@@ -1248,6 +1276,8 @@ namespace FogMod {
           // Console.WriteLine($"{id} set flag: {fogEdit.SetFlag} if {fogEdit.SetFlagIf}");
         }
       }
+      stopwatch.ResetAndPrint("  Loading fogEdits");
+
       foreach (KeyValuePair<string, List<(string, int)>> entry in
           bossTriggerRegions) {
         Area area = g.Areas[entry.Key];
@@ -1268,6 +1298,7 @@ namespace FogMod {
                                      }));
         }
       }
+      stopwatch.ResetAndPrint("  Loading bossTriggerRegions");
 
       HashSet<string> vanillaEntrances = new HashSet<string>();
       foreach (Node node in g.Nodes.Values) {
@@ -1365,6 +1396,7 @@ namespace FogMod {
           }
         }
       }
+      stopwatch.ResetAndPrint("  Loading vanillaEntrances");
 
       MSB3.Part.Enemy lesserWyvern = msbs["archdragon"]
                                      .Parts.Enemies
@@ -1493,6 +1525,7 @@ namespace FogMod {
           }
         }
       }
+      stopwatch.ResetAndPrint("  Loading cheats");
 
       // Also edit message in English to be slightly more suitable I guess.
       // This is for TK :fatcat:
@@ -1519,6 +1552,7 @@ namespace FogMod {
         AddModFile(outPaths, path);
         editor.OverrideBndRel(basePath, path, Params, f => f.Write());
       }
+      stopwatch.ResetAndPrint("  Loading outpaths");
 
       {
         string basePath = $@"fogdist\Base\menu_dlc2.msgbnd.dcx";
@@ -1530,6 +1564,7 @@ namespace FogMod {
         AddModFile(outPaths, path);
         editor.OverrideBndRel(basePath, path, menuFMGs, f => f.Write());
       }
+      stopwatch.ResetAndPrint("  Writing menu_dlc2.dcx");
 
       foreach (KeyValuePair<string, EMEVD> entry in emevds) {
         if (!validEmevd(entry.Key)) continue;
@@ -1537,12 +1572,16 @@ namespace FogMod {
         AddModFile(outPaths, path);
         entry.Value.Write(path);
       }
+      stopwatch.ResetAndPrint("  Writing emevd.dcx");
+
       foreach (KeyValuePair<string, MSB3> entry in msbs) {
         string map = ann.NameSpecs[entry.Key].Map;
         string path = $@"{outDir}\map\mapstudio\{map}.msb.dcx";
         AddModFile(outPaths, path);
         entry.Value.Write(path);
       }
+      stopwatch.ResetAndPrint("  Writing msb.dcx");
+
       foreach (KeyValuePair<string, Dictionary<string, ESD>> entry in esds) {
         string basePath = $@"fogdist\Base\{entry.Key}.talkesdbnd.dcx";
         string altPath = $@"{gameDir}\script\talk\{entry.Key}.talkesdbnd.dcx";
@@ -1553,8 +1592,10 @@ namespace FogMod {
         AddModFile(outPaths, path);
         editor.OverrideBndRel(basePath, path, entry.Value, e => e.Write());
       }
+      stopwatch.ResetAndPrint("  Writing talkesdbnd.dcx");
 
       MergeMods(outPaths, gameDir, outDir);
+      stopwatch.ResetAndPrint("  Merging mods");
     }
 
     private static readonly Regex phraseRe = new Regex(@"\s*;\s*");

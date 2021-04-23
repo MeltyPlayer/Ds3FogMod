@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.IO;
 
 using FogMod.io;
+using FogMod.util.time;
 
 using YamlDotNet.Serialization;
 
@@ -21,6 +22,9 @@ namespace FogMod {
         GameSpec.FromGame game,
         string gameDir,
         string outDir) {
+      var stopwatch = new Stopwatch();
+      stopwatch.Start();
+
       Writers.SpoilerLogs.WriteLine(string.Format("Seed: {0}. Options: {1}",
                                                   (object) opt.DisplaySeed,
                                                   (object) string.Join(
@@ -50,15 +54,20 @@ namespace FogMod {
       ItemReader.Result items =
           new ItemReader().FindItems(opt, ann, g, events, gameDir, game);
       Writers.SpoilerLogs.WriteLine(items.Randomized
-                            ? "Key item hash: " + items.ItemHash
-                            : "No key items randomized");
+                                        ? "Key item hash: " + items.ItemHash
+                                        : "No key items randomized");
       Writers.SpoilerLogs.WriteLine();
-      
+      stopwatch.ResetAndPrint("Prework");
+
       GraphConnector.Randomize(opt, g, ann);
+      stopwatch.ResetAndPrint("Randomizer");
 
       if (opt["bonedryrun"])
-        return items;
+        goto DoneRandomizing;
       Writers.SpoilerLogs.WriteLine();
+
+      Console.WriteLine();
+      Console.WriteLine("Saving game files...");
       if (game == GameSpec.FromGame.DS3) {
         EventConfig eventConfig;
         using (StreamReader streamReader = File.OpenText("fogdist\\events.txt"))
@@ -66,7 +75,7 @@ namespace FogMod {
               deserializer.Deserialize<EventConfig>((TextReader) streamReader);
         if (opt["eventsyaml"] || opt["events"]) {
           new GenerateConfig().WriteEventConfig(ann, events, opt);
-          return items;
+          goto DoneRandomizing;
         }
         new GameDataWriter3().Write(opt,
                                     ann,
@@ -78,10 +87,14 @@ namespace FogMod {
       } else {
         if (opt["dryrun"]) {
           Console.WriteLine("Success (dry run)");
-          return items;
+          goto DoneRandomizing;
         }
         new GameDataWriter().Write(opt, ann, g, gameDir, game);
       }
+      goto DoneRandomizing;
+
+      DoneRandomizing:
+      stopwatch.ResetAndPrint("Saving");
       return items;
     }
   }
