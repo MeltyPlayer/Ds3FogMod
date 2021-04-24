@@ -9,6 +9,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
 
+using FogMod.io;
+
 namespace SoulsFormats {
   [ComVisible(true)]
   public static class DCX {
@@ -36,17 +38,22 @@ namespace SoulsFormats {
       return DCX.Decompress(data, out DCX.Type _);
     }
 
-    public static byte[] Decompress(string path, out DCX.Type type) {
-      using (FileStream fileStream = File.OpenRead(path))
-        return DCX.Decompress(new BinaryReaderEx(true, (Stream) fileStream),
-                              out type);
-    }
-
     public static byte[] Decompress(string path) {
       return DCX.Decompress(path, out DCX.Type _);
     }
 
-    internal static byte[] Decompress(BinaryReaderEx br, out DCX.Type type) {
+    public static byte[] Decompress(string path, out DCX.Type type) {
+      using var fileStream = File.OpenRead(path);
+      return DCX.Decompress(new BinaryReaderEx(true, (Stream) fileStream),
+                            out type,
+                            new IoFile(path));
+    }
+
+    internal static byte[] Decompress(
+        BinaryReaderEx br,
+        out DCX.Type type,
+        IFile file = null
+    ) {
       br.BigEndian = true;
       type = DCX.Type.Unknown;
       string str = br.ReadASCII(4);
@@ -99,24 +106,24 @@ namespace SoulsFormats {
       }
       br.Position = 0L;
       if (type == DCX.Type.Zlib)
-        return SFUtil.ReadZlib(br, (int) br.Length);
+        return SFUtil.ReadZlib(br, (int) br.Length, file);
       if (type == DCX.Type.DCP_EDGE)
         return DCX.DecompressDCPEDGE(br);
       if (type == DCX.Type.DCP_DFLT)
-        return DCX.DecompressDCPDFLT(br);
+        return DCX.DecompressDCPDFLT(br, file);
       if (type == DCX.Type.DCX_EDGE)
         return DCX.DecompressDCXEDGE(br);
       if (type == DCX.Type.DCX_DFLT_10000_24_9 ||
           type == DCX.Type.DCX_DFLT_10000_44_9 ||
           (type == DCX.Type.DCX_DFLT_11000_44_8 ||
            type == DCX.Type.DCX_DFLT_11000_44_9))
-        return DCX.DecompressDCXDFLT(br, type);
+        return DCX.DecompressDCXDFLT(br, type, file);
       if (type == DCX.Type.DCX_KRAK)
         return DCX.DecompressDCXKRAK(br);
       throw new FormatException("Unknown DCX format.");
     }
 
-    private static byte[] DecompressDCPDFLT(BinaryReaderEx br) {
+    private static byte[] DecompressDCPDFLT(BinaryReaderEx br, IFile file) {
       br.AssertASCII("DCP\0");
       br.AssertASCII("DFLT");
       br.AssertInt32(32);
@@ -128,7 +135,7 @@ namespace SoulsFormats {
       br.AssertASCII("DCS\0");
       br.ReadInt32();
       int compressedSize = br.ReadInt32();
-      byte[] numArray = SFUtil.ReadZlib(br, compressedSize);
+      byte[] numArray = SFUtil.ReadZlib(br, compressedSize, file);
       br.AssertASCII("DCA\0");
       br.AssertInt32(8);
       return numArray;
@@ -240,7 +247,7 @@ namespace SoulsFormats {
       return buffer;
     }
 
-    private static byte[] DecompressDCXDFLT(BinaryReaderEx br, DCX.Type type) {
+    private static byte[] DecompressDCXDFLT(BinaryReaderEx br, DCX.Type type, IFile file) {
       br.AssertASCII("DCX\0");
       switch (type) {
         case DCX.Type.DCX_DFLT_10000_24_9:
@@ -281,7 +288,7 @@ namespace SoulsFormats {
       br.AssertInt32(65792);
       br.AssertASCII("DCA\0");
       br.ReadInt32();
-      return SFUtil.ReadZlib(br, compressedSize);
+      return SFUtil.ReadZlib(br, compressedSize, file);
     }
 
     private static byte[] DecompressDCXKRAK(BinaryReaderEx br) {

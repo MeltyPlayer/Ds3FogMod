@@ -9,6 +9,7 @@ using SoulsIds;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 using FogMod.io;
 using FogMod.util.time;
@@ -17,7 +18,7 @@ using YamlDotNet.Serialization;
 
 namespace FogMod {
   public class Randomizer {
-    public ItemReader.Result Randomize(
+    public async Task<ItemReader.Result> Randomize(
         RandomizerOptions opt,
         GameSpec.FromGame game,
         string gameDir,
@@ -77,13 +78,13 @@ namespace FogMod {
           new GenerateConfig().WriteEventConfig(ann, events, opt);
           goto DoneRandomizing;
         }
-        new GameDataWriter3().Write(opt,
-                                    ann,
-                                    g,
-                                    gameDir,
-                                    outDir,
-                                    events,
-                                    eventConfig);
+        await new GameDataWriter3().WriteAsync(opt,
+                                         ann,
+                                         g,
+                                         gameDir,
+                                         outDir,
+                                         events,
+                                         eventConfig);
       } else {
         if (opt["dryrun"]) {
           Console.WriteLine("Success (dry run)");

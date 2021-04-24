@@ -3,6 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 using FogMod.io;
 
@@ -19,7 +20,7 @@ namespace FogMod {
         IoDirectory.GetCwd().GetSubdir("temp", true);
 
     [TestMethod]
-    public void VerifyAgainstGoldens() {
+    public async Task VerifyAgainstGoldens() {
       var testExeDirectory = IoDirectory.GetCwd();
       var testProjectDirectory = testExeDirectory.GetSubdir("../..");
 
@@ -28,11 +29,11 @@ namespace FogMod {
 
       var goldenDirectories = testProjectGoldensDirectory.GetSubdirs();
       foreach (var goldenDirectory in goldenDirectories) {
-        this.VerifyAgainstGolden_(goldenDirectory);
+        await this.VerifyAgainstGolden_(goldenDirectory);
       }
     }
 
-    private void VerifyAgainstGolden_(IDirectory goldenDirectory) {
+    private async Task VerifyAgainstGolden_(IDirectory goldenDirectory) {
       var opt = new RandomizerOptions {
           Game = SoulsIds.GameSpec.FromGame.DS3
       };
@@ -73,12 +74,12 @@ namespace FogMod {
       string path = string.Format($"{spoilerLogs.FullName}\\temp.txt");
 
       Writers.SpoilerLogs = File.CreateText(path);
-      new Randomizer().Randomize(opt,
-                                 SoulsIds.GameSpec.FromGame.DS3,
-                                 opt["mergemods"]
-                                     ? gameDir + "\\randomizer"
-                                     : (string) null,
-                                 tempDir.FullName);
+      await new Randomizer().Randomize(opt,
+                                       SoulsIds.GameSpec.FromGame.DS3,
+                                       opt["mergemods"]
+                                           ? gameDir + "\\randomizer"
+                                           : (string) null,
+                                       tempDir.FullName);
       Writers.SpoilerLogs.Close();
 
       var directories = new[] {"event", "map", "msg", "script"};
@@ -107,12 +108,12 @@ namespace FogMod {
       }
 
       foreach (var expectedFile in expectedDirectory.GetFiles()) {
-        if (expectedFile.Name.EndsWith(".fst")) {
+        var fileName = expectedFile.Name;
+        if (fileName.EndsWith(".fst")) {
           continue;
         }
 
-        this.AssertFilesBytes_(expectedFile,
-                               actualDirectory.GetFile(expectedFile.Name));
+        this.AssertFilesBytes_(expectedFile, actualDirectory.GetFile(fileName));
       }
     }
 
