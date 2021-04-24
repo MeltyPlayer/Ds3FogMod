@@ -26,13 +26,14 @@ using static SoulsIds.Events;
 using static SoulsIds.GameSpec;
 using FogMod.util.time;
 using FogMod.util.math;
+using System.Threading.Tasks;
 
 namespace FogMod {
   public class GameDataWriter3 {
     private static readonly List<string> extraEmevd = new List<string>
         {"common", "common_func"};
 
-    public void Write(
+    public async Task WriteAsync(
         RandomizerOptions opt,
         AnnotationData ann,
         Graph g,
@@ -63,6 +64,7 @@ namespace FogMod {
           Console.WriteLine($"Using override {altPath}");
           path = altPath;
         }
+        // TODO: Slow
         Params = editor.LoadParams(path, layouts, true);
       }
       stopwatch.ResetAndPrint("  Loading params");
@@ -80,20 +82,33 @@ namespace FogMod {
       stopwatch.ResetAndPrint("  Loading menuFMGs");
 
       // Overrides where only one copy is needed
-      Dictionary<string, MSB3> maps = new Dictionary<string, MSB3>();
-      foreach (string basePath in Directory.GetFiles(
-          $@"fogdist\Base",
-          "*.msb.dcx")) {
+      var msbFiles = Directory.GetFiles($@"fogdist\Base", "*.msb.dcx");
+
+      var msbsToLoad = new Dictionary<string, string>();
+      foreach (string basePath in msbFiles) {
+        var name = GameEditor.BaseName(basePath);
+        if (!msbsToLoad.ContainsKey(name)) {
+          msbsToLoad[name] = basePath;
+        }
+      }
+
+      var maps = new Dictionary<string, MSB3>();
+      await Task.WhenAll(msbsToLoad.Values.Select(basePath => Task.Run(() => {
         string path = basePath;
         string name = GameEditor.BaseName(path);
-        if (!ann.Specs.ContainsKey(name)) continue;
+        if (!ann.Specs.ContainsKey(name)) {
+          return;
+        }
+
         string altPath = $@"{gameDir}\map\mapstudio\{name}.msb.dcx";
         if (gameDir != null && File.Exists(altPath)) {
           Console.WriteLine($"Using override {altPath}");
           path = altPath;
         }
+
+        // TODO: Slow
         maps[name] = MSB3.Read(path);
-      }
+      })));
       stopwatch.ResetAndPrint("  Loading maps");
 
       Dictionary<string, EMEVD> emevds = new Dictionary<string, EMEVD>();
@@ -1575,15 +1590,16 @@ namespace FogMod {
       }
       stopwatch.ResetAndPrint("  Writing emevd.dcx");
 
-      foreach (KeyValuePair<string, MSB3> entry in msbs) {
+      await Task.WhenAll(msbs.Select(entry => Task.Run(() => {
         string map = ann.NameSpecs[entry.Key].Map;
         string path = $@"{outDir}\map\mapstudio\{map}.msb.dcx";
         AddModFile(outPaths, path);
+        // TODO: Slow
         entry.Value.Write(path);
-      }
+      })));
       stopwatch.ResetAndPrint("  Writing msb.dcx");
 
-      foreach (KeyValuePair<string, Dictionary<string, ESD>> entry in esds) {
+      await Task.WhenAll(esds.Select(entry => Task.Run(() => {
         string basePath = $@"fogdist\Base\{entry.Key}.talkesdbnd.dcx";
         string altPath = $@"{gameDir}\script\talk\{entry.Key}.talkesdbnd.dcx";
         if (File.Exists(altPath)) {
@@ -1591,8 +1607,9 @@ namespace FogMod {
         }
         string path = $@"{outDir}\script\talk\{entry.Key}.talkesdbnd.dcx";
         AddModFile(outPaths, path);
+        // TODO: Slow
         editor.OverrideBndRel(basePath, path, entry.Value, e => e.Write());
-      }
+      })));
       stopwatch.ResetAndPrint("  Writing talkesdbnd.dcx");
 
       MergeMods(outPaths, gameDir, outDir);
@@ -1696,7 +1713,8 @@ namespace FogMod {
 
     private void AddModFile(List<string> writtenFiles, string path) {
       path = FullName(path);
-      Writers.SpoilerLogs.WriteLine($"Writing {path}");
+      // TODO: Leads to issues in the output.
+      //Writers.SpoilerLogs.WriteLine($"Writing {path}");
       writtenFiles.Add(path);
     }
 
