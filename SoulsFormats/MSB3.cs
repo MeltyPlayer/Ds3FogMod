@@ -137,8 +137,20 @@ namespace SoulsFormats {
         region.GetIndices(this, entries);
       stopwatch.ResetAndPrint("      Got region indices");
 
-      foreach (MSB3.Part part in entries.Parts)
-        part.GetIndices(this, entries);
+      var models = entries.Models;
+      var modelIndexByName = new Dictionary<string, int>();
+      for (var modelIndex = 0; modelIndex < models.Count; ++modelIndex) {
+        var model = models[modelIndex];
+        var modelName = model.Name;
+
+        if (!modelIndexByName.ContainsKey(modelName)) {
+          modelIndexByName[modelName] = modelIndex;
+        }
+      }
+
+      foreach (MSB3.Part part in entries.Parts) {
+        part.GetIndices(this, entries, modelIndexByName);
+      }
       stopwatch.ResetAndPrint("      Got part indices");
 
       foreach (MSB3.PartsPose partsPose in entries.PartsPoses)
@@ -1952,9 +1964,27 @@ namespace SoulsFormats {
             MSB.FindName<MSB3.Model>(entries.Models, this.modelIndex);
       }
 
-      internal virtual void GetIndices(MSB3 msb, MSB3.Entries entries) {
-        this.modelIndex =
-            MSB.FindIndex<MSB3.Model>(entries.Models, this.ModelName);
+      internal virtual void GetIndices(MSB3 msb, MSB3.Entries entries) {}
+
+      internal void GetIndices(
+          MSB3 msb, 
+          MSB3.Entries entries,
+          IDictionary<string, int> modelIndexByName) {
+        this.modelIndex = this.FindModelIndex(modelIndexByName);
+        this.GetIndices(msb, entries);
+      }
+
+      private int FindModelIndex(IDictionary<string, int> modelIndexByName) {
+        var modelName = this.ModelName;
+        if (modelName == null) {
+          return -1;
+        }
+
+        if (modelIndexByName.TryGetValue(modelName, out var index)) {
+          return index;
+        }
+
+        throw new KeyNotFoundException("Name not found: " + modelName);
       }
 
       public override string ToString() {
