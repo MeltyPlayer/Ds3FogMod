@@ -36,77 +36,32 @@ namespace SoulsIds {
         string path,
         Dictionary<string, PARAM.Layout> layouts = null,
         bool allowError = false) {
-      layouts = layouts ?? this.LoadLayouts();
-      return this.LoadBnd<PARAM>(path,
-                                 (Func<byte[], string, PARAM>) ((
-                                                                         data,
-                                                                         paramPath)
-                                                                     => {
-                                                                   PARAM obj;
-                                                                   try {
-                                                                     obj =
-                                                                         SoulsFile
-                                                                         <PARAM
-                                                                         >.Read(
-                                                                             data);
-                                                                   } catch (
-                                                                       Exception
-                                                                       ex) {
-                                                                     if (
-                                                                         !allowError
-                                                                     )
-                                                                       throw new
-                                                                           Exception(
-                                                                               "Failed to load param " +
-                                                                               paramPath +
-                                                                               ": " +
-                                                                               (object
-                                                                               ) ex);
-                                                                     return (
-                                                                             PARAM
-                                                                         )
-                                                                         null;
-                                                                   }
-                                                                   if (
-                                                                       layouts ==
-                                                                       null)
-                                                                     return obj;
-                                                                   if (layouts
-                                                                       .ContainsKey(
-                                                                           obj
-                                                                               .ParamType)
-                                                                   ) {
-                                                                     PARAM.
-                                                                         Layout
-                                                                         layout
-                                                                             = layouts
-                                                                             [obj
-                                                                                  .ParamType];
-                                                                     if (
-                                                                         (long)
-                                                                         layout
-                                                                             .Size ==
-                                                                         obj
-                                                                             .DetectedSize
-                                                                     ) {
-                                                                       obj
-                                                                           .ApplyParamdef(
-                                                                               layout
-                                                                                   .ToParamdef(
-                                                                                       obj
-                                                                                           .ParamType,
-                                                                                       out
-                                                                                       List
-                                                                                       <PARAMTDF
-                                                                                       > _));
-                                                                       return
-                                                                           obj;
-                                                                     }
-                                                                   }
-                                                                   return (PARAM
-                                                                       ) null;
-                                                                 }),
-                                 (string) null);
+      layouts ??= this.LoadLayouts();
+      return this.LoadBnd<PARAM>(
+          path,
+          (data, paramPath) => {
+            PARAM obj;
+            try {
+              obj = SoulsFile<PARAM>.Read(data);
+            } catch (Exception ex) {
+              if (!allowError)
+                throw new Exception("Failed to load param " + paramPath + ": " + (object) ex);
+              return null;
+            }
+            if (layouts == null)
+              return obj;
+            if (layouts.ContainsKey(obj.ParamType)
+            ) {
+              PARAM.Layout layout = layouts[obj.ParamType];
+              if ((long) layout.Size == obj.DetectedSize) {
+                obj.ApplyParamdef(
+                    layout.ToParamdef(obj.ParamType, out List<PARAMTDF> _));
+                return obj;
+              }
+            }
+            return null;
+          },
+          (string) null);
     }
 
     public Dictionary<T, string> LoadNames<T>(
