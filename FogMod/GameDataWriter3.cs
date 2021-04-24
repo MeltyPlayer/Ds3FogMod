@@ -25,6 +25,7 @@ using static FogMod.EventConfig;
 using static SoulsIds.Events;
 using static SoulsIds.GameSpec;
 using FogMod.util.time;
+using FogMod.util.math;
 
 namespace FogMod {
   public class GameDataWriter3 {
@@ -240,11 +241,11 @@ namespace FogMod {
         if (e.HasTag("unused") || e.HasTag("norandom") || e.HasTag("door"))
           continue;
 
-        Vector3 MoveInDirection(Vector3 v, Vector3 r, double dist) {
+        Vector3d MoveInDirection(Vector3d v, Vector3 r, double dist) {
           var angle = r.Y * Math.PI / 180;
-          return new Vector3((float) (v.X + Math.Sin(angle) * dist),
-                             v.Y,
-                             (float) (v.Z + Math.Cos(angle) * dist));
+          return new Vector3d(v.X + Math.Sin(angle) * dist,
+                              v.Y,
+                              v.Z + Math.Cos(angle) * dist);
         }
 
         for (int i = 0; i <= 1; i++) {
@@ -278,8 +279,8 @@ namespace FogMod {
             }
           }
 
-          Vector3 fogPosition = fog.Position;
-          float warpDist = 1f;
+          Vector3d fogPosition = new Vector3d(fog.Position);
+          double warpDist = 1;
           // Action trigger, in this case the fog object itself
           int actionID;
 
@@ -315,23 +316,23 @@ namespace FogMod {
               warpRotation = fog.Rotation;
               warpMove = opposite;
             }
-            Vector3 warpPosition =
+            Vector3d warpPosition =
                 MoveInDirection(fogPosition, warpMove, warpDist);
             if (side.HasTag("higher")) {
               warpPosition =
-                  new Vector3(warpPosition.X,
-                              warpPosition.Y + 1,
-                              warpPosition.Z);
+                  new Vector3d(warpPosition.X,
+                               warpPosition.Y + 1,
+                               warpPosition.Z);
             }
             if (e.AdjustHeight > 0) {
-              warpPosition = new Vector3(warpPosition.X,
-                                         warpPosition.Y + e.AdjustHeight,
-                                         warpPosition.Z);
+              warpPosition = new Vector3d(warpPosition.X,
+                                          warpPosition.Y + e.AdjustHeight,
+                                          warpPosition.Z);
             }
             if (side.AdjustHeight > 0) {
-              warpPosition = new Vector3(warpPosition.X,
-                                         warpPosition.Y + side.AdjustHeight,
-                                         warpPosition.Z);
+              warpPosition = new Vector3d(warpPosition.X,
+                                          warpPosition.Y + side.AdjustHeight,
+                                          warpPosition.Z);
             }
 
             playerArea = map;
@@ -339,7 +340,7 @@ namespace FogMod {
             p.MapStudioLayer = uint.MaxValue;
             p.ModelName = "c0000";
             p.EventEntityID = warpID;
-            p.Position = warpPosition;
+            p.Position = warpPosition.ToVector3();
             p.Rotation = warpRotation;
             p.Scale = new Vector3(1, 1, 1);
             msb.Parts.Players.Add(p);

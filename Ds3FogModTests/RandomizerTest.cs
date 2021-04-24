@@ -21,7 +21,7 @@ namespace FogMod {
     [TestMethod]
     public void VerifyAgainstGoldens() {
       var testExeDirectory = IoDirectory.GetCwd();
-      var testProjectDirectory = testExeDirectory.GetSubdir("../..");
+      var testProjectDirectory = testExeDirectory.GetSubdir("../../..");
 
       var testProjectGoldensDirectory = testProjectDirectory
           .GetSubdir("goldens");
@@ -145,7 +145,7 @@ namespace FogMod {
         var changePlural = differences == 1 ? "change" : "changes";
         Assert.Fail(
             $"Expected {actual.FullName} to have same contents as " +
-            $"{expected.FullName}, but found {differences} {changePlural} " + 
+            $"{expected.FullName}, but found {differences} {changePlural} " +
             $"out of {expectedLength} bytes");
       }
     }
