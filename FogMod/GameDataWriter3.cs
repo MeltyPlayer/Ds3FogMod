@@ -1566,7 +1566,7 @@ namespace FogMod {
                           ? $@"{outDir}\Data0.bdt"
                           : $@"{outDir}\param\gameparam\gameparam.parambnd.dcx";
         AddModFile(outPaths, path);
-        editor.OverrideBndRel(basePath, path, Params, f => f.Write());
+        await editor.OverrideBndRel(basePath, path, Params, f => f.Write());
       }
       stopwatch.ResetAndPrint("  Loading outpaths");
 
@@ -1578,7 +1578,7 @@ namespace FogMod {
         }
         string path = $@"{outDir}\msg\engus\menu_dlc2.msgbnd.dcx";
         AddModFile(outPaths, path);
-        editor.OverrideBndRel(basePath, path, menuFMGs, f => f.Write());
+        await editor.OverrideBndRel(basePath, path, menuFMGs, f => f.Write());
       }
       stopwatch.ResetAndPrint("  Writing menu_dlc2.dcx");
 
@@ -1599,7 +1599,7 @@ namespace FogMod {
       })));
       stopwatch.ResetAndPrint("  Writing msb.dcx");
 
-      await Task.WhenAll(esds.Select(entry => Task.Run(() => {
+      await Task.WhenAll(esds.Select(async entry => {
         string basePath = $@"fogdist\Base\{entry.Key}.talkesdbnd.dcx";
         string altPath = $@"{gameDir}\script\talk\{entry.Key}.talkesdbnd.dcx";
         if (File.Exists(altPath)) {
@@ -1608,8 +1608,8 @@ namespace FogMod {
         string path = $@"{outDir}\script\talk\{entry.Key}.talkesdbnd.dcx";
         AddModFile(outPaths, path);
         // TODO: Slow
-        editor.OverrideBndRel(basePath, path, entry.Value, e => e.Write());
-      })));
+        await editor.OverrideBndRel(basePath, path, entry.Value, e => e.Write());
+      }));
       stopwatch.ResetAndPrint("  Writing talkesdbnd.dcx");
 
       MergeMods(outPaths, gameDir, outDir);

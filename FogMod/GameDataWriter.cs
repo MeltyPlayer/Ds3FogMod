@@ -12,6 +12,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 
 namespace FogMod
@@ -51,7 +52,7 @@ namespace FogMod
       11700800
     }));
 
-    public void Write(
+    public async Task WriteAsync(
       RandomizerOptions opt,
       AnnotationData ann,
       Graph g,
@@ -1020,7 +1021,7 @@ namespace FogMod
         keyValuePair.Value.Write(path);
       }
       Console.WriteLine("Writing " + gameEditor.Spec.GameDir + "\\" + gameEditor.Spec.ParamFile);
-      gameEditor.OverrideBnd<PARAM>(gameEditor.Spec.GameDir + "\\" + gameEditor.Spec.ParamFile, "param\\GameParam", diffData1, (Func<PARAM, byte[]>) (f => f.Write()), (string) null);
+      await gameEditor.OverrideBnd<PARAM>(gameEditor.Spec.GameDir + "\\" + gameEditor.Spec.ParamFile, "param\\GameParam", diffData1, (Func<PARAM, byte[]>) (f => f.Write()), (string) null);
       Console.WriteLine("Copying ESDs to " + gameEditor.Spec.GameDir + "\\" + gameEditor.Spec.EsdDir);
       foreach (string file in Directory.GetFiles(str1 + "\\" + gameEditor.Spec.EsdDir, "*.talkesdbnd*"))
         File.Copy(file, gameEditor.Spec.GameDir + "\\" + gameEditor.Spec.EsdDir + "\\" + Path.GetFileName(file), true);
@@ -1029,7 +1030,7 @@ namespace FogMod
       diffData2[fmgEvent][15000281] = "Sealed in New Londo Ruins";
       diffData2[fmgEvent][15000282] = "Fog Gate Randomizer breaks when online.\nChange Launch setting in Network settings and then reload.";
       diffData2[fmgEvent][15000283] = g.EntranceIds["1702901"].IsFixed ? "Go to jail" : "Go to jail (randomized warp)";
-      gameEditor.OverrideBnd<FMG>(gameEditor.Spec.GameDir + "\\msg\\" + opt.Language + "\\menu.msgbnd" + str2, "msg\\" + opt.Language, diffData2, (Func<FMG, byte[]>) (fmg => fmg.Write()), (string) null);
+      await gameEditor.OverrideBnd<FMG>(gameEditor.Spec.GameDir + "\\msg\\" + opt.Language + "\\menu.msgbnd" + str2, "msg\\" + opt.Language, diffData2, (Func<FMG, byte[]>) (fmg => fmg.Write()), (string) null);
 
       void setScalingSp(PARAM.Row row, int sp)
       {

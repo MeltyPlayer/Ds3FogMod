@@ -90,7 +90,7 @@ namespace FogMod {
           Console.WriteLine("Success (dry run)");
           goto DoneRandomizing;
         }
-        new GameDataWriter().Write(opt, ann, g, gameDir, game);
+        await new GameDataWriter().WriteAsync(opt, ann, g, gameDir, game);
       }
       goto DoneRandomizing;
 
