@@ -10,7 +10,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace FogMod {
@@ -21,7 +20,7 @@ namespace FogMod {
     private static extern bool AttachConsole(int dwProcessId);
 
     [STAThread]
-    private static async Task Main(string[] args) {
+    private static void Main(string[] args) {
       if (args.Length != 0 &&
           !((IEnumerable<string>) args).Contains<string>("/gui")) {
         Program.AttachConsole(-1);
@@ -43,14 +42,14 @@ namespace FogMod {
         opt.Game = game;
         string gameDir = GameSpec.ForGame(game).GameDir;
         if (game == GameSpec.FromGame.DS3)
-          await new Randomizer().Randomize(opt,
+          new Randomizer().Randomize(opt,
                                      game,
                                      opt["mergemods"]
                                          ? gameDir + "\\randomizer"
                                          : (string) null,
                                      gameDir + "\\fog");
         else
-          await new Randomizer().Randomize(opt, game, gameDir, gameDir);
+          new Randomizer().Randomize(opt, game, gameDir, gameDir);
       } else {
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);

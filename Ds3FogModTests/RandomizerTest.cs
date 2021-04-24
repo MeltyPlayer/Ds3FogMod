@@ -3,7 +3,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 using FogMod.io;
 
@@ -20,7 +19,7 @@ namespace FogMod {
         IoDirectory.GetCwd().GetSubdir("temp", true);
 
     [TestMethod]
-    public async Task VerifyAgainstGoldens() {
+    public void VerifyAgainstGoldens() {
       var testExeDirectory = IoDirectory.GetCwd();
       var testProjectDirectory = testExeDirectory.GetSubdir("../..");
 
@@ -29,11 +28,11 @@ namespace FogMod {
 
       var goldenDirectories = testProjectGoldensDirectory.GetSubdirs();
       foreach (var goldenDirectory in goldenDirectories) {
-        await this.VerifyAgainstGolden_(goldenDirectory);
+        this.VerifyAgainstGolden_(goldenDirectory);
       }
     }
 
-    private async Task VerifyAgainstGolden_(IDirectory goldenDirectory) {
+    private void VerifyAgainstGolden_(IDirectory goldenDirectory) {
       var opt = new RandomizerOptions {
           Game = SoulsIds.GameSpec.FromGame.DS3
       };
@@ -66,12 +65,12 @@ namespace FogMod {
       string path = string.Format($"{spoilerLogs.FullName}\\temp.txt");
 
       Writers.SpoilerLogs = File.CreateText(path);
-      await new Randomizer().Randomize(opt,
-                                       SoulsIds.GameSpec.FromGame.DS3,
-                                       opt["mergemods"]
-                                           ? gameDir + "\\randomizer"
-                                           : (string) null,
-                                       tempDir.FullName);
+      new Randomizer().Randomize(opt,
+                                 SoulsIds.GameSpec.FromGame.DS3,
+                                 opt["mergemods"]
+                                     ? gameDir + "\\randomizer"
+                                     : (string) null,
+                                 tempDir.FullName);
       Writers.SpoilerLogs.Close();
 
       var directories = new[] {"event", "map", "msg", "script"};

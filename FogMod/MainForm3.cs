@@ -190,7 +190,7 @@ namespace FogMod {
       RandomizerOptions rand = mainForm3.options.Copy();
       mainForm3.randb.BackColor = Color.LightYellow;
       Randomizer randomizer = new Randomizer();
-      await Task.Factory.StartNew((Action) (async () => {
+      await Task.Factory.StartNew((Action) (() => {
                                                Directory.CreateDirectory(
                                                    "spoiler_logs");
                                                string path = string.Format(
@@ -203,7 +203,7 @@ namespace FogMod {
                                                Writers.SpoilerLogs = File.CreateText(path);
 
                                                try {
-                                                 ItemReader.Result result = await
+                                                 ItemReader.Result result =
                                                      randomizer.Randomize(
                                                          rand,
                                                          GameSpec.FromGame.DS3,

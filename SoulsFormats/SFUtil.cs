@@ -7,15 +7,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
-
-using FogMod.io;
-
-using SharpCompress.Compressors;
-using SharpCompress.Compressors.Deflate;
 
 namespace SoulsFormats {
   [ComVisible(true)]
@@ -37,9 +33,6 @@ namespace SoulsFormats {
 
     private static byte[] ds3RegulationKey =
         SFEncoding.ASCII.GetBytes("ds3#jn/8_7(rsY9pg55GFN7VFL#+3n/)");
-
-    private static CompressionLevel
-        compressionLevel_ = CompressionLevel.Level5;
 
     public static string GuessExtension(byte[] bytes, bool bigEndian = false) {
       bool flag = false;
@@ -264,55 +257,27 @@ namespace SoulsFormats {
       long position = bw.Position;
       bw.WriteByte((byte) 120);
       bw.WriteByte(formatByte);
-
-      var deflateStream =
-          new DeflateStream(bw.Stream,
-                            CompressionMode.Compress,
-                            SFUtil.compressionLevel_);
-      deflateStream.FlushMode = FlushType.Finish;
-      deflateStream.Write(input, 0, input.Length);
-      deflateStream.Flush();
-
+      using (DeflateStream deflateStream =
+          new DeflateStream(bw.Stream, CompressionMode.Compress, true))
+        deflateStream.Write(input, 0, input.Length);
       bw.WriteUInt32(SFUtil.Adler32(input));
       return (int) (bw.Position - position);
     }
 
-    public static byte[] ReadZlib(
-        BinaryReaderEx br,
-        int compressedSize,
-        IFile file = null
-    ) {
-      IoFile fastFile = null;
-      if (file != null) {
-        var directory = file.GetParent();
-        fastFile = new IoFile(directory.FullName + "\\" + file.Name + ".fst");
-
-        if (fastFile.Exists) {
-          return File.ReadAllBytes(fastFile.FullName);
-        }
-      }
-
+    public static byte[] ReadZlib(BinaryReaderEx br, int compressedSize) {
       int num1 = (int) br.AssertByte((byte) 120);
       int num2 =
           (int) br.AssertByte((byte) 1, (byte) 94, (byte) 156, (byte) 218);
       byte[] buffer = br.ReadBytes(compressedSize - 2);
-      using (MemoryStream memoryStream1 = new MemoryStream(compressedSize)) {
+      using (MemoryStream memoryStream1 = new MemoryStream()) {
         using (MemoryStream memoryStream2 = new MemoryStream(buffer)) {
-          var deflateStream =
+          using (DeflateStream deflateStream =
               new DeflateStream((Stream) memoryStream2,
                                 CompressionMode.Decompress,
-                                SFUtil.compressionLevel_);
-          deflateStream.FlushMode = FlushType.Finish;
-          deflateStream.CopyTo((Stream) memoryStream1);
-          deflateStream.Flush();
+                                true))
+            deflateStream.CopyTo((Stream) memoryStream1);
         }
-
-        var bytes = memoryStream1.ToArray();
-
-        if (fastFile != null) {
-          File.WriteAllBytes(fastFile.FullName, bytes);
-        }
-        return bytes;
+        return memoryStream1.ToArray();
       }
     }
 
@@ -462,12 +427,12 @@ namespace SoulsFormats {
       byte[] rgbIV = new byte[16];
       byte[] buffer = new byte[secret.Length - 16];
       Buffer.BlockCopy((Array) secret, 0, (Array) rgbIV, 0, rgbIV.Length);
-      Buffer.BlockCopy(secret,
+      Buffer.BlockCopy((Array) secret,
                        rgbIV.Length,
-                       buffer,
+                       (Array) buffer,
                        0,
                        buffer.Length);
-      using (MemoryStream memoryStream = new MemoryStream(buffer.Length)) {
+      using (MemoryStream memoryStream = new MemoryStream()) {
         using (AesManaged aesManaged = new AesManaged()) {
           aesManaged.Mode = CipherMode.CBC;
           aesManaged.Padding = PaddingMode.None;

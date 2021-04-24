@@ -255,7 +255,7 @@ namespace FogMod {
           mainForm.setStatus("Randomizing...", false);
           mainForm.randb.BackColor = Color.LightYellow;
           Randomizer randomizer = new Randomizer();
-          await Task.Factory.StartNew((Action) (async () => {
+          await Task.Factory.StartNew((Action) (() => {
                                                    Directory.CreateDirectory(
                                                        "runs");
                                                    string path = string.Format(
@@ -274,7 +274,7 @@ namespace FogMod {
                                                    Console.SetOut(text);
                                                    try {
                                                      ItemReader.Result result =
-                                                         await randomizer.Randomize(
+                                                         randomizer.Randomize(
                                                              rand,
                                                              this.game,
                                                              gameDir,
