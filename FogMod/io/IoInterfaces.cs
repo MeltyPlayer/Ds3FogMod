@@ -4,6 +4,9 @@ namespace FogMod.io {
   public interface IIoObject {
     string Name { get; }
     string FullName { get; }
+
+    IDirectory GetParent();
+    bool Exists { get; }
   }
 
   public interface IDirectory : IIoObject {
