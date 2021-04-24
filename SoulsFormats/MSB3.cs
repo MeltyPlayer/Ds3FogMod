@@ -103,7 +103,7 @@ namespace SoulsFormats {
     }
 
     protected override void Write(BinaryWriterEx bw) {
-      var stopwatch = new Stopwatch();
+      var stopwatch = new Stopwatch {EnableLogging = false};
       stopwatch.Start();
 
       bw.BigEndian = false;
