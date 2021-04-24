@@ -5,6 +5,7 @@
 // Assembly location: M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\FogMod.exe
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -115,15 +116,23 @@ namespace SoulsFormats {
       entries.Parts = this.Parts.GetEntries();
       entries.PartsPoses = this.PartsPoses.GetEntries();
       entries.BoneNames = this.BoneNames.GetEntries();
-      
+
+      var partCountByModelName = new ConcurrentDictionary<string, int>();
+      foreach (var part in entries.Parts) {
+        var modelName = part.ModelName;
+        var partCount =
+            partCountByModelName.GetOrAdd(modelName, _ => 0);
+        partCountByModelName[modelName] = partCount + 1;
+      }
+
       foreach (MSB3.Model model in entries.Models)
-        model.CountInstances(entries.Parts);
+        model.CountInstances(partCountByModelName);
       stopwatch.ResetAndPrint("      Got model indices");
-      
+
       foreach (MSB3.Event @event in entries.Events)
         @event.GetIndices(this, entries);
       stopwatch.ResetAndPrint("      Got event indices");
-      
+
       foreach (MSB3.Region region in entries.Regions)
         region.GetIndices(this, entries);
       stopwatch.ResetAndPrint("      Got region indices");
@@ -131,7 +140,7 @@ namespace SoulsFormats {
       foreach (MSB3.Part part in entries.Parts)
         part.GetIndices(this, entries);
       stopwatch.ResetAndPrint("      Got part indices");
-      
+
       foreach (MSB3.PartsPose partsPose in entries.PartsPoses)
         partsPose.GetIndices(this, entries);
       stopwatch.ResetAndPrint("      Got partPose indices");
@@ -1284,10 +1293,12 @@ namespace SoulsFormats {
             "Type data should not be written for models with no type data.");
       }
 
-      internal void CountInstances(List<MSB3.Part> parts) {
+      internal void CountInstances(
+          IDictionary<string, int> partCountByModelName) {
         this.InstanceCount =
-            parts.Count<MSB3.Part>(
-                (Func<MSB3.Part, bool>) (p => p.ModelName == this.Name));
+            partCountByModelName.TryGetValue(this.Name, out var partCount)
+                ? partCount
+                : 0;
       }
 
       public override string ToString() {
