@@ -13,6 +13,8 @@ namespace FogMod.util.time {
 
     private StopwatchState state_ = StopwatchState.OFF;
 
+    public bool EnableLogging { get; set; } = true;
+
     public void Start() {
       this.state_ = StopwatchState.STARTED;
       this.startTimestamp_ = DateTime.Now;
@@ -30,8 +32,13 @@ namespace FogMod.util.time {
       return elapsed;
     }
 
-    public void ResetAndPrint(string prefix)
-      => Console.WriteLine($"{prefix}: {this.Reset().TotalSeconds}");
+    public void ResetAndPrint(string prefix) {
+      var elapsed = this.Reset();
+
+      if (this.EnableLogging) {
+        Console.WriteLine($"{prefix}: {elapsed.TotalSeconds}");
+      }
+    }
 
     public TimeSpan Elapsed => this.state_ switch {
         StopwatchState.STARTED => DateTime.Now - this.startTimestamp_,
