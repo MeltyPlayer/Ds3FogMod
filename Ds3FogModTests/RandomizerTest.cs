@@ -21,7 +21,7 @@ namespace FogMod {
     [TestMethod]
     public void VerifyAgainstGoldens() {
       var testExeDirectory = IoDirectory.GetCwd();
-      var testProjectDirectory = testExeDirectory.GetSubdir("../../..");
+      var testProjectDirectory = testExeDirectory.GetSubdir("../..");
 
       var testProjectGoldensDirectory = testProjectDirectory
           .GetSubdir("goldens");
