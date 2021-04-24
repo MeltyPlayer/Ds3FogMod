@@ -58,6 +58,14 @@ namespace FogMod {
       opt.Seed = int.Parse(goldenDirectory.Name);
 
       var tempDir = RandomizerTest.TEMP_DIR;
+      if (tempDir.Name != "temp") {
+        Assert.Fail("Got the wrong directory!!!");
+        return;
+      }
+
+      var tempDirInfo = new DirectoryInfo(tempDir.FullName);
+      tempDirInfo.Delete(true);
+      tempDirInfo.Create();
 
       var gameDir = "M:\\Games\\Steam\\steamapps\\common\\DARK SOULS III\\Game";
 
@@ -99,6 +107,10 @@ namespace FogMod {
       }
 
       foreach (var expectedFile in expectedDirectory.GetFiles()) {
+        if (expectedFile.Name.EndsWith(".fst")) {
+          continue;
+        }
+
         this.AssertFilesBytes_(expectedFile,
                                actualDirectory.GetFile(expectedFile.Name));
       }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -61,7 +62,11 @@ namespace FogMod.io {
 
     public IFile GetFile(string path) {
       // TODO: Handle subdirectories automatically.
-      return new IoFile(this.impl_.GetFiles(path).Single());
+      try {
+        return new IoFile(this.impl_.GetFiles(path).Single());
+      } catch(Exception e) {
+        throw new Exception($"Expected to find {path}", e);
+      }
     }
   }
 }
