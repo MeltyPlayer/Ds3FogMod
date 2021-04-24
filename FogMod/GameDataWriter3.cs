@@ -1578,7 +1578,6 @@ namespace FogMod {
       foreach (KeyValuePair<string, MSB3> entry in msbs) {
         string map = ann.NameSpecs[entry.Key].Map;
         string path = $@"{outDir}\map\mapstudio\{map}.msb.dcx";
-        Console.WriteLine($"    Writing {path}");
         AddModFile(outPaths, path);
         entry.Value.Write(path);
       }

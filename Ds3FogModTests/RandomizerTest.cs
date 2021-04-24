@@ -93,14 +93,12 @@ namespace FogMod {
         IDirectory expectedDirectory,
         IDirectory actualDirectory) {
       foreach (var expectedSubdir in expectedDirectory.GetSubdirs()) {
-        Console.WriteLine($"Comparing {expectedSubdir.FullName}");
         this.AssertDirectoriesEqual_(expectedSubdir,
                                      actualDirectory.GetSubdir(
                                          expectedSubdir.Name));
       }
 
       foreach (var expectedFile in expectedDirectory.GetFiles()) {
-        Console.WriteLine($"Comparing {expectedFile.FullName}");
         this.AssertFilesBytes_(expectedFile,
                                actualDirectory.GetFile(expectedFile.Name));
       }
