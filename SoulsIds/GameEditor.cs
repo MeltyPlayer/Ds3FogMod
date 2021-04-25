@@ -9,6 +9,8 @@ using SoulsFormats;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SoulsIds {
   public class GameEditor {
@@ -135,21 +137,20 @@ namespace SoulsIds {
                                           (object) path,
                                           (object) ex));
       }
-      foreach (BinderFile file in binder.Files) {
+
+      foreach (var file in binder.Files) {
         if (fileExt == null || file.Name.EndsWith(fileExt)) {
           string index = GameEditor.BaseName(file.Name);
           try {
             T obj = parser(file.Bytes, index);
-            if ((object) obj != null)
+            if (obj != null)
               dictionary[index] = obj;
           } catch (Exception ex) {
-            throw new Exception(string.Format("Failed to load {0}: {1}: {2}",
-                                              (object) path,
-                                              (object) index,
-                                              (object) ex));
+            throw new Exception($"Failed to load {path}: {index}: {ex}");
           }
         }
       }
+
       return dictionary;
     }
 
@@ -166,8 +167,7 @@ namespace SoulsIds {
           this.Spec.GameDir + "\\" + relDir,
           ext)) {
         string index = GameEditor.BaseName(file);
-        Dictionary<string, T> dictionary2 =
-            this.LoadBnd<T>(file, parser, fileExt);
+        var dictionary2 = this.LoadBnd(file, parser, fileExt);
         if (dictionary2.Count > 0)
           dictionary1[index] = dictionary2;
       }
@@ -216,23 +216,22 @@ namespace SoulsIds {
         throw new Exception("DCX encoding not provided");
       Path.GetFileName(path);
       IBinder binder = this.ReadBnd(path);
+
       foreach (BinderFile file in binder.Files) {
         if (fileExt == null || file.Name.EndsWith(fileExt)) {
           string key = GameEditor.BaseName(file.Name);
-          if (diffData.ContainsKey(key)) {
-            if ((object) diffData[key] != null) {
-              try {
-                file.Bytes = writer(diffData[key]);
-              } catch (Exception ex) {
-                Console.WriteLine(string.Format("Failed to load {0}: {1}: {2}",
-                                                (object) path,
-                                                (object) key,
-                                                (object) ex));
-              }
+
+          diffData.TryGetValue(key, out var value);
+          if (value != null) {
+            try {
+              file.Bytes = writer(value);
+            } catch (Exception ex) {
+              Console.WriteLine($"Failed to load {path}: {key}: {ex}");
             }
           }
         }
       }
+
       if (binder is BND4 bnd) {
         if (this.Spec.Game == GameSpec.FromGame.DS3 &&
             outPath.EndsWith("Data0.bdt")) {
@@ -259,9 +258,9 @@ namespace SoulsIds {
         string fileExt = null) {
       if (this.Spec.GameDir == null)
         throw new Exception("Base game dir not provided");
-      foreach (string file in Directory.GetFiles(
-          this.Spec.GameDir + "\\" + fromDir,
-          ext)) {
+
+      var files = Directory.GetFiles(this.Spec.GameDir + "\\" + fromDir, ext);
+      foreach(var file in files) {
         string key = GameEditor.BaseName(file);
         if (diffBnds.ContainsKey(key))
           this.OverrideBnd<T>(file, toDir, diffBnds[key], writer, fileExt);

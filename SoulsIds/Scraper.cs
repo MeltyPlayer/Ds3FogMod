@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace SoulsIds {
   public class Scraper {
@@ -108,7 +109,7 @@ namespace SoulsIds {
       this.editor = new GameEditor(spec);
     }
 
-    private void LoadParams() {
+    private async Task LoadParams() {
       if (this.Params != null)
         return;
       this.Params =
@@ -117,64 +118,25 @@ namespace SoulsIds {
               false);
     }
 
-    public bool ScrapeMsgs(Universe u) {
+    public async Task<bool> ScrapeMsgs(Universe u) {
       if (this.spec.MsgDir == null)
         return false;
-      foreach (KeyValuePair<string, FMG> keyValuePair in (
-          IEnumerable<KeyValuePair<string, FMG>>) this
-                                                  .editor
-                                                  .LoadBnds<FMG
-                                                  >(this.spec.MsgDir,
-                                                    (Func<byte[], string, FMG>)
-                                                    ((data, name)
-                                                          => SoulsFile<FMG>
-                                                              .Read(data)),
-                                                    "*bnd.dcx",
-                                                    (string) null)
-                                                  .SelectMany<
-                                                      KeyValuePair<string,
-                                                          Dictionary<string, FMG
-                                                          >>,
-                                                      KeyValuePair<string, FMG>
-                                                  >((Func<KeyValuePair<string,
-                                                            Dictionary<string,
-                                                                FMG>>
-                                                        , IEnumerable<
-                                                            KeyValuePair<string,
-                                                                FMG
-                                                            >>>) (e => (
-                                                                       IEnumerable
-                                                                       <
-                                                                           KeyValuePair
-                                                                           <
-                                                                               string
-                                                                               ,
-                                                                               FMG
-                                                                           >>) e
-                                                                       .Value))
-                                                  .Concat<
-                                                      KeyValuePair<string, FMG>
-                                                  >((IEnumerable<
-                                                        KeyValuePair<string, FMG
-                                                        >>) this
-                                                            .editor.Load<FMG>(
-                                                                this
-                                                                    .spec
-                                                                    .MsgDir,
-                                                                (Func<string,
-                                                                    FMG>) (name
-                                                                                => SoulsFile
-                                                                                <FMG
-                                                                                >.Read(
-                                                                                    name)
-                                                                          ),
-                                                                "*.fmg"))
-                                                  .OrderBy<
-                                                      KeyValuePair<string, FMG>,
-                                                      string>(
-                                                      (Func<KeyValuePair<string,
-                                                          FMG>, string>)
-                                                      (e => e.Key))) {
+
+      var fmgs =
+          (this.editor.LoadBnds(this.spec.MsgDir,
+                                     (data, name)
+                                         => SoulsFile<FMG>
+                                             .Read(data),
+                                     "*bnd.dcx",
+                                     (string) null))
+                .SelectMany(e => e.Value)
+                .Concat(this
+                        .editor.Load(
+                            this.spec.MsgDir,
+                            name => SoulsFile<FMG>.Read(name),
+                            "*.fmg"))
+                .OrderBy(e => e.Key);
+      foreach (var keyValuePair in fmgs) {
         if (Scraper.MsgTypes.ContainsKey(keyValuePair.Key)) {
           Universe.Namespace msgType = Scraper.MsgTypes[keyValuePair.Key];
           foreach (FMG.Entry entry in keyValuePair.Value.Entries)
@@ -188,7 +150,7 @@ namespace SoulsIds {
         foreach (KeyValuePair<string, FMG> keyValuePair in
             this.editor.Load<FMG>(this.spec.MsgDir + "\\talk",
                                   (Func<string, FMG>) (name => SoulsFile<FMG>
-                                                            .Read(name)),
+                                          .Read(name)),
                                   "*.fmg")) {
           foreach (FMG.Entry entry in keyValuePair.Value.Entries)
             u.Names[Universe.Obj.Talk(entry.ID)] = entry.Text;
@@ -197,7 +159,7 @@ namespace SoulsIds {
       if (this.spec.ParamFile == null ||
           !Scraper.talkParamMsgId.ContainsKey(this.spec.Game))
         return false;
-      this.LoadParams();
+      await this.LoadParams();
       if (!this.Params.ContainsKey("TalkParam"))
         return false;
       string index = Scraper.talkParamMsgId[this.spec.Game];
@@ -213,10 +175,10 @@ namespace SoulsIds {
       return true;
     }
 
-    public bool ScrapeItems(Universe u) {
+    public async Task<bool> ScrapeItems(Universe u) {
       if (this.spec.ParamFile == null)
         return false;
-      this.LoadParams();
+      await this.LoadParams();
       if (this.spec.Game == GameSpec.FromGame.DS2S) {
         if (!this.Params.ContainsKey("ItemLotParam2_Other"))
           return false;
@@ -224,9 +186,9 @@ namespace SoulsIds {
                                   .Params["ItemLotParam2_Other"]
                                   .Rows.Concat<PARAM.Row>(
                                       (IEnumerable<PARAM.Row>) this
-                                                               .Params[
-                                                                   "ItemLotParam2_Chr"]
-                                                               .Rows)) {
+                                          .Params[
+                                              "ItemLotParam2_Chr"]
+                                          .Rows)) {
           Universe.Obj index1 = Universe.Obj.Lot((int) row.ID);
           Universe.Obj index2 =
               Universe.Obj.Item(3U, (int) (uint) row["Unk2C"].Value);
@@ -389,7 +351,7 @@ namespace SoulsIds {
         foreach (KeyValuePair<string, MSBS> keyValuePair in
             this.editor.Load<MSBS>(this.spec.MsbDir,
                                    (Func<string, MSBS>) (path => SoulsFile<MSBS>
-                                                              .Read(path)),
+                                           .Read(path)),
                                    "*.dcx")) {
           string key = keyValuePair.Key;
           MSBS msbs = keyValuePair.Value;

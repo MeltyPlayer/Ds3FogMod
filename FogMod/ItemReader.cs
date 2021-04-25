@@ -12,10 +12,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace FogMod {
   public class ItemReader {
-    public ItemReader.Result FindItems(
+    public async Task<ItemReader.Result> FindItems(
         RandomizerOptions opt,
         AnnotationData ann,
         Graph g,
@@ -31,7 +32,7 @@ namespace FogMod {
         GameEditor gameEditor = new GameEditor(game);
         gameEditor.Spec.GameDir = gameDir;
         Dictionary<int, PARAM.Row> dictionary2 =
-            gameEditor.LoadParams(gameEditor.LoadLayouts(), false)
+            (gameEditor.LoadParams(gameEditor.LoadLayouts(), false))
                       ["ItemLotParam"]
                       .Rows.ToDictionary<PARAM.Row, int, PARAM.Row>(
                           (Func<PARAM.Row, int>) (r => (int) r.ID),

@@ -73,7 +73,7 @@ namespace FogMod {
       return name == "UNUSED" ? $"Human NPC {id}" : name;
     }
 
-    public void WriteEventConfig(
+    public async Task WriteEventConfig(
         AnnotationData ann,
         Events events,
         RandomizerOptions opt) {

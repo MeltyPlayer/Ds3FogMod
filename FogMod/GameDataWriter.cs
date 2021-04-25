@@ -12,6 +12,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 
 namespace FogMod
@@ -51,7 +52,7 @@ namespace FogMod
       11700800
     }));
 
-    public void Write(
+    public async Task WriteAsync(
       RandomizerOptions opt,
       AnnotationData ann,
       Graph g,

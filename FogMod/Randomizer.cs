@@ -53,7 +53,7 @@ namespace FogMod {
       Graph g = new Graph();
       g.Construct(opt, ann);
       ItemReader.Result items =
-          new ItemReader().FindItems(opt, ann, g, events, gameDir, game);
+          await new ItemReader().FindItems(opt, ann, g, events, gameDir, game);
       Writers.SpoilerLogs.WriteLine(items.Randomized
                                         ? "Key item hash: " + items.ItemHash
                                         : "No key items randomized");
@@ -75,7 +75,7 @@ namespace FogMod {
           eventConfig =
               deserializer.Deserialize<EventConfig>((TextReader) streamReader);
         if (opt["eventsyaml"] || opt["events"]) {
-          new GenerateConfig().WriteEventConfig(ann, events, opt);
+          await new GenerateConfig().WriteEventConfig(ann, events, opt);
           goto DoneRandomizing;
         }
         await new GameDataWriter3().WriteAsync(opt,
@@ -90,7 +90,7 @@ namespace FogMod {
           Console.WriteLine("Success (dry run)");
           goto DoneRandomizing;
         }
-        new GameDataWriter().Write(opt, ann, g, gameDir, game);
+        await new GameDataWriter().WriteAsync(opt, ann, g, gameDir, game);
       }
       goto DoneRandomizing;
 
