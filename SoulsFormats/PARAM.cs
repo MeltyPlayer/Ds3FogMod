@@ -12,6 +12,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Xml;
 
+using FogMod.util.time;
+
 namespace SoulsFormats {
   [ComVisible(true)]
   public class PARAM : SoulsFile<PARAM> {
@@ -243,8 +245,9 @@ namespace SoulsFormats {
 
     public void ApplyParamdef(PARAMDEF paramdef) {
       this.AppliedParamdef = paramdef;
-      foreach (PARAM.Row row in this.Rows)
-        row.ReadCells(this.RowReader, this.AppliedParamdef);
+      foreach (PARAM.Row row in this.Rows) {
+        row.ScheduleUpdateCells(this.RowReader, this.AppliedParamdef);
+      }
     }
 
     public PARAM.Row this[int id] {
@@ -702,13 +705,28 @@ namespace SoulsFormats {
     }
 
     public class Row {
+      private BinaryReaderEx reader_;
+      private PARAMDEF appliedParamdef_;
+
       internal long DataOffset;
 
       public long ID { get; set; }
 
       public string Name { get; set; }
 
-      public IReadOnlyList<PARAM.Cell> Cells { get; private set; }
+      public IReadOnlyList<PARAM.Cell> Cells {
+        get {
+          if (this.reader_ != null) {
+            this.ReadCells_(this.reader_, this.appliedParamdef_);
+            this.reader_ = null;
+            this.appliedParamdef_ = null;
+          }
+
+          return this.cells_;
+        }
+      }
+
+      private Cell[] cells_;
 
       public Row(long id, string name, PARAMDEF paramdef) {
         this.ID = id;
@@ -719,7 +737,7 @@ namespace SoulsFormats {
           object obj = ParamUtil.CastDefaultValue(field);
           cellArray[index] = new PARAM.Cell(field, obj);
         }
-        this.Cells = (IReadOnlyList<PARAM.Cell>) cellArray;
+        this.cells_ = cellArray;
       }
 
       internal Row(BinaryReaderEx br, byte format2D, byte format2E) {
@@ -741,11 +759,18 @@ namespace SoulsFormats {
           this.Name = br.GetUTF16(offset);
       }
 
-      internal void ReadCells(BinaryReaderEx br, PARAMDEF paramdef) {
+      internal void ScheduleUpdateCells(BinaryReaderEx br, PARAMDEF paramdef) {
+        this.reader_ = br;
+        this.appliedParamdef_ = paramdef;
+      }
+
+      private void ReadCells_(BinaryReaderEx br, PARAMDEF paramdef) {
         if (this.DataOffset == 0L)
           return;
+
         br.Position = this.DataOffset;
         PARAM.Cell[] cellArray = new PARAM.Cell[paramdef.Fields.Count];
+
         int num1 = -1;
         PARAMDEF.DefType defType = PARAMDEF.DefType.u8;
         uint num2 = 0;
@@ -838,7 +863,7 @@ namespace SoulsFormats {
           }
           cellArray[index] = new PARAM.Cell(field, obj);
         }
-        this.Cells = (IReadOnlyList<PARAM.Cell>) cellArray;
+        this.cells_ = cellArray;
       }
 
       internal void WriteHeader(BinaryWriterEx bw, byte format2D, int i) {
