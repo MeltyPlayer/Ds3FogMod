@@ -40,33 +40,17 @@ namespace FogMod {
         string gameDir,
         string outDir,
         Events events,
-        EventConfig eventConfig) {
+        EventConfig eventConfig,
+        GameEditor editor) {
       var stopwatch = new Stopwatch();
       stopwatch.Start();
-
-      GameEditor editor = new GameEditor(FromGame.DS3);
-      editor.Spec.GameDir = $@"fogdist";
-      editor.Spec.LayoutDir = $@"fogdist\Layouts";
-      editor.Spec.NameDir = $@"fogdist\Names";
-
-      Dictionary<string, PARAM.Layout> layouts = editor.LoadLayouts();
 
       bool validEmevd(string name)
         => ann.Specs.ContainsKey(name) || extraEmevd.Contains(name);
 
       stopwatch.ResetAndPrint("  Prework");
 
-      Dictionary<string, PARAM> Params;
-      {
-        string path = @"fogdist\Base\Data0.bdt";
-        string altPath = $@"{gameDir}\Data0.bdt";
-        if (gameDir != null && File.Exists(altPath)) {
-          Console.WriteLine($"Using override {altPath}");
-          path = altPath;
-        }
-        // TODO: Slow
-        Params = editor.LoadParams(path, layouts, true);
-      }
+      var Params = ParamsManager.Get(gameDir, events, editor);
       stopwatch.ResetAndPrint("  Loading params");
 
       Dictionary<string, FMG> menuFMGs;

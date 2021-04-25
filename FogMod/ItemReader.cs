@@ -4,6 +4,7 @@
 // MVID: D28026FD-A9AB-45EB-9CE9-27B9E67A6072
 // Assembly location: M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\FogMod.exe
 
+using FogMod.util.time;
 using SoulsFormats;
 
 using SoulsIds;
@@ -22,17 +23,20 @@ namespace FogMod {
         Graph g,
         Events events,
         string gameDir,
-        GameSpec.FromGame game) {
-      Dictionary<string, string> dictionary1 =
-          ann.KeyItems.ToDictionary<AnnotationData.Item, string, string>(
-              (Func<AnnotationData.Item, string>) (item => item.ID),
-              (Func<AnnotationData.Item, string>) (item => item.Name));
-      Dictionary<string, List<string>> itemAreas = g.ItemAreas;
+        GameSpec.FromGame game,
+        GameEditor gameEditor) {
+      var stopwatch = new Stopwatch();
+      stopwatch.Start();
+
+      var dictionary1 =
+          ann.KeyItems.ToDictionary(item => item.ID, item => item.Name);
+      var itemAreas = g.ItemAreas;
+
+      var layouts = gameEditor.LoadLayouts();
+
       if (ann.LotLocations != null) {
-        GameEditor gameEditor = new GameEditor(game);
-        gameEditor.Spec.GameDir = gameDir;
         Dictionary<int, PARAM.Row> dictionary2 =
-            (gameEditor.LoadParams(gameEditor.LoadLayouts(), false))
+            (gameEditor.LoadParams(layouts, false))
                       ["ItemLotParam"]
                       .Rows.ToDictionary<PARAM.Row, int, PARAM.Row>(
                           (Func<PARAM.Row, int>) (r => (int) r.ID),
@@ -68,15 +72,10 @@ namespace FogMod {
                             : -1;
                     if (num4 != -1) {
                       string key2 =
-                          string.Format("{0}:{1}",
-                                        (object) num4,
-                                        (object) num1);
+                          $"{(object) num4}:{(object) num1}";
                       if (opt["debuglots"])
                         Console.WriteLine(
-                            string.Format("{0} in {1} has {2}",
-                                          (object) current.Key,
-                                          (object) current.Value,
-                                          (object) key2));
+                            $"{current.Key} in {current.Value} has {key2}");
                       string index2;
                       if (dictionary1.TryGetValue(key2, out index2)) {
                         if (itemAreas[index2].Count > 0 &&
@@ -102,19 +101,18 @@ namespace FogMod {
           }
         }
       }
+      stopwatch.ResetAndPrint("  Working w/ lotlocations");
+
       if (ann.Locations != null) {
-        GameEditor gameEditor = new GameEditor(game);
-        gameEditor.Spec.GameDir = "fogdist";
-        gameEditor.Spec.LayoutDir = "fogdist\\Layouts";
-        gameEditor.Spec.NameDir = "fogdist\\Names";
-        Dictionary<string, PARAM.Layout> layouts = gameEditor.LoadLayouts();
+        var locationStopwatch = new Stopwatch();
+        locationStopwatch.Start();
+
         int num1 = -1;
         Dictionary<string, PARAM> dictionary2 =
-            gameEditor.LoadParams("fogdist\\Base\\Data0.bdt", layouts, true);
+            ParamsManager.Get(gameDir, events, gameEditor);
+        locationStopwatch.ResetAndPrint("    Locations 0");
+
         if (gameDir != null) {
-          string path1 = gameDir + "\\Data0.bdt";
-          if (File.Exists(path1))
-            dictionary2 = gameEditor.LoadParams(path1, layouts, true);
           string path2 = gameDir + "\\event\\common.emevd.dcx";
           if (File.Exists(path2)) {
             EMEVD.Event @event = SoulsFile<EMEVD>
@@ -132,6 +130,8 @@ namespace FogMod {
             }
           }
         }
+        locationStopwatch.ResetAndPrint("    Locations 1");
+
         Dictionary<int, PARAM.Row> dictionary3 = dictionary2["ItemLotParam"]
                                                  .Rows.ToDictionary<PARAM.Row,
                                                      int, PARAM.Row>(
@@ -146,6 +146,8 @@ namespace FogMod {
                                                      (r => (int) r.ID),
                                                      (Func<PARAM.Row, PARAM.Row>
                                                      ) (r => r));
+        locationStopwatch.ResetAndPrint("    Locations 2");
+
         foreach (AnnotationData.KeyItemLoc keyItemLoc in ann.Locations.Items) {
           List<string> list = ((IEnumerable<string>) keyItemLoc.Area.Split(' '))
               .ToList<string>();
@@ -236,7 +238,10 @@ namespace FogMod {
             }
           }
         }
+        locationStopwatch.ResetAndPrint("    Locations 3");
       }
+      stopwatch.ResetAndPrint("  Working w/ locations");
+
       bool flag1;
       do {
         flag1 = false;
@@ -251,6 +256,8 @@ namespace FogMod {
           }
         }
       } while (flag1);
+      stopwatch.ResetAndPrint("  Working w/ item areas");
+
       if (opt["explain"] || opt["debuglots"]) {
         foreach (AnnotationData.Item keyItem in ann.KeyItems)
           Console.WriteLine(keyItem.Name +
@@ -264,6 +271,8 @@ namespace FogMod {
                                             keyItem.Name]) +
                             "]");
       }
+      stopwatch.ResetAndPrint("  Printing about item areas");
+
       SortedSet<string> sortedSet = new SortedSet<string>();
       bool flag2 = false;
       foreach (AnnotationData.Item keyItem in ann.KeyItems) {
@@ -291,6 +300,8 @@ namespace FogMod {
                         string.Join(",", (IEnumerable<string>) stringList));
         }
       }
+      stopwatch.ResetAndPrint("  Gathering items?");
+
       return new ItemReader.Result() {
           Randomized = flag2,
           ItemHash =

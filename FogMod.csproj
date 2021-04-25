@@ -68,6 +68,7 @@
     <Compile Include="FogMod\io\FileWriterManager.cs" />
     <Compile Include="FogMod\io\IoFile.cs" />
     <Compile Include="FogMod\io\Writers.cs" />
+    <Compile Include="FogMod\ParamsManager.cs" />
     <Compile Include="FogMod\util\math\Vector3d.cs" />
     <Compile Include="FogMod\util\time\Stopwatch.cs" />
     <Compile Include="GlobalSuppressions.cs" />

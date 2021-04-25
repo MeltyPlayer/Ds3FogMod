@@ -36,11 +36,14 @@ namespace FogMod {
                         ? "fogdist\\fog.txt"
                         : "dist\\fog.txt";
       IDeserializer deserializer = new DeserializerBuilder().Build();
+
       AnnotationData ann;
       using (StreamReader streamReader = File.OpenText(path))
         ann = deserializer.Deserialize<AnnotationData>(
             (TextReader) streamReader);
       ann.SetGame(game);
+      stopwatch.ResetAndPrint("Set up annotations");
+
       Events events = (Events) null;
       if (game == GameSpec.FromGame.DS3) {
         using (StreamReader streamReader =
@@ -50,15 +53,24 @@ namespace FogMod {
                   (TextReader) streamReader);
         events = new Events("fogdist\\Base\\ds3-common.emedf.json");
       }
+      stopwatch.ResetAndPrint("Read fog gates & events");
+
       Graph g = new Graph();
       g.Construct(opt, ann);
+      stopwatch.ResetAndPrint("Construct graph");
+
+      GameEditor editor = new GameEditor(game);
+      editor.Spec.GameDir = $@"fogdist";
+      editor.Spec.LayoutDir = $@"fogdist\Layouts";
+      editor.Spec.NameDir = $@"fogdist\Names";
+
       ItemReader.Result items =
-          await new ItemReader().FindItems(opt, ann, g, events, gameDir, game);
+          await new ItemReader().FindItems(opt, ann, g, events, gameDir, game, editor);
       Writers.SpoilerLogs.WriteLine(items.Randomized
                                         ? "Key item hash: " + items.ItemHash
                                         : "No key items randomized");
       Writers.SpoilerLogs.WriteLine();
-      stopwatch.ResetAndPrint("Prework");
+      stopwatch.ResetAndPrint("Find items");
 
       GraphConnector.Randomize(opt, g, ann);
       stopwatch.ResetAndPrint("Randomizer");
@@ -79,12 +91,13 @@ namespace FogMod {
           goto DoneRandomizing;
         }
         await new GameDataWriter3().WriteAsync(opt,
-                                         ann,
-                                         g,
-                                         gameDir,
-                                         outDir,
-                                         events,
-                                         eventConfig);
+                                               ann,
+                                               g,
+                                               gameDir,
+                                               outDir,
+                                               events,
+                                               eventConfig,
+                                               editor);
       } else {
         if (opt["dryrun"]) {
           Console.WriteLine("Success (dry run)");

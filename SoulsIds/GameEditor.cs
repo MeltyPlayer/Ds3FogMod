@@ -87,7 +87,12 @@ namespace SoulsIds {
       return dictionary;
     }
 
+    private Dictionary<string, PARAM.Layout> layoutsCache_;
     public Dictionary<string, PARAM.Layout> LoadLayouts() {
+      if (this.layoutsCache_ != null) {
+        return this.layoutsCache_;
+      }
+
       if (this.Spec.LayoutDir == null)
         throw new Exception("Layout dir not provided");
       Dictionary<string, PARAM.Layout> dictionary =
@@ -98,7 +103,7 @@ namespace SoulsIds {
         PARAM.Layout layout = PARAM.Layout.ReadXMLFile(file);
         dictionary[withoutExtension] = layout;
       }
-      return dictionary;
+      return this.layoutsCache_ = dictionary;
     }
 
     public Dictionary<string, T> Load<T>(
