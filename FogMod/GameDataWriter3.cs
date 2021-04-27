@@ -104,19 +104,20 @@ namespace FogMod {
 
       Dictionary<string, Dictionary<string, ESD>> esds =
           new Dictionary<string, Dictionary<string, ESD>>();
-      foreach (string basePath in Directory.GetFiles(
-          $@"fogdist\Base",
-          "*.talkesdbnd.dcx")) {
+      var esdPaths = Directory.GetFiles($@"fogdist\Base", "*.talkesdbnd.dcx");
+      await Task.WhenAll(esdPaths.Select(basePath => Task.Run(() => {
         string path = basePath;
         string name = GameEditor.BaseName(path);
-        if (!ann.Specs.ContainsKey(name)) continue;
+        if (!ann.Specs.ContainsKey(name)) {
+          return;
+        }
         string altPath = $@"{gameDir}\script\talk\{name}.talkesdbnd.dcx";
         if (gameDir != null && File.Exists(altPath)) {
           Console.WriteLine($"Using override {altPath}");
           path = altPath;
         }
         esds[name] = editor.LoadBnd(path, (data, p) => ESD.Read(data));
-      }
+      })));
       stopwatch.ResetAndPrint("  Loading esds");
 
       // TODO: Backup? Not really modifying the game files, but still in-place modification of something else

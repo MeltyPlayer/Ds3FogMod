@@ -61,6 +61,9 @@ namespace SoulsFormats {
     }
 
     protected override void Read(BinaryReaderEx br) {
+      var stopwatch = new Stopwatch();
+      stopwatch.Start();
+
       br.BigEndian = false;
       br.AssertASCII("MSB ");
       br.AssertInt32(1);
@@ -69,37 +72,64 @@ namespace SoulsFormats {
       br.AssertBoolean(false);
       int num1 = (int) br.AssertByte((byte) 1);
       int num2 = (int) br.AssertByte(byte.MaxValue);
+      stopwatch.ResetAndPrint("    Read msb3 0");
+
       MSB3.Entries entries = new MSB3.Entries();
       this.Models = new MSB3.ModelParam(3);
       entries.Models = this.Models.Read(br);
+      stopwatch.ResetAndPrint("    Read msb3 models");
+
       this.Events = new MSB3.EventParam(3);
       entries.Events = this.Events.Read(br);
+      stopwatch.ResetAndPrint("    Read msb3 events");
+
       this.Regions = new MSB3.PointParam(3);
       entries.Regions = this.Regions.Read(br);
+      stopwatch.ResetAndPrint("    Read msb3 regions");
+
       this.Routes = new MSB3.RouteParam(3);
       entries.Routes = this.Routes.Read(br);
+      stopwatch.ResetAndPrint("    Read msb3 routes");
+
       this.Layers = new MSB3.LayerParam(3);
       entries.Layers = this.Layers.Read(br);
+      stopwatch.ResetAndPrint("    Read msb3 layers");
+
       this.Parts = new MSB3.PartsParam(3);
       entries.Parts = this.Parts.Read(br);
+      stopwatch.ResetAndPrint("    Read msb3 parts");
+      
       this.PartsPoses = new MSB3.MapstudioPartsPose(0);
       entries.PartsPoses = this.PartsPoses.Read(br);
+      stopwatch.ResetAndPrint("    Read msb3 parts poses");
+
       this.BoneNames = new MSB3.MapstudioBoneName(0);
       entries.BoneNames = this.BoneNames.Read(br);
+      stopwatch.ResetAndPrint("    Read msb3 bone names");
+
       if (br.Position != 0L)
         throw new InvalidDataException(
             "The next param offset of the final param should be 0, but it wasn't.");
       MSB.DisambiguateNames<MSB3.Model>(entries.Models);
       MSB.DisambiguateNames<MSB3.Part>(entries.Parts);
       MSB.DisambiguateNames<MSB3.Region>(entries.Regions);
+      stopwatch.ResetAndPrint("    Read msb3 disambiguate names");
+
       foreach (MSB3.Event @event in entries.Events)
         @event.GetNames(this, entries);
+      stopwatch.ResetAndPrint("    Read msb3 get event names");
+
       foreach (MSB3.Region region in entries.Regions)
         region.GetNames(this, entries);
+      stopwatch.ResetAndPrint("    Read msb3 get region names");
+
       foreach (MSB3.Part part in entries.Parts)
         part.GetNames(this, entries);
+      stopwatch.ResetAndPrint("    Read msb3 get part names");
+
       foreach (MSB3.PartsPose partsPose in entries.PartsPoses)
         partsPose.GetNames(this, entries);
+      stopwatch.ResetAndPrint("    Read msb3 get parts pose names");
     }
 
     protected override void Write(BinaryWriterEx bw) {
@@ -340,7 +370,7 @@ namespace SoulsFormats {
         this.EventID = br.ReadInt32();
         int num2 = (int) br.AssertUInt32((uint) this.Type);
         br.ReadInt32();
-        br.AssertInt32(new int[1]);
+        br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         long num3 = br.ReadInt64();
         long num4 = br.ReadInt64();
         this.Name = br.GetUTF16(position + num1);
@@ -348,7 +378,7 @@ namespace SoulsFormats {
         this.PartIndex = br.ReadInt32();
         this.PointIndex = br.ReadInt32();
         this.EventEntityID = br.ReadInt32();
-        br.AssertInt32(new int[1]);
+        br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         br.Position = position + num4;
         this.Read(br);
       }
@@ -433,10 +463,10 @@ namespace SoulsFormats {
             : base(br) {}
 
         internal override void Read(BinaryReaderEx br) {
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
           this.PartIndex2 = br.ReadInt32();
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
           this.ItemLot1 = br.ReadInt32();
           this.ItemLot2 = br.ReadInt32();
           br.AssertInt32(-1);
@@ -453,9 +483,9 @@ namespace SoulsFormats {
           this.StartDisabled = br.ReadBoolean();
           int num1 = (int) br.AssertByte(new byte[1]);
           int num2 = (int) br.AssertByte(new byte[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         }
 
         internal override void WriteSpecific(BinaryWriterEx bw) {
@@ -552,25 +582,25 @@ namespace SoulsFormats {
           this.SessionCondition = br.ReadInt32();
           this.UnkT14 = br.ReadSingle();
           this.UnkT18 = br.ReadSingle();
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
           this.SpawnPointIndices = br.ReadInt32s(8);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
           this.SpawnPartIndices = br.ReadInt32s(32);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         }
 
         internal override void WriteSpecific(BinaryWriterEx bw) {
@@ -662,9 +692,9 @@ namespace SoulsFormats {
           int num2 = (int) br.AssertByte(new byte[1]);
           int num3 = (int) br.AssertByte(new byte[1]);
           this.EventFlagID = br.ReadInt32();
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         }
 
         internal override void WriteSpecific(BinaryWriterEx bw) {
@@ -780,7 +810,7 @@ namespace SoulsFormats {
           this.MapEventIDMaybe = br.ReadInt32();
           this.FlagsMaybe = br.ReadInt32();
           this.UnkT18 = br.ReadInt32();
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         }
 
         internal override void WriteSpecific(BinaryWriterEx bw) {
@@ -822,9 +852,9 @@ namespace SoulsFormats {
 
         internal override void Read(BinaryReaderEx br) {
           this.UnkT00 = br.AssertInt32(0, 1, 2, 5);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
           this.WalkPointIndices = br.ReadInt16s(32);
         }
 
@@ -885,8 +915,8 @@ namespace SoulsFormats {
         internal override void Read(BinaryReaderEx br) {
           this.PlatoonIDScriptActivate = br.ReadInt32();
           this.State = br.ReadInt32();
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
           this.GroupPartsIndices = br.ReadInt32s(32);
         }
 
@@ -1093,7 +1123,7 @@ namespace SoulsFormats {
       internal PartsPose(BinaryReaderEx br) {
         this.PartIndex = br.ReadInt16();
         short num = br.ReadInt16();
-        br.AssertInt32(new int[1]);
+        br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         br.AssertInt64(16L);
         this.Bones = new List<MSB3.PartsPose.Bone>((int) num);
         for (int index = 0; index < (int) num; ++index)
@@ -1272,7 +1302,7 @@ namespace SoulsFormats {
         br.ReadInt32();
         long num3 = br.ReadInt64();
         this.InstanceCount = br.ReadInt32();
-        br.AssertInt32(new int[1]);
+        br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         long num4 = br.ReadInt64();
         this.Name = br.GetUTF16(position + num1);
         this.Placeholder = br.GetUTF16(position + num3);
@@ -1353,9 +1383,9 @@ namespace SoulsFormats {
           this.UnkT01 = br.ReadByte();
           this.UnkT02 = br.ReadBoolean();
           this.UnkT03 = br.ReadBoolean();
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         }
 
         internal override void WriteTypeData(BinaryWriterEx bw) {
@@ -1403,9 +1433,9 @@ namespace SoulsFormats {
           this.UnkT01 = br.ReadByte();
           this.UnkT02 = br.ReadBoolean();
           this.UnkT03 = br.ReadBoolean();
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         }
 
         internal override void WriteTypeData(BinaryWriterEx bw) {
@@ -1624,40 +1654,59 @@ namespace SoulsFormats {
       }
 
       internal override MSB3.Part ReadEntry(BinaryReaderEx br) {
+        var stopwatch = new Stopwatch {EnableLogging = false};
+        stopwatch.Start();
+       
         MSB3.PartsType enum32 = br.GetEnum32<MSB3.PartsType>(br.Position + 8L);
         switch (enum32) {
           case MSB3.PartsType.MapPiece:
             MSB3.Part.MapPiece mapPiece = new MSB3.Part.MapPiece(br);
             this.MapPieces.Add(mapPiece);
+            stopwatch.ResetAndPrint("      Read map piece");
+
             return (MSB3.Part) mapPiece;
           case MSB3.PartsType.Object:
             MSB3.Part.Object @object = new MSB3.Part.Object(br);
             this.Objects.Add(@object);
+            stopwatch.ResetAndPrint("      Read object");
+
             return (MSB3.Part) @object;
           case MSB3.PartsType.Enemy:
             MSB3.Part.Enemy enemy = new MSB3.Part.Enemy(br);
             this.Enemies.Add(enemy);
+            stopwatch.ResetAndPrint("      Read enemy");
+            
             return (MSB3.Part) enemy;
           case MSB3.PartsType.Player:
             MSB3.Part.Player player = new MSB3.Part.Player(br);
             this.Players.Add(player);
+            stopwatch.ResetAndPrint("      Read player");
+
             return (MSB3.Part) player;
           case MSB3.PartsType.Collision:
             MSB3.Part.Collision collision = new MSB3.Part.Collision(br);
             this.Collisions.Add(collision);
+            stopwatch.ResetAndPrint("      Read collision");
+
             return (MSB3.Part) collision;
           case MSB3.PartsType.DummyObject:
             MSB3.Part.DummyObject dummyObject = new MSB3.Part.DummyObject(br);
             this.DummyObjects.Add(dummyObject);
+            stopwatch.ResetAndPrint("      Read dummy object");
+
             return (MSB3.Part) dummyObject;
           case MSB3.PartsType.DummyEnemy:
             MSB3.Part.DummyEnemy dummyEnemy = new MSB3.Part.DummyEnemy(br);
             this.DummyEnemies.Add(dummyEnemy);
+            stopwatch.ResetAndPrint("      Read dummy enemy");
+
             return (MSB3.Part) dummyEnemy;
           case MSB3.PartsType.ConnectCollision:
             MSB3.Part.ConnectCollision connectCollision =
                 new MSB3.Part.ConnectCollision(br);
             this.ConnectCollisions.Add(connectCollision);
+            stopwatch.ResetAndPrint("      Read connect collision");
+
             return (MSB3.Part) connectCollision;
           default:
             throw new NotImplementedException(
@@ -1819,7 +1868,7 @@ namespace SoulsFormats {
         int num2 = (int) br.AssertUInt32((uint) this.Type);
         br.ReadInt32();
         this.modelIndex = br.ReadInt32();
-        br.AssertInt32(new int[1]);
+        br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         long num3 = br.ReadInt64();
         this.Position = br.ReadVector3();
         this.Rotation = br.ReadVector3();
@@ -1829,7 +1878,7 @@ namespace SoulsFormats {
         this.DrawGroups = br.ReadUInt32s(8);
         this.DispGroups = br.ReadUInt32s(8);
         this.BackreadGroups = br.ReadUInt32s(8);
-        br.AssertInt32(new int[1]);
+        br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         long num4 = br.ReadInt64();
         long num5 = br.ReadInt64();
         long num6 = br.ReadInt64();
@@ -1842,7 +1891,7 @@ namespace SoulsFormats {
         this.OldFogID = br.ReadSByte();
         this.OldScatterID = br.ReadSByte();
         this.OldLensFlareID = br.ReadSByte();
-        br.AssertInt32(new int[1]);
+        br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         this.LanternID = br.ReadSByte();
         this.LodParamID = br.ReadSByte();
         this.UnkB0E = br.ReadSByte();
@@ -1857,7 +1906,7 @@ namespace SoulsFormats {
         this.UnkB17 = br.ReadBoolean();
         this.UnkB18 = br.ReadInt32();
         this.EventEntityGroups = br.ReadInt32s(8);
-        br.AssertInt32(new int[1]);
+        br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         br.Position = position + num5;
         this.ReadTypeData(br);
         if (this.HasGparamConfig) {
@@ -2052,9 +2101,9 @@ namespace SoulsFormats {
           br.AssertPattern(60, (byte) 0);
           this.Unk3C = br.ReadInt32();
           this.Unk40 = br.ReadSingle();
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         }
 
         internal void Write(BinaryWriterEx bw) {
@@ -2096,8 +2145,8 @@ namespace SoulsFormats {
             : base(br) {}
 
         internal override void ReadTypeData(BinaryReaderEx br) {
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         }
 
         internal override void ReadGparamConfig(BinaryReaderEx br) {
@@ -2113,6 +2162,8 @@ namespace SoulsFormats {
           this.Gparam.Write(bw);
         }
       }
+
+      internal static readonly int[] SHARED_SINGLE = new int[1];
 
       public class Object : MSB3.Part {
         private int CollisionPartIndex;
@@ -2180,8 +2231,8 @@ namespace SoulsFormats {
             : base(br) {}
 
         internal override void ReadTypeData(BinaryReaderEx br) {
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
           this.CollisionPartIndex = br.ReadInt32();
           this.UnkT0C = br.ReadByte();
           this.EnableObjAnimNetSyncStructure = br.ReadBoolean();
@@ -2278,8 +2329,8 @@ namespace SoulsFormats {
             : base(br) {}
 
         internal override void ReadTypeData(BinaryReaderEx br) {
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
           this.ThinkParamID = br.ReadInt32();
           this.NPCParamID = br.ReadInt32();
           this.TalkID = br.ReadInt32();
@@ -2289,40 +2340,40 @@ namespace SoulsFormats {
           this.CollisionPartIndex = br.ReadInt32();
           this.WalkRouteIndex = br.ReadInt16();
           int num1 = (int) br.AssertInt16(new short[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
           br.AssertInt32(-1);
           br.AssertInt32(-1);
           br.AssertInt32(-1);
           br.AssertInt32(-1);
           this.BackupEventAnimID = br.ReadInt32();
           br.AssertInt32(-1);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
           this.UnkT78 = br.ReadInt32();
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
           this.UnkT84 = br.ReadSingle();
           for (int index = 0; index < 5; ++index) {
             br.AssertInt32(-1);
             int num2 = (int) br.AssertInt16((short) -1);
             int num3 = (int) br.AssertInt16((short) 10);
           }
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         }
 
         internal override void ReadGparamConfig(BinaryReaderEx br) {
@@ -2425,10 +2476,10 @@ namespace SoulsFormats {
             : base(br) {}
 
         internal override void ReadTypeData(BinaryReaderEx br) {
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         }
 
         internal override void WriteTypeData(BinaryWriterEx bw) {
@@ -2514,10 +2565,10 @@ namespace SoulsFormats {
           this.SoundSpaceType = br.ReadEnum8<MSB3.Part.Collision.SoundSpace>();
           this.EnvLightMapSpotIndex = br.ReadInt16();
           this.ReflectPlaneHeight = br.ReadSingle();
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
           br.AssertInt32(-1);
           br.AssertInt32(-1);
           br.AssertInt32(-1);
@@ -2533,10 +2584,10 @@ namespace SoulsFormats {
           this.PlayRegionID = br.ReadInt32();
           this.LockCamID1 = br.ReadInt16();
           this.LockCamID2 = br.ReadInt16();
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         }
 
         internal override void ReadGparamConfig(BinaryReaderEx br) {
@@ -2687,8 +2738,8 @@ namespace SoulsFormats {
           this.MapID2 = br.ReadByte();
           this.MapID3 = br.ReadByte();
           this.MapID4 = br.ReadByte();
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         }
 
         internal override void WriteTypeData(BinaryWriterEx bw) {
@@ -3370,9 +3421,9 @@ namespace SoulsFormats {
 
         internal override void ReadSpecific(BinaryReaderEx br) {
           this.UnkT00 = br.ReadInt32();
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         }
 
         internal override void WriteSpecific(BinaryWriterEx bw, long start) {
@@ -3538,14 +3589,14 @@ namespace SoulsFormats {
           this.UnkT08 = br.ReadBoolean();
           this.UnkT09 = br.ReadByte();
           this.UnkT0A = br.ReadInt16();
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         }
 
         internal override void WriteSpecific(BinaryWriterEx bw, long start) {
@@ -3629,9 +3680,9 @@ namespace SoulsFormats {
 
         internal override void ReadSpecific(BinaryReaderEx br) {
           this.UnkT00 = br.ReadInt32();
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
-          br.AssertInt32(new int[1]);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
+          br.AssertInt32(MSB3.Part.SHARED_SINGLE);
         }
 
         internal override void WriteSpecific(BinaryWriterEx bw, long start) {

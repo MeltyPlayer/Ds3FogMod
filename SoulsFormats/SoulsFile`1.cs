@@ -51,14 +51,13 @@ namespace SoulsFormats {
     }
 
     public static TFormat Read(string path) {
-      using (FileStream fileStream = File.OpenRead(path)) {
-        BinaryReaderEx br = new BinaryReaderEx(false, (Stream) fileStream);
-        TFormat format = new TFormat();
-        BinaryReaderEx decompressedBr =
-            SFUtil.GetDecompressedBR(br, out format.Compression);
-        format.Read(decompressedBr);
-        return format;
-      }
+      using FileStream fileStream = File.OpenRead(path);
+      BinaryReaderEx br = new BinaryReaderEx(false, fileStream);
+      TFormat format = new TFormat();
+      BinaryReaderEx decompressedBr =
+          SFUtil.GetDecompressedBR(br, out format.Compression);
+      format.Read(decompressedBr);
+      return format;
     }
 
     private static bool IsRead(BinaryReaderEx br, out TFormat file) {
