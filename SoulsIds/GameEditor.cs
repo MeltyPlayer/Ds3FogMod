@@ -237,6 +237,7 @@ namespace SoulsIds {
         }
       }
 
+      // TODO: Should only save once! SLOW!
       if (binder is BND4 bnd) {
         if (this.Spec.Game == GameSpec.FromGame.DS3 &&
             outPath.EndsWith("Data0.bdt")) {

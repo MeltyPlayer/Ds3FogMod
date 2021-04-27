@@ -13,6 +13,9 @@ using FogMod.Properties;
 
 using SoulsFormats;
 
+using SoulsIds;
+using FogMod.util.time;
+
 namespace FogMod {
   [TestClass]
   public class RandomizerTest {
@@ -82,6 +85,9 @@ namespace FogMod {
                                        tempDir.FullName);
       Writers.SpoilerLogs.Close();
 
+      var stopwatch = new Stopwatch();
+      stopwatch.Start();
+
       var directories = new[] {"event", "map", "msg", "script"};
       foreach (var directory in directories) {
         var goldenSubdir = goldenDirectory.GetSubdir(directory);
@@ -89,20 +95,26 @@ namespace FogMod {
 
         this.AssertDirectoriesEqual_(goldenSubdir, tempSubdir);
       }
+      stopwatch.ResetAndPrint("Verifying output files");
 
       this.AssertData0_(goldenDirectory, tempDir);
+      stopwatch.ResetAndPrint("Verifying Data0.bdt");
 
       // Verifies spoiler logs.
       this.AssertSpoilerLogsEqual_(
           goldenDirectory.GetSubdir("spoiler_logs").GetFiles().First(),
           tempDir.GetSubdir("spoiler_logs").GetFiles().First());
+      stopwatch.ResetAndPrint("Verifying spoiler logs");
     }
 
     private void AssertData0_(IDirectory goldenDirectory, IDirectory tempDir) {
+      var expectedFile = goldenDirectory.GetFile("Data0.bdt");
+      var actualFile = tempDir.GetFile("Data0.bdt");
+
       var expectedData0 = SoulsFile<BND4>.Read(
-          this.ReadFileBytes_(goldenDirectory.GetFile("Data0.bdt"), true));
+          this.ReadFileBytes_(expectedFile, true));
       var actualData0 = SoulsFile<BND4>.Read(
-          this.ReadFileBytes_(tempDir.GetFile("Data0.bdt"), true));
+          this.ReadFileBytes_(actualFile, true));
 
       Assert.AreEqual(expectedData0.BigEndian, actualData0.BigEndian);
       Assert.AreEqual(expectedData0.BitBigEndian, actualData0.BitBigEndian);
@@ -118,15 +130,151 @@ namespace FogMod {
 
       var expectedCount = expectedFiles.Count;
       Assert.AreEqual(expectedCount, actualFiles.Count);
-      for (var i = 0; i < expectedCount; ++i) {
-        var expectedFile = expectedFiles[i];
-        var actualFile = actualFiles[i];
 
-        var expectedName = expectedFile.Name;
-        this.AssertBytes_(expectedFile.Bytes, actualFile.Bytes, expectedName);
+      GameEditor editor = new GameEditor(GameSpec.FromGame.DS3);
+      editor.Spec.GameDir = $@"fogdist";
+      editor.Spec.LayoutDir = $@"fogdist\Layouts";
+      editor.Spec.NameDir = $@"fogdist\Names";
+
+      var expectedParams = editor.LoadParams(expectedFile.FullName, null, true);
+      var actualParams = editor.LoadParams(actualFile.FullName, null, true);
+
+      Assert.AreEqual(expectedParams.Count, actualParams.Count);
+      foreach (var expectedParam in expectedParams) {
+        var success =
+            actualParams.TryGetValue(expectedParam.Key, out var actualParam);
+
+        Assert.IsTrue(success, $"Expected to find {expectedParam} in actual.");
+        this.AssertParamsEqual_(expectedParam.Value,
+                                actualParam,
+                                expectedParam.Key);
+      }
+    }
+
+    private void AssertParamsEqual_(PARAM expected, PARAM actual, string key) {
+      var differenceText = $"Difference for {key}";
+
+      var expectedParamdef = expected.AppliedParamdef;
+      var actualParamdef = actual.AppliedParamdef;
+      Assert.AreEqual(expectedParamdef.BigEndian,
+                      actualParamdef.BigEndian,
+                      differenceText);
+      Assert.AreEqual(expectedParamdef.ParamType,
+                      actualParamdef.ParamType,
+                      differenceText);
+      Assert.AreEqual(expectedParamdef.Unicode,
+                      actualParamdef.Unicode,
+                      differenceText);
+      Assert.AreEqual(expectedParamdef.Unk06,
+                      actualParamdef.Unk06,
+                      differenceText);
+      Assert.AreEqual(expectedParamdef.Version,
+                      actualParamdef.Version,
+                      differenceText);
+
+      var expectedFields = expectedParamdef.Fields;
+      var actualFields = actualParamdef.Fields;
+      Assert.AreEqual(expectedFields.Count, actualFields.Count, differenceText);
+      for (var i = 0; i < expectedFields.Count; ++i) {
+        var expectedField = expectedFields[i];
+        var actualField = actualFields[i];
+
+        Assert.AreEqual(expectedField.DisplayType,
+                        actualField.DisplayType,
+                        differenceText);
+        Assert.AreEqual(expectedField.Default,
+                        actualField.Default,
+                        differenceText);
+        Assert.AreEqual(expectedField.BitSize,
+                        actualField.BitSize,
+                        differenceText);
+        Assert.AreEqual(expectedField.ArrayLength,
+                        actualField.ArrayLength,
+                        differenceText);
+        Assert.AreEqual(expectedField.Description,
+                        actualField.Description,
+                        differenceText);
+        Assert.AreEqual(expectedField.DisplayFormat,
+                        actualField.DisplayFormat,
+                        differenceText);
+        Assert.AreEqual(expectedField.DisplayName,
+                        actualField.DisplayName,
+                        differenceText);
+        Assert.AreEqual(expectedField.Increment,
+                        actualField.Increment,
+                        differenceText);
+        Assert.AreEqual(expectedField.InternalName,
+                        actualField.InternalName,
+                        differenceText);
+        Assert.AreEqual(expectedField.InternalType,
+                        actualField.InternalType,
+                        differenceText);
+        Assert.AreEqual(expectedField.Maximum,
+                        actualField.Maximum,
+                        differenceText);
+        Assert.AreEqual(expectedField.Minimum,
+                        actualField.Minimum,
+                        differenceText);
+        Assert.AreEqual(expectedField.SortID,
+                        actualField.SortID,
+                        differenceText);
+        Assert.AreEqual(expectedField.EditFlags,
+                        actualField.EditFlags,
+                        differenceText);
       }
 
-      // this.AssertFilesBytesInDirs_(goldenDirectory, tempDir, "Data0.bdt", true);
+      Assert.AreEqual(expected.BigEndian, actual.BigEndian, differenceText);
+      Assert.AreEqual(expected.DetectedSize,
+                      actual.DetectedSize,
+                      differenceText);
+      Assert.AreEqual(expected.Format2D, actual.Format2D, differenceText);
+      Assert.AreEqual(expected.Format2E, actual.Format2E, differenceText);
+      Assert.AreEqual(expected.Format2F, actual.Format2F, differenceText);
+      Assert.AreEqual(expected.ParamType, actual.ParamType, differenceText);
+      Assert.AreEqual(expected.Unk06, actual.Unk06, differenceText);
+      Assert.AreEqual(expected.Unk08, actual.Unk08, differenceText);
+
+      var expectedRows = expected.Rows;
+      var actualRows = actual.Rows;
+      Assert.AreEqual(expectedRows.Count, actualRows.Count, differenceText);
+      for (var r = 0; r < expectedRows.Count; ++r) {
+        var expectedRow = expectedRows[r];
+        var actualRow = actualRows[r];
+
+        Assert.AreEqual(expectedRow.Name, actualRow.Name, differenceText);
+        Assert.AreEqual(expectedRow.ID, actualRow.ID, differenceText);
+
+        var expectedCells = expectedRow.Cells;
+        var actualCells = actualRow.Cells;
+        Assert.AreEqual(expectedCells.Count, actualCells.Count, differenceText);
+        for (var c = 0; c < expectedCells.Count; ++c) {
+          var expectedCell = expectedCells[c];
+          var actualCell = actualCells[c];
+
+          var expectedDef = expectedCell.Def;
+          var actualDef = actualCell.Def;
+          // TODO: Check all these fields?
+
+          var expectedValue = expectedCell.Value;
+          var actualValue = actualCell.Value;
+
+          var displayType = expectedDef.DisplayType;
+          if (displayType == PARAMDEF.DefType.dummy8) {
+            AssertBytes_(expectedValue as byte[],
+                         actualValue as byte[],
+                         expectedDef.DisplayName);
+          } else if (displayType == PARAMDEF.DefType.f32) {
+            var expectedFloat = (float)expectedValue;
+            var actualFloat = (float)actualValue;
+            Assert.AreEqual(expectedFloat,
+                            actualFloat,
+                            .0001,
+                            differenceText);
+          } else {
+            Assert.AreEqual(expectedValue, actualValue, differenceText);
+          }
+        }
+      }
     }
 
     private void AssertDirectoriesEqual_(
@@ -238,15 +386,6 @@ namespace FogMod {
     }
 
     private void SaveFile_(byte[] bytes, string output) {
-      /*using var inputStream = new DeflateStream(
-          new FileStream(input.FullName, FileMode.Open),
-          CompressionMode.Decompress);
-      using var outputStream = new DeflateStream(
-          new FileStream(output, FileMode.Create),
-          CompressionMode.Compress);
-
-      inputStream.CopyTo(outputStream);*/
-
       using var outputStream = new FileStream(output, FileMode.Create);
       outputStream.Write(bytes, 0, bytes.Length);
     }
@@ -254,13 +393,15 @@ namespace FogMod {
     private void AssertSpoilerLogsEqual_(IFile expected, IFile actual) {
       Func<IFile, string> readFromSpoilerLogs = f
           => File.ReadAllLines(f.FullName)
-                 .Where(l => !l.StartsWith("Writing "))
-                 .Aggregate(new StringBuilder(),
-                            (current, next)
-                                => current
-                                   .Append(current.Length == 0 ? "" : ", ")
-                                   .Append(next))
-                 .ToString();
+                 .Where(l => !l.StartsWith("Writing ") &&
+                             !l.StartsWith("Found extra file ") &&
+                             !l.StartsWith("No extra files found"))
+          .Aggregate(new StringBuilder(),
+                     (current, next)
+                         => current
+                            .Append(current.Length == 0 ? "" : ", ")
+                            .Append(next))
+          .ToString();
       Assert.AreEqual(
           readFromSpoilerLogs(expected),
           readFromSpoilerLogs(actual));
