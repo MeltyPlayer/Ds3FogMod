@@ -61,7 +61,7 @@ namespace SoulsFormats {
     }
 
     protected override void Read(BinaryReaderEx br) {
-      var stopwatch = new Stopwatch();
+      var stopwatch = new Stopwatch {EnableLogging = false};
       stopwatch.Start();
 
       br.BigEndian = false;
@@ -98,7 +98,7 @@ namespace SoulsFormats {
       this.Parts = new MSB3.PartsParam(3);
       entries.Parts = this.Parts.Read(br);
       stopwatch.ResetAndPrint("    Read msb3 parts");
-      
+
       this.PartsPoses = new MSB3.MapstudioPartsPose(0);
       entries.PartsPoses = this.PartsPoses.Read(br);
       stopwatch.ResetAndPrint("    Read msb3 parts poses");
@@ -1656,7 +1656,7 @@ namespace SoulsFormats {
       internal override MSB3.Part ReadEntry(BinaryReaderEx br) {
         var stopwatch = new Stopwatch {EnableLogging = false};
         stopwatch.Start();
-       
+
         MSB3.PartsType enum32 = br.GetEnum32<MSB3.PartsType>(br.Position + 8L);
         switch (enum32) {
           case MSB3.PartsType.MapPiece:
@@ -1675,7 +1675,7 @@ namespace SoulsFormats {
             MSB3.Part.Enemy enemy = new MSB3.Part.Enemy(br);
             this.Enemies.Add(enemy);
             stopwatch.ResetAndPrint("      Read enemy");
-            
+
             return (MSB3.Part) enemy;
           case MSB3.PartsType.Player:
             MSB3.Part.Player player = new MSB3.Part.Player(br);
@@ -2016,7 +2016,7 @@ namespace SoulsFormats {
       internal virtual void GetIndices(MSB3 msb, MSB3.Entries entries) {}
 
       internal void GetIndices(
-          MSB3 msb, 
+          MSB3 msb,
           MSB3.Entries entries,
           IDictionary<string, int> modelIndexByName) {
         this.modelIndex = this.FindModelIndex(modelIndexByName);

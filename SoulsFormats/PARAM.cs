@@ -12,6 +12,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Xml;
 
+using FogMod.io;
 using FogMod.util.time;
 
 namespace SoulsFormats {
@@ -705,11 +706,8 @@ namespace SoulsFormats {
     }
 
     public class Row {
-      private BinaryReaderEx reader_;
+      private LazyWriterHelper lazyWriterHelper_ = new LazyWriterHelper();
       private PARAMDEF appliedParamdef_;
-      private int expectedByteCount_;
-
-      private bool streamable_;
 
       internal long DataOffset;
 
@@ -719,11 +717,11 @@ namespace SoulsFormats {
 
       public IReadOnlyList<PARAM.Cell> Cells {
         get {
-          if (this.reader_ != null) {
-            this.ReadCells_(this.reader_, this.appliedParamdef_);
-            this.reader_ = null;
+          if (this.lazyWriterHelper_.CanStream) {
+            this.ReadCells_(this.lazyWriterHelper_.Reader,
+                            this.appliedParamdef_);
+            this.lazyWriterHelper_.Touch();
             this.appliedParamdef_ = null;
-            this.streamable_ = false;
           }
 
           return this.cells_;
@@ -764,9 +762,6 @@ namespace SoulsFormats {
       }
 
       internal void ScheduleUpdateCells(BinaryReaderEx br, PARAMDEF paramdef) {
-        this.reader_ = br;
-        this.appliedParamdef_ = paramdef;
-
         var byteCount = 0;
         int num1 = -1;
         PARAMDEF.DefType defType = PARAMDEF.DefType.u8;
@@ -801,7 +796,7 @@ namespace SoulsFormats {
               if (!ParamUtil.IsBitType(displayType))
                 throw new NotImplementedException(
                     string.Format("Unsupported field type: {0}",
-                                  (object)displayType));
+                                  (object) displayType));
               if (field.BitSize == -1) {
                 switch (displayType) {
                   case PARAMDEF.DefType.u8:
@@ -837,8 +832,8 @@ namespace SoulsFormats {
             if (field.BitSize > bitLimit)
               throw new InvalidDataException(
                   string.Format("Bit size {0} is too large to fit in type {1}.",
-                                (object)field.BitSize,
-                                (object)type));
+                                (object) field.BitSize,
+                                (object) type));
             if (num1 == -1 ||
                 type != defType ||
                 num1 + field.BitSize > bitLimit) {
@@ -861,10 +856,10 @@ namespace SoulsFormats {
           }
         }
 
-        this.expectedByteCount_ = byteCount;
         br.Position += byteCount;
 
-        this.streamable_ = true;
+        this.lazyWriterHelper_.Update(br, this.DataOffset, byteCount);
+        this.appliedParamdef_ = paramdef;
       }
 
       private void ReadCells_(BinaryReaderEx br, PARAMDEF paramdef) {
@@ -968,10 +963,11 @@ namespace SoulsFormats {
         }
         this.cells_ = cellArray;
 
+        var expectedReadByteCount = this.lazyWriterHelper_.Length;
         var actualReadByteCount = br.Position - this.DataOffset;
-        if (actualReadByteCount != this.expectedByteCount_) {
+        if (actualReadByteCount != expectedReadByteCount) {
           throw new Exception(
-              $"Predicted wrong # of bytes. Expected {this.expectedByteCount_}, but got {actualReadByteCount}.");
+              $"Predicted wrong # of bytes. Expected {expectedReadByteCount}, but got {actualReadByteCount}.");
         }
       }
 
@@ -995,12 +991,8 @@ namespace SoulsFormats {
           bw.FillInt64(string.Format("RowOffset{0}", (object) index),
                        bw.Position);
 
-        if (this.streamable_) {
-          if (this.DataOffset == 0L)
-            return;
 
-          this.reader_.Position = this.DataOffset;
-          bw.WriteBytes(this.reader_.ReadBytes(this.expectedByteCount_));
+        if (this.lazyWriterHelper_.StreamTo(bw)) {
           return;
         }
 
