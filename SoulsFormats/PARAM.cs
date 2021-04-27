@@ -707,6 +707,9 @@ namespace SoulsFormats {
     public class Row {
       private BinaryReaderEx reader_;
       private PARAMDEF appliedParamdef_;
+      private int expectedByteCount_;
+
+      private bool streamable_;
 
       internal long DataOffset;
 
@@ -720,6 +723,7 @@ namespace SoulsFormats {
             this.ReadCells_(this.reader_, this.appliedParamdef_);
             this.reader_ = null;
             this.appliedParamdef_ = null;
+            this.streamable_ = false;
           }
 
           return this.cells_;
@@ -762,6 +766,105 @@ namespace SoulsFormats {
       internal void ScheduleUpdateCells(BinaryReaderEx br, PARAMDEF paramdef) {
         this.reader_ = br;
         this.appliedParamdef_ = paramdef;
+
+        var byteCount = 0;
+        int num1 = -1;
+        PARAMDEF.DefType defType = PARAMDEF.DefType.u8;
+        for (int index = 0; index < paramdef.Fields.Count; ++index) {
+          PARAMDEF.Field field = paramdef.Fields[index];
+          var found = false;
+
+          PARAMDEF.DefType displayType = field.DisplayType;
+          switch (displayType) {
+            case PARAMDEF.DefType.s8:
+              found = true;
+              byteCount += 1;
+              break;
+            case PARAMDEF.DefType.s16:
+              found = true;
+              byteCount += 2;
+              break;
+            case PARAMDEF.DefType.s32:
+            case PARAMDEF.DefType.f32:
+              found = true;
+              byteCount += 4;
+              break;
+            case PARAMDEF.DefType.fixstr:
+              found = true;
+              byteCount += field.ArrayLength;
+              break;
+            case PARAMDEF.DefType.fixstrW:
+              found = true;
+              byteCount += field.ArrayLength * 2;
+              break;
+            default:
+              if (!ParamUtil.IsBitType(displayType))
+                throw new NotImplementedException(
+                    string.Format("Unsupported field type: {0}",
+                                  (object)displayType));
+              if (field.BitSize == -1) {
+                switch (displayType) {
+                  case PARAMDEF.DefType.u8:
+                    found = true;
+                    byteCount += 1;
+                    break;
+                  case PARAMDEF.DefType.u16:
+                    found = true;
+                    byteCount += 2;
+                    break;
+                  case PARAMDEF.DefType.u32:
+                    found = true;
+                    byteCount += 4;
+                    break;
+                  case PARAMDEF.DefType.dummy8:
+                    found = true;
+                    byteCount += field.ArrayLength;
+                    break;
+                }
+              }
+              break;
+          }
+
+          if (found) {
+            num1 = -1;
+          } else {
+            PARAMDEF.DefType type = displayType == PARAMDEF.DefType.dummy8
+                                        ? PARAMDEF.DefType.u8
+                                        : displayType;
+            int bitLimit = ParamUtil.GetBitLimit(type);
+            if (field.BitSize == 0)
+              throw new NotImplementedException("Bit size 0 is not supported.");
+            if (field.BitSize > bitLimit)
+              throw new InvalidDataException(
+                  string.Format("Bit size {0} is too large to fit in type {1}.",
+                                (object)field.BitSize,
+                                (object)type));
+            if (num1 == -1 ||
+                type != defType ||
+                num1 + field.BitSize > bitLimit) {
+              num1 = 0;
+              defType = type;
+              switch (defType) {
+                case PARAMDEF.DefType.u8:
+                  byteCount += 1;
+                  break;
+                case PARAMDEF.DefType.u16:
+                  byteCount += 2;
+                  break;
+                case PARAMDEF.DefType.u32:
+                  byteCount += 4;
+                  break;
+              }
+            }
+
+            num1 += field.BitSize;
+          }
+        }
+
+        this.expectedByteCount_ = byteCount;
+        br.Position += byteCount;
+
+        this.streamable_ = true;
       }
 
       private void ReadCells_(BinaryReaderEx br, PARAMDEF paramdef) {
@@ -864,6 +967,12 @@ namespace SoulsFormats {
           cellArray[index] = new PARAM.Cell(field, obj);
         }
         this.cells_ = cellArray;
+
+        var actualReadByteCount = br.Position - this.DataOffset;
+        if (actualReadByteCount != this.expectedByteCount_) {
+          throw new Exception(
+              $"Predicted wrong # of bytes. Expected {this.expectedByteCount_}, but got {actualReadByteCount}.");
+        }
       }
 
       internal void WriteHeader(BinaryWriterEx bw, byte format2D, int i) {
@@ -885,14 +994,27 @@ namespace SoulsFormats {
         else
           bw.FillInt64(string.Format("RowOffset{0}", (object) index),
                        bw.Position);
+
+        if (this.streamable_) {
+          if (this.DataOffset == 0L)
+            return;
+
+          this.reader_.Position = this.DataOffset;
+          bw.WriteBytes(this.reader_.ReadBytes(this.expectedByteCount_));
+          return;
+        }
+
         int num1 = -1;
         PARAMDEF.DefType type = PARAMDEF.DefType.u8;
         uint num2 = 0;
-        for (int index1 = 0; index1 < this.Cells.Count; ++index1) {
-          PARAM.Cell cell = this.Cells[index1];
+
+        var cells = this.Cells;
+        for (int index1 = 0; index1 < cells.Count; ++index1) {
+          PARAM.Cell cell = cells[index1];
           object obj = cell.Value;
           PARAMDEF.Field def1 = cell.Def;
           PARAMDEF.DefType displayType1 = def1.DisplayType;
+
           switch (displayType1) {
             case PARAMDEF.DefType.s8:
               bw.WriteSByte((sbyte) obj);
@@ -959,10 +1081,10 @@ namespace SoulsFormats {
                 num2 |= num4;
                 num1 += def1.BitSize;
                 bool flag = false;
-                if (index1 == this.Cells.Count - 1) {
+                if (index1 == cells.Count - 1) {
                   flag = true;
                 } else {
-                  PARAMDEF.Field def2 = this.Cells[index1 + 1].Def;
+                  PARAMDEF.Field def2 = cells[index1 + 1].Def;
                   PARAMDEF.DefType displayType2 = def2.DisplayType;
                   int bitLimit = ParamUtil.GetBitLimit(type);
                   if (!ParamUtil.IsBitType(displayType2) ||
