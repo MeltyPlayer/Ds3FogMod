@@ -90,12 +90,43 @@ namespace FogMod {
         this.AssertDirectoriesEqual_(goldenSubdir, tempSubdir);
       }
 
-      // this.AssertFilesBytesInDirs_(goldenDirectory, tempDir, "Data0.bdt");
+      this.AssertData0_(goldenDirectory, tempDir);
 
       // Verifies spoiler logs.
       this.AssertSpoilerLogsEqual_(
           goldenDirectory.GetSubdir("spoiler_logs").GetFiles().First(),
           tempDir.GetSubdir("spoiler_logs").GetFiles().First());
+    }
+
+    private void AssertData0_(IDirectory goldenDirectory, IDirectory tempDir) {
+      var expectedData0 = SoulsFile<BND4>.Read(
+          this.ReadFileBytes_(goldenDirectory.GetFile("Data0.bdt"), true));
+      var actualData0 = SoulsFile<BND4>.Read(
+          this.ReadFileBytes_(tempDir.GetFile("Data0.bdt"), true));
+
+      Assert.AreEqual(expectedData0.BigEndian, actualData0.BigEndian);
+      Assert.AreEqual(expectedData0.BitBigEndian, actualData0.BitBigEndian);
+      Assert.AreEqual(expectedData0.Extended, actualData0.Extended);
+      Assert.AreEqual(expectedData0.Format, actualData0.Format);
+      Assert.AreEqual(expectedData0.Unicode, actualData0.Unicode);
+      Assert.AreEqual(expectedData0.Unk04, actualData0.Unk04);
+      Assert.AreEqual(expectedData0.Unk05, actualData0.Unk05);
+      Assert.AreEqual(expectedData0.Version, actualData0.Version);
+
+      var expectedFiles = expectedData0.Files;
+      var actualFiles = actualData0.Files;
+
+      var expectedCount = expectedFiles.Count;
+      Assert.AreEqual(expectedCount, actualFiles.Count);
+      for (var i = 0; i < expectedCount; ++i) {
+        var expectedFile = expectedFiles[i];
+        var actualFile = actualFiles[i];
+
+        var expectedName = expectedFile.Name;
+        this.AssertBytes_(expectedFile.Bytes, actualFile.Bytes, expectedName);
+      }
+
+      // this.AssertFilesBytesInDirs_(goldenDirectory, tempDir, "Data0.bdt", true);
     }
 
     private void AssertDirectoriesEqual_(
@@ -120,8 +151,11 @@ namespace FogMod {
     private void AssertFilesBytesInDirs_(
         IDirectory expected,
         IDirectory actual,
-        string name)
-      => this.AssertFilesBytes_(expected.GetFile(name), actual.GetFile(name));
+        string name,
+        bool decrypt = false)
+      => this.AssertFilesBytes_(expected.GetFile(name),
+                                actual.GetFile(name),
+                                decrypt);
 
     private void AssertFilesTextInDirs_(
         IDirectory expected,
@@ -130,34 +164,39 @@ namespace FogMod {
       => this.AssertFilesText_(expected.GetFile(name), actual.GetFile(name));
 
 
-    private void AssertFilesBytes_(IFile expected, IFile actual) {
-      var expectedBytes = this.ReadFileBytes_(expected);
-      var actualBytes = this.ReadFileBytes_(actual);
+    private void AssertFilesBytes_(
+        IFile expected,
+        IFile actual,
+        bool decrypt = false) {
+      var expectedBytes = this.ReadFileBytes_(expected, decrypt);
+      var actualBytes = this.ReadFileBytes_(actual, decrypt);
+      this.AssertBytes_(expectedBytes, actualBytes, expected.FullName);
+    }
 
-      var expectedLength = expectedBytes.Length;
-      if (expectedLength != actualBytes.Length) {
-        this.DecompressFiles_(expected, actual);
+    private void AssertBytes_(byte[] expected, byte[] actual, string name) {
+      var expectedLength = expected.Length;
+      if (expectedLength != actual.Length) {
+        this.SaveExpectedAndActual_(expected, actual);
         Assert.AreEqual(expectedLength,
-                        actualBytes.Length,
+                        actual.Length,
                         "Expected files to be the same length.");
         return;
       }
 
       var differences = 0;
       for (var i = 0; i < expectedLength; ++i) {
-        if (expectedBytes[i] != actualBytes[i]) {
+        if (expected[i] != actual[i]) {
           ++differences;
         }
       }
 
       if (differences != 0) {
-        this.DecompressFiles_(expected, actual);
-
+        this.SaveExpectedAndActual_(expected, actual);
         var changePlural = differences == 1 ? "change" : "changes";
         Assert.Fail(
-            $"Expected {actual.FullName} to have same contents as " +
-            $"{expected.FullName}, but found {differences} {changePlural} " +
-            $"out of {expectedLength} bytes");
+            $"Expected {name} to have same contents as {name}, but " +
+            $"found {differences} {changePlural} out of {expectedLength} " +
+            "bytes");
       }
     }
 
@@ -173,22 +212,32 @@ namespace FogMod {
       }
     }
 
-    private void DecompressFiles_(IFile expected, IFile actual) {
-      this.DecompressFile_(expected,
-                           RandomizerTest.TEMP_DIR.FullName + "\\expected.txt");
-      this.DecompressFile_(actual,
-                           RandomizerTest.TEMP_DIR.FullName + "\\actual.txt");
+    private void DecompressFiles_(IFile expected, IFile actual)
+      => this.SaveExpectedAndActual_(this.ReadFileBytes_(expected),
+                                     this.ReadFileBytes_(actual));
+
+    private void SaveExpectedAndActual_(byte[] expected, byte[] actual) {
+      this.SaveFile_(expected,
+                     RandomizerTest.TEMP_DIR.FullName + "\\expected.txt");
+      this.SaveFile_(actual, RandomizerTest.TEMP_DIR.FullName + "\\actual.txt");
     }
 
-    private byte[] ReadFileBytes_(IFile file) {
+    private byte[] ReadFileBytes_(IFile file, bool decrypt = false) {
+      byte[] rawBytes;
       try {
-        return DCX.Decompress(file.FullName);
+        rawBytes = DCX.Decompress(file.FullName);
       } catch {
-        return File.ReadAllBytes(file.FullName);
+        rawBytes = File.ReadAllBytes(file.FullName);
       }
+
+      if (decrypt) {
+        return SFUtil.DecryptByteArray(SFUtil.ds3RegulationKey, rawBytes);
+      }
+
+      return rawBytes;
     }
 
-    private void DecompressFile_(IFile input, string output) {
+    private void SaveFile_(byte[] bytes, string output) {
       /*using var inputStream = new DeflateStream(
           new FileStream(input.FullName, FileMode.Open),
           CompressionMode.Decompress);
@@ -198,7 +247,6 @@ namespace FogMod {
 
       inputStream.CopyTo(outputStream);*/
 
-      var bytes = this.ReadFileBytes_(input);
       using var outputStream = new FileStream(output, FileMode.Create);
       outputStream.Write(bytes, 0, bytes.Length);
     }

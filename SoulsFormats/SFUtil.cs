@@ -35,7 +35,7 @@ namespace SoulsFormats {
         SFUtil.ParseHexString(
             "FD 46 4D 69 5E 69 A3 9A 10 E3 19 A7 AC E8 B7 FA");
 
-    private static byte[] ds3RegulationKey =
+    public static byte[] ds3RegulationKey =
         SFEncoding.ASCII.GetBytes("ds3#jn/8_7(rsY9pg55GFN7VFL#+3n/)");
 
     private static CompressionLevel
@@ -432,7 +432,7 @@ namespace SoulsFormats {
       File.WriteAllBytes(path, bytes);
     }
 
-    private static byte[] EncryptByteArray(byte[] key, byte[] secret) {
+    public static byte[] EncryptByteArray(byte[] key, byte[] secret) {
       using (MemoryStream memoryStream = new MemoryStream()) {
         using (AesManaged aesManaged = new AesManaged()) {
           aesManaged.Mode = CipherMode.CBC;
@@ -458,7 +458,7 @@ namespace SoulsFormats {
       }
     }
 
-    private static byte[] DecryptByteArray(byte[] key, byte[] secret) {
+    public static byte[] DecryptByteArray(byte[] key, byte[] secret) {
       byte[] rgbIV = new byte[16];
       byte[] buffer = new byte[secret.Length - 16];
       Buffer.BlockCopy((Array) secret, 0, (Array) rgbIV, 0, rgbIV.Length);

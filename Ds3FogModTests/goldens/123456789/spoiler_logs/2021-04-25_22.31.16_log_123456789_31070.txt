@@ -247,57 +247,69 @@ Soul of Cinder (scaling: 100%) <----
   Preexisting: From Kiln of the First Flame to Soul of Cinder (between Soul of Cinder and Kiln Entrance)
 Finished 123456789 at try 7
 
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\Data0.bdt
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\msg\engus\menu_dlc2.msgbnd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\common.emevd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\common_func.emevd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m30_00_00_00.emevd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m30_01_00_00.emevd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m31_00_00_00.emevd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m32_00_00_00.emevd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m33_00_00_00.emevd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m34_01_00_00.emevd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m35_00_00_00.emevd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m37_00_00_00.emevd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m38_00_00_00.emevd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m39_00_00_00.emevd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m40_00_00_00.emevd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m41_00_00_00.emevd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m45_00_00_00.emevd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m50_00_00_00.emevd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m51_00_00_00.emevd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\event\m51_01_00_00.emevd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m30_00_00_00.msb.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m30_01_00_00.msb.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m31_00_00_00.msb.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m32_00_00_00.msb.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m33_00_00_00.msb.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m34_01_00_00.msb.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m35_00_00_00.msb.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m37_00_00_00.msb.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m38_00_00_00.msb.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m39_00_00_00.msb.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m40_00_00_00.msb.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m41_00_00_00.msb.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m45_00_00_00.msb.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m50_00_00_00.msb.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m51_00_00_00.msb.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\map\mapstudio\m51_01_00_00.msb.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m30_00_00_00.talkesdbnd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m30_01_00_00.talkesdbnd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m31_00_00_00.talkesdbnd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m32_00_00_00.talkesdbnd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m33_00_00_00.talkesdbnd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m34_01_00_00.talkesdbnd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m35_00_00_00.talkesdbnd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m37_00_00_00.talkesdbnd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m38_00_00_00.talkesdbnd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m39_00_00_00.talkesdbnd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m40_00_00_00.talkesdbnd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m41_00_00_00.talkesdbnd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m45_00_00_00.talkesdbnd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m50_00_00_00.talkesdbnd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m51_00_00_00.talkesdbnd.dcx
-Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod\script\talk\m51_01_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\Data0.bdt
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\msg\engus\menu_dlc2.msgbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\event\common.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\event\common_func.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\event\m30_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\event\m30_01_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\event\m31_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\event\m32_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\event\m33_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\event\m34_01_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\event\m35_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\event\m37_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\event\m38_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\event\m39_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\event\m40_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\event\m41_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\event\m45_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\event\m50_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\event\m51_00_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\event\m51_01_00_00.emevd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\map\mapstudio\m30_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\map\mapstudio\m30_01_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\map\mapstudio\m31_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\map\mapstudio\m32_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\map\mapstudio\m33_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\map\mapstudio\m34_01_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\map\mapstudio\m35_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\map\mapstudio\m37_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\map\mapstudio\m38_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\map\mapstudio\m39_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\map\mapstudio\m40_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\map\mapstudio\m41_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\map\mapstudio\m45_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\map\mapstudio\m50_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\map\mapstudio\m51_00_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\map\mapstudio\m51_01_00_00.msb.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\script\talk\m30_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\script\talk\m30_01_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\script\talk\m31_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\script\talk\m32_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\script\talk\m33_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\script\talk\m34_01_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\script\talk\m35_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\script\talk\m37_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\script\talk\m38_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\script\talk\m39_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\script\talk\m40_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\script\talk\m41_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\script\talk\m45_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\script\talk\m50_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\script\talk\m51_00_00_00.talkesdbnd.dcx
+Writing M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\script\talk\m51_01_00_00.talkesdbnd.dcx
 Processing extra mod files...
-No extra files found
+Found extra file (delete it if you don't want it): M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\chr\c0000.anibnd.dcx
+Found extra file (delete it if you don't want it): M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\chr\c0000_a4x.anibnd.dcx
+Found extra file (delete it if you don't want it): M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\chr\c0000_a8x.anibnd.dcx
+Found extra file (delete it if you don't want it): M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\parts\wp_a_1404.partsbnd.dcx
+Found extra file (delete it if you don't want it): M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\parts\wp_a_1405.partsbnd.dcx
+Found extra file (delete it if you don't want it): M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\parts\wp_a_1409.partsbnd.dcx
+Found extra file (delete it if you don't want it): M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\parts\wp_a_1410.partsbnd.dcx
+Found extra file (delete it if you don't want it): M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\parts\wp_a_1411.partsbnd.dcx
+Found extra file (delete it if you don't want it): M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\parts\wp_a_1417.partsbnd.dcx
+Found extra file (delete it if you don't want it): M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\parts\wp_a_1419.partsbnd.dcx
+Found extra file (delete it if you don't want it): M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\sound\fdp_c6080.fsb
+Found extra file (delete it if you don't want it): M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\sound\fdp_main.fsb
+Found extra file (delete it if you don't want it): M:\Games\Steam\steamapps\common\DARK SOULS III\Game\mod3\sound\fdp_mixer.fev

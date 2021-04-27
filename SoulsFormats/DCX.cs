@@ -14,6 +14,14 @@ using FogMod.io;
 namespace SoulsFormats {
   [ComVisible(true)]
   public static class DCX {
+    public static bool Is(byte[] bytes)
+      => DCX.Is(new BinaryReaderEx(true, bytes));
+
+    public static bool Is(string path) {
+      using var fileStream = File.OpenRead(path);
+      return DCX.Is(new BinaryReaderEx(true, (Stream) fileStream));
+    }
+
     internal static bool Is(BinaryReaderEx br) {
       if (br.Stream.Length < 4L)
         return false;
@@ -21,26 +29,14 @@ namespace SoulsFormats {
       return ascii == "DCP\0" || ascii == "DCX\0";
     }
 
-    public static bool Is(byte[] bytes) {
-      return DCX.Is(new BinaryReaderEx(true, bytes));
-    }
+    public static byte[] Decompress(byte[] data)
+      => DCX.Decompress(data, out DCX.Type _);
 
-    public static bool Is(string path) {
-      using (FileStream fileStream = File.OpenRead(path))
-        return DCX.Is(new BinaryReaderEx(true, (Stream) fileStream));
-    }
+    public static byte[] Decompress(byte[] data, out DCX.Type type)
+      => DCX.Decompress(new BinaryReaderEx(true, data), out type);
 
-    public static byte[] Decompress(byte[] data, out DCX.Type type) {
-      return DCX.Decompress(new BinaryReaderEx(true, data), out type);
-    }
-
-    public static byte[] Decompress(byte[] data) {
-      return DCX.Decompress(data, out DCX.Type _);
-    }
-
-    public static byte[] Decompress(string path) {
-      return DCX.Decompress(path, out DCX.Type _);
-    }
+    public static byte[] Decompress(string path)
+      => DCX.Decompress(path, out DCX.Type _);
 
     public static byte[] Decompress(string path, out DCX.Type type) {
       using var fileStream = File.OpenRead(path);
@@ -169,24 +165,25 @@ namespace SoulsFormats {
       if (num1 != 32 + num2 * 16)
         throw new InvalidDataException("Unexpected EgdT size in EDGE DCX.");
       byte[] buffer = new byte[length];
-      using (MemoryStream memoryStream1 = new MemoryStream(buffer)) {
-        for (int index = 0; index < num2; ++index) {
-          br.AssertInt32(new int[1]);
-          int num3 = br.ReadInt32();
-          int count2 = br.ReadInt32();
-          int num4 = br.AssertInt32(0, 1) == 1 ? 1 : 0;
-          byte[] bytes = br.GetBytes(position + (long) num3, count2);
-          if (num4 != 0) {
-            using (MemoryStream memoryStream2 = new MemoryStream(bytes)) {
-              using (DeflateStream deflateStream =
-                  new DeflateStream((Stream) memoryStream2,
-                                    CompressionMode.Decompress))
-                deflateStream.CopyTo((Stream) memoryStream1);
-            }
-          } else
-            memoryStream1.Write(bytes, 0, bytes.Length);
+
+      using MemoryStream memoryStream1 = new MemoryStream(buffer);
+      for (int index = 0; index < num2; ++index) {
+        br.AssertInt32(new int[1]);
+        int num3 = br.ReadInt32();
+        int count2 = br.ReadInt32();
+        int num4 = br.AssertInt32(0, 1) == 1 ? 1 : 0;
+        byte[] bytes = br.GetBytes(position + (long) num3, count2);
+        if (num4 != 0) {
+          using MemoryStream memoryStream2 = new MemoryStream(bytes);
+          using DeflateStream deflateStream =
+              new DeflateStream((Stream) memoryStream2,
+                                CompressionMode.Decompress);
+          deflateStream.CopyTo((Stream) memoryStream1);
+        } else {
+          memoryStream1.Write(bytes, 0, bytes.Length);
         }
       }
+
       return buffer;
     }
 
@@ -225,29 +222,33 @@ namespace SoulsFormats {
       if (num3 != 36 + num4 * 16)
         throw new InvalidDataException("Unexpected EgdT size in EDGE DCX.");
       byte[] buffer = new byte[length];
-      using (MemoryStream memoryStream1 = new MemoryStream(buffer)) {
-        for (int index = 0; index < num4; ++index) {
-          br.AssertInt32(new int[1]);
-          int num5 = br.ReadInt32();
-          int count = br.ReadInt32();
-          int num6 = br.AssertInt32(0, 1) == 1 ? 1 : 0;
-          byte[] bytes =
-              br.GetBytes(position + (long) num2 + (long) num5, count);
-          if (num6 != 0) {
-            using (MemoryStream memoryStream2 = new MemoryStream(bytes)) {
-              using (DeflateStream deflateStream =
-                  new DeflateStream((Stream) memoryStream2,
-                                    CompressionMode.Decompress))
-                deflateStream.CopyTo((Stream) memoryStream1);
-            }
-          } else
-            memoryStream1.Write(bytes, 0, bytes.Length);
+
+      using MemoryStream memoryStream1 = new MemoryStream(buffer);
+      for (int index = 0; index < num4; ++index) {
+        br.AssertInt32(new int[1]);
+        int num5 = br.ReadInt32();
+        int count = br.ReadInt32();
+        int num6 = br.AssertInt32(0, 1) == 1 ? 1 : 0;
+        byte[] bytes =
+            br.GetBytes(position + (long) num2 + (long) num5, count);
+        if (num6 != 0) {
+          using MemoryStream memoryStream2 = new MemoryStream(bytes);
+          using DeflateStream deflateStream =
+              new DeflateStream((Stream) memoryStream2,
+                                CompressionMode.Decompress);
+          deflateStream.CopyTo((Stream) memoryStream1);
+        } else {
+          memoryStream1.Write(bytes, 0, bytes.Length);
         }
       }
+
       return buffer;
     }
 
-    private static byte[] DecompressDCXDFLT(BinaryReaderEx br, DCX.Type type, IFile file) {
+    private static byte[] DecompressDCXDFLT(
+        BinaryReaderEx br,
+        DCX.Type type,
+        IFile file) {
       br.AssertASCII("DCX\0");
       switch (type) {
         case DCX.Type.DCX_DFLT_10000_24_9:
