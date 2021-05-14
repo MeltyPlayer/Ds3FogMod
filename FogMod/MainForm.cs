@@ -255,6 +255,12 @@ namespace FogMod {
           mainForm.setStatus("Randomizing...", false);
           mainForm.randb.BackColor = Color.LightYellow;
           Randomizer randomizer = new Randomizer();
+
+          var editor = new GameEditor(this.game);
+          editor.Spec.GameDir = @"dist";
+          editor.Spec.LayoutDir = @"dist\Layouts";
+          editor.Spec.NameDir = @"dist\Names";
+
           await Task.Factory.StartNew((Action) (async () => {
                                                    Directory.CreateDirectory(
                                                        "runs");
@@ -277,6 +283,7 @@ namespace FogMod {
                                                          await randomizer.Randomize(
                                                              rand,
                                                              this.game,
+                                                             editor,
                                                              gameDir,
                                                              gameDir);
                                                      this.setStatus(

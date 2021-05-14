@@ -8,8 +8,16 @@ namespace FogMod.io {
     private readonly DirectoryInfo impl_;
 
 
-    public static IoDirectory GetCwd()
+    public static IDirectory GetCwd()
       => new IoDirectory(Directory.GetCurrentDirectory());
+
+
+    public static IDirectory GameDirectory { get; } =
+      new IoDirectory(
+          "M:\\Games\\Steam\\steamapps\\common\\DARK SOULS III\\Game");
+
+    public static IDirectory ModDirectory { get; } =
+      IoDirectory.GameDirectory.GetSubdir("mod");
 
 
     public IoDirectory(DirectoryInfo directoryInfo)
@@ -60,11 +68,14 @@ namespace FogMod.io {
     public IEnumerable<IFile> GetFiles()
       => this.impl_.EnumerateFiles().Select(file => new IoFile(file));
 
+    public IEnumerable<IFile> GetFiles(string searchPattern)
+      => this.impl_.GetFiles(searchPattern).Select(file => new IoFile(file));
+
     public IFile GetFile(string path) {
       // TODO: Handle subdirectories automatically.
       try {
         return new IoFile(this.impl_.GetFiles(path).Single());
-      } catch(Exception e) {
+      } catch (Exception e) {
         throw new Exception($"Expected to find {path}", e);
       }
     }

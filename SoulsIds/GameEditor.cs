@@ -138,9 +138,7 @@ namespace SoulsIds {
       try {
         binder = this.ReadBnd(path);
       } catch (Exception ex) {
-        throw new Exception(string.Format("Failed to load {0}: {1}",
-                                          (object) path,
-                                          (object) ex));
+        throw new Exception($"Failed to load {path}: {ex}");
       }
 
       foreach (var file in binder.Files) {

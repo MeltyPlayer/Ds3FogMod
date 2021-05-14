@@ -21,6 +21,7 @@ namespace FogMod {
     public async Task<ItemReader.Result> Randomize(
         RandomizerOptions opt,
         GameSpec.FromGame game,
+        GameEditor editor,
         string gameDir,
         string outDir) {
       var stopwatch = new Stopwatch();
@@ -32,26 +33,28 @@ namespace FogMod {
                                                       " ",
                                                       (IEnumerable<string>) opt
                                                           .GetEnabled())));
-      string path = game == GameSpec.FromGame.DS3
-                        ? "fogdist\\fog.txt"
-                        : "dist\\fog.txt";
+
+      var fogdistDirectory = new IoDirectory(editor.Spec.GameDir);
+      var fogTxt = fogdistDirectory.GetFile("fog.txt");
+
       IDeserializer deserializer = new DeserializerBuilder().Build();
 
       AnnotationData ann;
-      using (StreamReader streamReader = File.OpenText(path))
+      using (StreamReader streamReader = File.OpenText(fogTxt.FullName))
         ann = deserializer.Deserialize<AnnotationData>(
             (TextReader) streamReader);
       ann.SetGame(game);
       stopwatch.ResetAndPrint("Set up annotations");
 
-      Events events = (Events) null;
+      Events events = null;
       if (game == GameSpec.FromGame.DS3) {
-        using (StreamReader streamReader =
-            File.OpenText("fogdist\\locations.txt"))
-          ann.Locations =
-              deserializer.Deserialize<AnnotationData.FogLocations>(
-                  (TextReader) streamReader);
-        events = new Events("fogdist\\Base\\ds3-common.emedf.json");
+        var locations = fogdistDirectory.GetFile("locations.txt");
+        using var streamReader = File.OpenText(locations.FullName);
+        ann.Locations = deserializer.Deserialize<AnnotationData.FogLocations>(
+            streamReader);
+
+        var ds3Common = fogdistDirectory.GetFile("Base\\ds3-common.emedf.json");
+        events = new Events(ds3Common.FullName);
       }
       stopwatch.ResetAndPrint("Read fog gates & events");
 
@@ -59,13 +62,13 @@ namespace FogMod {
       g.Construct(opt, ann);
       stopwatch.ResetAndPrint("Construct graph");
 
-      GameEditor editor = new GameEditor(game);
-      editor.Spec.GameDir = $@"fogdist";
-      editor.Spec.LayoutDir = $@"fogdist\Layouts";
-      editor.Spec.NameDir = $@"fogdist\Names";
-
       ItemReader.Result items =
-          await new ItemReader().FindItems(opt, ann, g, events, gameDir, game, editor);
+          await new ItemReader().FindItems(opt,
+                                           ann,
+                                           g,
+                                           events,
+                                           gameDir,
+                                           editor);
       Writers.SpoilerLogs.WriteLine(items.Randomized
                                         ? "Key item hash: " + items.ItemHash
                                         : "No key items randomized");
@@ -87,7 +90,7 @@ namespace FogMod {
           eventConfig =
               deserializer.Deserialize<EventConfig>((TextReader) streamReader);
         if (opt["eventsyaml"] || opt["events"]) {
-          await new GenerateConfig().WriteEventConfig(ann, events, opt);
+          await new GenerateConfig().WriteEventConfig(editor, ann, events, opt);
           goto DoneRandomizing;
         }
         await new GameDataWriter3().WriteAsync(opt,

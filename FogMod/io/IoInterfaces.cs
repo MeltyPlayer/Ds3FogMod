@@ -14,6 +14,8 @@ namespace FogMod.io {
     IDirectory GetSubdir(string relativePath, bool create = false);
 
     IEnumerable<IFile> GetFiles();
+    IEnumerable<IFile> GetFiles(string searchPattern);
+
     IFile GetFile(string relativePath);
   }
 

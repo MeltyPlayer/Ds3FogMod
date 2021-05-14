@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 
+using FogMod.io;
+
 using SoulsFormats;
 
 using SoulsIds;
@@ -19,7 +21,8 @@ namespace FogMod {
         return ParamsManager.cache_;
       }
 
-      string path = @"fogdist\Base\Data0.bdt";
+      var fogdistDirectory = new IoDirectory(editor.Spec.GameDir);
+      string path = fogdistDirectory.GetFile("Base\\Data0.bdt").FullName;
       string altPath = $@"{gameDir}\Data0.bdt";
       if (gameDir != null && File.Exists(altPath)) {
         Console.WriteLine($"Using override {altPath}");

@@ -53,9 +53,12 @@ namespace FogMod {
       var Params = ParamsManager.Get(gameDir, events, editor);
       stopwatch.ResetAndPrint("  Loading params");
 
+      var fogdistDirectory = new IoDirectory(editor.Spec.GameDir);
+      var baseDirectory = fogdistDirectory.GetSubdir("Base");
+
       Dictionary<string, FMG> menuFMGs;
       {
-        string path = @"fogdist\Base\menu_dlc2.msgbnd.dcx";
+        var path = baseDirectory.GetFile("menu_dlc2.msgbnd.dcx").FullName;
         string altPath = $@"{gameDir}\msg\engus\menu_dlc2.msgbnd.dcx";
         if (gameDir != null && File.Exists(altPath)) {
           Console.WriteLine($"Using override {altPath}");
@@ -66,10 +69,10 @@ namespace FogMod {
       stopwatch.ResetAndPrint("  Loading menuFMGs");
 
       // Overrides where only one copy is needed
-      var msbFiles = Directory.GetFiles($@"fogdist\Base", "*.msb.dcx");
+      var msbFiles = baseDirectory.GetFiles("*.msb.dcx");
       var maps = new Dictionary<string, MSB3>();
       foreach (var basePath in msbFiles) {
-        string path = basePath;
+        string path = basePath.FullName;
         string name = GameEditor.BaseName(path);
         if (!ann.Specs.ContainsKey(name)) {
           return;
@@ -87,10 +90,8 @@ namespace FogMod {
       stopwatch.ResetAndPrint("  Loading maps");
 
       Dictionary<string, EMEVD> emevds = new Dictionary<string, EMEVD>();
-      foreach (string basePath in Directory.GetFiles(
-          $@"fogdist\Base",
-          "*.emevd.dcx")) {
-        string path = basePath;
+      foreach (var basePath in baseDirectory.GetFiles("*.emevd.dcx")) {
+        string path = basePath.FullName;
         string name = GameEditor.BaseName(path);
         if (!validEmevd(name)) continue;
         string altPath = $@"{gameDir}\event\{name}.emevd.dcx";
@@ -104,9 +105,9 @@ namespace FogMod {
 
       Dictionary<string, Dictionary<string, ESD>> esds =
           new Dictionary<string, Dictionary<string, ESD>>();
-      var esdPaths = Directory.GetFiles($@"fogdist\Base", "*.talkesdbnd.dcx");
+      var esdPaths = baseDirectory.GetFiles("*.talkesdbnd.dcx");
       await Task.WhenAll(esdPaths.Select(basePath => Task.Run(() => {
-        string path = basePath;
+        string path = basePath.FullName;
         string name = GameEditor.BaseName(path);
         if (!ann.Specs.ContainsKey(name)) {
           return;
@@ -1532,7 +1533,7 @@ namespace FogMod {
 
       List<string> outPaths = new List<string>();
       {
-        string basePath = $@"fogdist\Base\Data0.bdt";
+        string basePath = baseDirectory.GetFile("Data0.bdt").FullName;
         string altPath = $@"{gameDir}\Data0.bdt";
         if (File.Exists(altPath)) {
           basePath = altPath;
@@ -1547,7 +1548,7 @@ namespace FogMod {
       stopwatch.ResetAndPrint("  Loading outpaths");
 
       {
-        string basePath = $@"fogdist\Base\menu_dlc2.msgbnd.dcx";
+        string basePath = baseDirectory.GetFile("menu_dlc2.msgbnd.dcx").FullName;
         string altPath = $@"{gameDir}\msg\engus\menu_dlc2.msgbnd.dcx";
         if (File.Exists(altPath)) {
           basePath = altPath;
@@ -1576,7 +1577,7 @@ namespace FogMod {
       stopwatch.ResetAndPrint("  Writing msb.dcx");
 
       await Task.WhenAll(esds.Select(entry => Task.Run(() => {
-        string basePath = $@"fogdist\Base\{entry.Key}.talkesdbnd.dcx";
+        string basePath = baseDirectory.GetFile($"{entry.Key}.talkesdbnd.dcx").FullName;
         string altPath = $@"{gameDir}\script\talk\{entry.Key}.talkesdbnd.dcx";
         if (File.Exists(altPath)) {
           basePath = altPath;

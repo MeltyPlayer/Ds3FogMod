@@ -23,7 +23,6 @@ namespace FogMod {
         Graph g,
         Events events,
         string gameDir,
-        GameSpec.FromGame game,
         GameEditor gameEditor) {
       var stopwatch = new Stopwatch();
       stopwatch.Start();

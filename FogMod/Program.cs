@@ -42,15 +42,22 @@ namespace FogMod {
         GameSpec.FromGame game = GameSpec.FromGame.DS3;
         opt.Game = game;
         string gameDir = GameSpec.ForGame(game).GameDir;
+
+        var editor = new GameEditor(game);
+        editor.Spec.GameDir = @"fogdist";
+        editor.Spec.LayoutDir = @"fogdist\Layouts";
+        editor.Spec.NameDir = @"fogdist\Names";
+
         if (game == GameSpec.FromGame.DS3)
           await new Randomizer().Randomize(opt,
                                      game,
+                                     editor,
                                      opt["mergemods"]
                                          ? gameDir + "\\randomizer"
                                          : (string) null,
                                      gameDir + "\\fog");
         else
-          await new Randomizer().Randomize(opt, game, gameDir, gameDir);
+          await new Randomizer().Randomize(opt, game, editor, gameDir, gameDir);
       } else {
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);

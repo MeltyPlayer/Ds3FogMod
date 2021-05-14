@@ -74,12 +74,10 @@ namespace FogMod {
     }
 
     public async Task WriteEventConfig(
+        GameEditor editor,
         AnnotationData ann,
         Events events,
         RandomizerOptions opt) {
-      GameEditor editor = new GameEditor(FromGame.DS3);
-
-      editor.Spec.GameDir = "fogdist";
       Dictionary<string, MSB3> maps = editor.Load(
           @"Base",
           path => ann.Specs.ContainsKey(GameEditor.BaseName(path))
@@ -104,7 +102,6 @@ namespace FogMod {
       deleteEmpty(maps);
       deleteEmpty(emevds);
 
-      editor.Spec.NameDir = @"fogdist\Names";
       Dictionary<string, string> modelNames =
           editor.LoadNames("ModelName", n => n);
       SortedDictionary<int, string> chars =
@@ -141,7 +138,7 @@ namespace FogMod {
       }
 
       Dictionary<string, Dictionary<string, FMG>> fmgs =
-          new GameEditor(FromGame.DS3).LoadBnds(
+          editor.LoadBnds(
               $@"msg\engus",
               (data, name) => FMG.Read(data),
               ext: "*_dlc2.msgbnd.dcx");

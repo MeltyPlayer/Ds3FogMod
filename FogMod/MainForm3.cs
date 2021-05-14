@@ -190,6 +190,12 @@ namespace FogMod {
       RandomizerOptions rand = mainForm3.options.Copy();
       mainForm3.randb.BackColor = Color.LightYellow;
       Randomizer randomizer = new Randomizer();
+
+      var editor = new GameEditor(GameSpec.FromGame.DS3);
+      editor.Spec.GameDir = @"fogdist";
+      editor.Spec.LayoutDir = @"fogdist\Layouts";
+      editor.Spec.NameDir = @"fogdist\Names";
+
       await Task.Factory.StartNew((Action) (async () => {
                                                Directory.CreateDirectory(
                                                    "spoiler_logs");
@@ -207,6 +213,7 @@ namespace FogMod {
                                                      randomizer.Randomize(
                                                          rand,
                                                          GameSpec.FromGame.DS3,
+                                                         editor,
                                                          gameDir,
                                                          Directory
                                                              .GetCurrentDirectory());

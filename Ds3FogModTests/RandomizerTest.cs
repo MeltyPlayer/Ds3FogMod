@@ -14,6 +14,7 @@ using FogMod.Properties;
 using SoulsFormats;
 
 using SoulsIds;
+
 using FogMod.util.time;
 
 namespace FogMod {
@@ -77,8 +78,20 @@ namespace FogMod {
       string path = string.Format($"{spoilerLogs.FullName}\\temp.txt");
 
       Writers.SpoilerLogs = File.CreateText(path);
+
+      var modDirectory = IoDirectory.ModDirectory;
+      var fogdistDirectory = modDirectory.GetSubdir("fogdist");
+      var layoutsDirectory = fogdistDirectory.GetSubdir("Layouts");
+      var namesDirectory = fogdistDirectory.GetSubdir("Names");
+
+      var editor = new GameEditor(GameSpec.FromGame.DS3);
+      editor.Spec.GameDir = fogdistDirectory.FullName;
+      editor.Spec.LayoutDir = layoutsDirectory.FullName;
+      editor.Spec.NameDir = namesDirectory.FullName;
+
       await new Randomizer().Randomize(opt,
                                        SoulsIds.GameSpec.FromGame.DS3,
+                                       editor,
                                        opt["mergemods"]
                                            ? gameDir + "\\randomizer"
                                            : (string) null,
@@ -97,7 +110,7 @@ namespace FogMod {
       }
       stopwatch.ResetAndPrint("Verifying output files");
 
-      this.AssertData0_(goldenDirectory, tempDir);
+      this.AssertData0_(goldenDirectory, tempDir, editor);
       stopwatch.ResetAndPrint("Verifying Data0.bdt");
 
       // Verifies spoiler logs.
@@ -107,7 +120,10 @@ namespace FogMod {
       stopwatch.ResetAndPrint("Verifying spoiler logs");
     }
 
-    private void AssertData0_(IDirectory goldenDirectory, IDirectory tempDir) {
+    private void AssertData0_(
+        IDirectory goldenDirectory,
+        IDirectory tempDir,
+        GameEditor editor) {
       var expectedFile = goldenDirectory.GetFile("Data0.bdt");
       var actualFile = tempDir.GetFile("Data0.bdt");
 
@@ -130,11 +146,6 @@ namespace FogMod {
 
       var expectedCount = expectedFiles.Count;
       Assert.AreEqual(expectedCount, actualFiles.Count);
-
-      GameEditor editor = new GameEditor(GameSpec.FromGame.DS3);
-      editor.Spec.GameDir = $@"fogdist";
-      editor.Spec.LayoutDir = $@"fogdist\Layouts";
-      editor.Spec.NameDir = $@"fogdist\Names";
 
       var expectedParams = editor.LoadParams(expectedFile.FullName, null, true);
       var actualParams = editor.LoadParams(actualFile.FullName, null, true);
@@ -264,8 +275,8 @@ namespace FogMod {
                          actualValue as byte[],
                          expectedDef.DisplayName);
           } else if (displayType == PARAMDEF.DefType.f32) {
-            var expectedFloat = (float)expectedValue;
-            var actualFloat = (float)actualValue;
+            var expectedFloat = (float) expectedValue;
+            var actualFloat = (float) actualValue;
             Assert.AreEqual(expectedFloat,
                             actualFloat,
                             .0001,
@@ -396,12 +407,12 @@ namespace FogMod {
                  .Where(l => !l.StartsWith("Writing ") &&
                              !l.StartsWith("Found extra file ") &&
                              !l.StartsWith("No extra files found"))
-          .Aggregate(new StringBuilder(),
-                     (current, next)
-                         => current
-                            .Append(current.Length == 0 ? "" : ", ")
-                            .Append(next))
-          .ToString();
+                 .Aggregate(new StringBuilder(),
+                            (current, next)
+                                => current
+                                   .Append(current.Length == 0 ? "" : ", ")
+                                   .Append(next))
+                 .ToString();
       Assert.AreEqual(
           readFromSpoilerLogs(expected),
           readFromSpoilerLogs(actual));
