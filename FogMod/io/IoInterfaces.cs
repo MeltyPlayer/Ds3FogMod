@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 
 namespace FogMod.io {
   public interface IIoObject {
@@ -19,5 +20,8 @@ namespace FogMod.io {
     IFile GetFile(string relativePath);
   }
 
-  public interface IFile : IIoObject {}
+  public interface IFile : IIoObject {
+    StreamReader ReadAsText();
+    byte[] SkimAllBytes();
+  }
 }

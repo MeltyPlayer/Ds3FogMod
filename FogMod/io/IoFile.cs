@@ -12,5 +12,8 @@ namespace FogMod.io {
 
     public IDirectory GetParent() => new IoDirectory(this.impl_.Directory);
     public bool Exists => this.impl_.Exists;
+
+    public StreamReader ReadAsText() => File.OpenText(this.FullName);
+    public byte[] SkimAllBytes() => File.ReadAllBytes(this.FullName);
   }
 }

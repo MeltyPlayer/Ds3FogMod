@@ -4,6 +4,8 @@ using System.Linq;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
+using FogMod.io;
+
 using SoulsFormats;
 
 using static SoulsFormats.EMEVD.Instruction;
@@ -52,6 +54,8 @@ namespace SoulsIds {
     private EMEDF doc_;
     private Dictionary<string, (int, int)> docByName_;
     private Dictionary<EMEDF.InstrDoc, List<int>> funcBytePositions_;
+
+    public Events(IFile emedfFile) : this(emedfFile.FullName) {}
 
     public Events(string emedfPath) {
       doc_ = EMEDF.ReadFile(emedfPath);

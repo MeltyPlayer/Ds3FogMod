@@ -40,7 +40,7 @@ namespace FogMod {
       IDeserializer deserializer = new DeserializerBuilder().Build();
 
       AnnotationData ann;
-      using (StreamReader streamReader = File.OpenText(fogTxt.FullName))
+      using (StreamReader streamReader = fogTxt.ReadAsText())
         ann = deserializer.Deserialize<AnnotationData>(
             (TextReader) streamReader);
       ann.SetGame(game);
@@ -49,12 +49,12 @@ namespace FogMod {
       Events events = null;
       if (game == GameSpec.FromGame.DS3) {
         var locations = fogdistDirectory.GetFile("locations.txt");
-        using var streamReader = File.OpenText(locations.FullName);
+        using var streamReader = locations.ReadAsText();
         ann.Locations = deserializer.Deserialize<AnnotationData.FogLocations>(
             streamReader);
 
         var ds3Common = fogdistDirectory.GetFile("Base\\ds3-common.emedf.json");
-        events = new Events(ds3Common.FullName);
+        events = new Events(ds3Common);
       }
       stopwatch.ResetAndPrint("Read fog gates & events");
 
@@ -85,10 +85,10 @@ namespace FogMod {
       Console.WriteLine();
       Console.WriteLine("Saving game files...");
       if (game == GameSpec.FromGame.DS3) {
+        var eventsTxt = fogdistDirectory.GetFile("events.txt");
         EventConfig eventConfig;
-        using (StreamReader streamReader = File.OpenText("fogdist\\events.txt"))
-          eventConfig =
-              deserializer.Deserialize<EventConfig>((TextReader) streamReader);
+        using (StreamReader streamReader = eventsTxt.ReadAsText())
+          eventConfig = deserializer.Deserialize<EventConfig>(streamReader);
         if (opt["eventsyaml"] || opt["events"]) {
           await new GenerateConfig().WriteEventConfig(editor, ann, events, opt);
           goto DoneRandomizing;

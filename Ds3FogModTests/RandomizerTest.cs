@@ -386,7 +386,7 @@ namespace FogMod {
       try {
         rawBytes = DCX.Decompress(file.FullName);
       } catch {
-        rawBytes = File.ReadAllBytes(file.FullName);
+        rawBytes = file.SkimAllBytes();
       }
 
       if (decrypt) {
