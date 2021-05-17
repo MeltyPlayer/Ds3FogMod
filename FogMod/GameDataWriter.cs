@@ -64,11 +64,11 @@ namespace FogMod
       string str1 = string.Format("dist\\{0}", (object) game);
       gameEditor.Spec.GameDir = str1;
       Dictionary<string, MSB1> dictionary1 = gameEditor.Load<MSB1>("map\\MapStudio", (Func<string, MSB1>) (path => !ann.Specs.ContainsKey(Path.GetFileNameWithoutExtension(path)) ? (MSB1) null : SoulsFile<MSB1>.Read(path)), "*.msb");
-      Dictionary<string, PARAM.Layout> layouts = gameEditor.LoadLayouts();
-      Dictionary<string, PARAM> dictionary2 = gameEditor.LoadParams(layouts, false);
+      Dictionary<string, PARAM.Layout> layouts = await gameEditor.LoadLayouts();
+      Dictionary<string, PARAM> dictionary2 = await gameEditor.LoadParams(layouts, false);
       gameEditor.Spec.GameDir = gameDir;
       Dictionary<string, MSB1> dictionary3 = gameEditor.Load<MSB1>("map\\MapStudio", (Func<string, MSB1>) (path => !ann.Specs.ContainsKey(Path.GetFileNameWithoutExtension(path)) ? (MSB1) null : SoulsFile<MSB1>.Read(path)), "*.msb");
-      Dictionary<string, PARAM> diffData1 = gameEditor.LoadParams(layouts, false);
+      Dictionary<string, PARAM> diffData1 = await gameEditor.LoadParams(layouts, false);
       string str2 = flag1 ? ".dcx" : "";
       string fmgEvent = flag1 ? "Event_text_" : "イベントテキスト";
       Dictionary<string, FMG> diffData2 = gameEditor.LoadBnd<FMG>(gameEditor.Spec.GameDir + "\\msg\\" + opt.Language + "\\menu.msgbnd" + str2, (Func<byte[], string, FMG>) ((data, name) => !(name == fmgEvent) ? (FMG) null : SoulsFile<FMG>.Read(data)), (string) null);

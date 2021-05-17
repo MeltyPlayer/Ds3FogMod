@@ -50,7 +50,7 @@ namespace FogMod {
 
       stopwatch.ResetAndPrint("  Prework");
 
-      var Params = ParamsManager.Get(gameDir, events, editor);
+      var Params = await ParamsManager.Get(gameDir, events, editor);
       stopwatch.ResetAndPrint("  Loading params");
 
       var fogdistDirectory = new IoDirectory(editor.Spec.GameDir);

@@ -113,7 +113,7 @@ namespace SoulsIds {
       if (this.Params != null)
         return;
       this.Params =
-          new GameEditor(this.spec).LoadParams(
+          await new GameEditor(this.spec).LoadParams(
               (Dictionary<string, PARAM.Layout>) null,
               false);
     }

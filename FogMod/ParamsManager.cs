@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 using FogMod.io;
 
@@ -12,7 +13,7 @@ namespace FogMod {
   public static class ParamsManager {
     private static Dictionary<string, PARAM> cache_;
 
-    public static Dictionary<string, PARAM> Get(
+    public static async Task<Dictionary<string, PARAM>> Get(
         string gameDir,
         Events events,
         GameEditor editor
@@ -30,8 +31,9 @@ namespace FogMod {
       }
 
       // TODO: Slow
-      var layouts = editor.LoadLayouts();
-      return ParamsManager.cache_ = editor.LoadParams(path, layouts, true);
+      var layouts = await editor.LoadLayouts();
+      return ParamsManager.cache_ =
+                 await editor.LoadParams(path, layouts, true);
     }
   }
 }

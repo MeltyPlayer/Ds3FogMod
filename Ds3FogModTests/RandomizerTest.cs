@@ -110,7 +110,7 @@ namespace FogMod {
       }
       stopwatch.ResetAndPrint("Verifying output files");
 
-      this.AssertData0_(goldenDirectory, tempDir, editor);
+      await this.AssertData0_(goldenDirectory, tempDir, editor);
       stopwatch.ResetAndPrint("Verifying Data0.bdt");
 
       // Verifies spoiler logs.
@@ -120,7 +120,7 @@ namespace FogMod {
       stopwatch.ResetAndPrint("Verifying spoiler logs");
     }
 
-    private void AssertData0_(
+    private async Task AssertData0_(
         IDirectory goldenDirectory,
         IDirectory tempDir,
         GameEditor editor) {
@@ -147,8 +147,12 @@ namespace FogMod {
       var expectedCount = expectedFiles.Count;
       Assert.AreEqual(expectedCount, actualFiles.Count);
 
-      var expectedParams = editor.LoadParams(expectedFile.FullName, null, true);
-      var actualParams = editor.LoadParams(actualFile.FullName, null, true);
+      var param = await Task.WhenAll(new[] {
+          editor.LoadParams(expectedFile.FullName, null, true),
+          editor.LoadParams(actualFile.FullName, null, true)
+      });
+      var expectedParams = param[0];
+      var actualParams = param[1];
 
       Assert.AreEqual(expectedParams.Count, actualParams.Count);
       foreach (var expectedParam in expectedParams) {

@@ -70,6 +70,8 @@ namespace FogMod {
     private Label label9;
     private RadioButton earlywarp;
 
+    private GameEditor editor;
+
     public MainForm3() {
       this.InitializeComponent();
       this.errorL.Text = "";
@@ -98,6 +100,12 @@ namespace FogMod {
           }
         }
       }
+
+      this.editor = new GameEditor(GameSpec.FromGame.DS3);
+      this.editor.Spec.GameDir = @"fogdist";
+      this.editor.Spec.LayoutDir = @"fogdist\Layouts";
+      this.editor.Spec.NameDir = @"fogdist\Names";
+      Task.Run(this.editor.LoadLayouts);
     }
 
     private void UpdateExePath() {
@@ -190,11 +198,6 @@ namespace FogMod {
       RandomizerOptions rand = mainForm3.options.Copy();
       mainForm3.randb.BackColor = Color.LightYellow;
       Randomizer randomizer = new Randomizer();
-
-      var editor = new GameEditor(GameSpec.FromGame.DS3);
-      editor.Spec.GameDir = @"fogdist";
-      editor.Spec.LayoutDir = @"fogdist\Layouts";
-      editor.Spec.NameDir = @"fogdist\Names";
       
       await Task.Run(async () => {
         Directory.CreateDirectory(
@@ -211,7 +214,7 @@ namespace FogMod {
                       rand,
                       GameSpec.FromGame
                               .DS3,
-                      editor,
+                      this.editor,
                       gameDir,
                       Directory
                           .GetCurrentDirectory());

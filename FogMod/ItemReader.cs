@@ -31,11 +31,11 @@ namespace FogMod {
           ann.KeyItems.ToDictionary(item => item.ID, item => item.Name);
       var itemAreas = g.ItemAreas;
 
-      var layouts = gameEditor.LoadLayouts();
+      var layouts = await gameEditor.LoadLayouts();
 
       if (ann.LotLocations != null) {
         Dictionary<int, PARAM.Row> dictionary2 =
-            (gameEditor.LoadParams(layouts, false))
+            (await gameEditor.LoadParams(layouts, false))
                       ["ItemLotParam"]
                       .Rows.ToDictionary<PARAM.Row, int, PARAM.Row>(
                           (Func<PARAM.Row, int>) (r => (int) r.ID),
@@ -108,7 +108,7 @@ namespace FogMod {
 
         int num1 = -1;
         Dictionary<string, PARAM> dictionary2 =
-            ParamsManager.Get(gameDir, events, gameEditor);
+            await ParamsManager.Get(gameDir, events, gameEditor);
         locationStopwatch.ResetAndPrint("    Locations 0");
 
         if (gameDir != null) {

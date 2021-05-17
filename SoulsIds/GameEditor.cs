@@ -24,7 +24,7 @@ namespace SoulsIds {
       this.Spec = spec;
     }
 
-    public Dictionary<string, PARAM> LoadParams(
+    public Task<Dictionary<string, PARAM>> LoadParams(
         Dictionary<string, PARAM.Layout> layouts = null,
         bool allowError = false) {
       if (this.Spec.ParamFile == null)
@@ -34,11 +34,11 @@ namespace SoulsIds {
                              allowError);
     }
 
-    public Dictionary<string, PARAM> LoadParams(
+    public async Task<Dictionary<string, PARAM>> LoadParams(
         string path,
         Dictionary<string, PARAM.Layout> layouts = null,
         bool allowError = false) {
-      layouts ??= this.LoadLayouts();
+      layouts ??= await this.LoadLayouts();
       return this.LoadBnd<PARAM>(
           path,
           (data, paramPath) => {
@@ -87,23 +87,28 @@ namespace SoulsIds {
       return dictionary;
     }
 
-    private Dictionary<string, PARAM.Layout> layoutsCache_;
-    public Dictionary<string, PARAM.Layout> LoadLayouts() {
+    private Task<Dictionary<string, PARAM.Layout>> layoutsCache_;
+    public async Task<Dictionary<string, PARAM.Layout>> LoadLayouts() {
       if (this.layoutsCache_ != null) {
-        return this.layoutsCache_;
+        return await this.layoutsCache_;
       }
 
-      if (this.Spec.LayoutDir == null)
-        throw new Exception("Layout dir not provided");
-      Dictionary<string, PARAM.Layout> dictionary =
-          new Dictionary<string, PARAM.Layout>();
-      foreach (string file in Directory.GetFiles(this.Spec.LayoutDir, "*.xml")
-      ) {
-        string withoutExtension = Path.GetFileNameWithoutExtension(file);
-        PARAM.Layout layout = PARAM.Layout.ReadXMLFile(file);
-        dictionary[withoutExtension] = layout;
-      }
-      return this.layoutsCache_ = dictionary;
+      return await (this.layoutsCache_ = Task.Run(() => {
+        if (this.Spec.LayoutDir == null) {
+          throw new Exception("Layout dir not provided");
+        }
+
+        Dictionary<string, PARAM.Layout> dictionary =
+            new Dictionary<string, PARAM.Layout>();
+        foreach (string file in Directory.GetFiles(this.Spec.LayoutDir, "*.xml")
+        ) {
+          string withoutExtension = Path.GetFileNameWithoutExtension(file);
+          PARAM.Layout layout = PARAM.Layout.ReadXMLFile(file);
+          dictionary[withoutExtension] = layout;
+        }
+
+        return dictionary;
+      }));
     }
 
     public Dictionary<string, T> Load<T>(
