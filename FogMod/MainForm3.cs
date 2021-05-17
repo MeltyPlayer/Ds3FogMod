@@ -195,61 +195,61 @@ namespace FogMod {
       editor.Spec.GameDir = @"fogdist";
       editor.Spec.LayoutDir = @"fogdist\Layouts";
       editor.Spec.NameDir = @"fogdist\Names";
+      
+      await Task.Run(async () => {
+        Directory.CreateDirectory(
+            "spoiler_logs");
+        var path =
+            $"spoiler_logs\\{DateTime.Now:yyyy-MM-dd_HH.mm.ss}_log_{rand.Seed}_{rand.ConfigHash()}.txt";
+        Writers.SpoilerLogs =
+            File.CreateText(path);
 
-      await Task.Factory.StartNew((Action) (async () => {
-                                               Directory.CreateDirectory(
-                                                   "spoiler_logs");
-                                               string path = string.Format(
-                                                   "spoiler_logs\\{0}_log_{1}_{2}.txt",
-                                                   (object) DateTime
-                                                            .Now.ToString(
-                                                                "yyyy-MM-dd_HH.mm.ss"),
-                                                   (object) rand.Seed,
-                                                   (object) rand.ConfigHash());
-                                               Writers.SpoilerLogs = File.CreateText(path);
+        try {
+          ItemReader.Result result =
+              await
+                  randomizer.Randomize(
+                      rand,
+                      GameSpec.FromGame
+                              .DS3,
+                      editor,
+                      gameDir,
+                      Directory
+                          .GetCurrentDirectory());
+          this.setStatus(
+              "Done. Info in " +
+              path +
+              " | Restart your game!" +
+              (result.Randomized
+                   ? " | Key item hash: " +
+                     result.ItemHash
+                   : ""),
+              false,
+              true);
+        } catch (Exception ex) {
+          Writers.SpoilerLogs.WriteLine(ex);
+          this.SetError(
+              "Error encountered: " +
+              ex.Message +
+              "\r\n\r\nIt may work to try again with a different seed. " +
+              (gameDir == null
+                   ? ""
+                   : "The merged mod might also not be compatible. "
+              ) +
+              "See most recent file in spoiler_logs directory for the full error.");
+          this.setStatus(
+              "Error! See error message in " +
+              path,
+              true,
+              false);
+        } finally {
+          Writers.SpoilerLogs.Close();
+        }
+      });
 
-                                               try {
-                                                 ItemReader.Result result = await
-                                                     randomizer.Randomize(
-                                                         rand,
-                                                         GameSpec.FromGame.DS3,
-                                                         editor,
-                                                         gameDir,
-                                                         Directory
-                                                             .GetCurrentDirectory());
-                                                 this.setStatus(
-                                                     "Done. Info in " +
-                                                     path +
-                                                     " | Restart your game!" +
-                                                     (result.Randomized
-                                                          ? " | Key item hash: " +
-                                                            result.ItemHash
-                                                          : ""),
-                                                     false,
-                                                     true);
-                                               } catch (Exception ex) {
-                                                 Console.WriteLine((object) ex);
-                                                 this.SetError(
-                                                     "Error encountered: " +
-                                                     ex.Message +
-                                                     "\r\n\r\nIt may work to try again with a different seed. " +
-                                                     (gameDir == null
-                                                          ? ""
-                                                          : "The merged mod might also not be compatible. "
-                                                     ) +
-                                                     "See most recent file in spoiler_logs directory for the full error.");
-                                                 this.setStatus(
-                                                     "Error! See error message in " +
-                                                     path,
-                                                     true,
-                                                     false);
-                                               } finally {
-                                                 Writers.SpoilerLogs.Close();
-                                               }
-                                             }));
-      mainForm3.randb.Enabled = true;
-      mainForm3.randb.Text = prevText;
-      mainForm3.randb.BackColor = SystemColors.Control;
+      mainForm3.randb.Text =
+          prevText;
+      mainForm3.randb.BackColor =
+          SystemColors.Control;
       mainForm3.working = false;
       mainForm3.UpdateExePath();
     }
