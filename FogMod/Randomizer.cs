@@ -34,18 +34,10 @@ namespace FogMod {
                                                       (IEnumerable<string>) opt
                                                           .GetEnabled())));
 
+      var ann = await AnnotationManager.Get(editor);
+
       var fogdistDirectory = new IoDirectory(editor.Spec.GameDir);
-      var fogTxt = fogdistDirectory.GetFile("fog.txt");
-
       IDeserializer deserializer = new DeserializerBuilder().Build();
-
-      AnnotationData ann;
-      using (StreamReader streamReader = fogTxt.ReadAsText())
-        ann = deserializer.Deserialize<AnnotationData>(
-            (TextReader) streamReader);
-      ann.SetGame(game);
-      stopwatch.ResetAndPrint("Set up annotations");
-
       Events events = null;
       if (game == GameSpec.FromGame.DS3) {
         var locations = fogdistDirectory.GetFile("locations.txt");

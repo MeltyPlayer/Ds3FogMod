@@ -58,6 +58,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FogMod\AnnotationManager.cs" />
     <Compile Include="FogMod\Flags.cs" />
     <Compile Include="FogMod\GameDataWriter3.cs" />
     <Compile Include="FogMod\GenerateConfig.cs" />
@@ -69,6 +70,7 @@
     <Compile Include="FogMod\io\IoFile.cs" />
     <Compile Include="FogMod\io\LazyWriterHelper.cs" />
     <Compile Include="FogMod\io\Writers.cs" />
+    <Compile Include="FogMod\MapsManager.cs" />
     <Compile Include="FogMod\ParamsManager.cs" />
     <Compile Include="FogMod\util\math\Vector3d.cs" />
     <Compile Include="FogMod\util\time\Stopwatch.cs" />

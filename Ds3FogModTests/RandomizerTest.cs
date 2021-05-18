@@ -24,6 +24,82 @@ namespace FogMod {
         IoDirectory.GetCwd().GetSubdir("temp", true);
 
     [TestMethod]
+    public async Task TestSpeed() {
+      var opt = new RandomizerOptions {
+        Game = SoulsIds.GameSpec.FromGame.DS3
+      };
+
+      // Randomize boss fog gates
+      opt["boss"] = true;
+      // Randomize pvp fog gates
+      opt["pvp"] = true;
+      // Require cinders of a lord
+      opt["lords"] = true;
+
+      // Scale enemies & bosses
+      opt["scale"] = true;
+      // Allow escaping w/o fighting bosses
+      opt["pacifist"] = true;
+      // Tree skip
+      opt["treeskip"] = true;
+
+      opt["earlywarp"] = true;
+
+      // Use fixed seed
+      //opt["fixedseed"] = true;
+      opt.Seed = 123456789;
+
+      var tempDir = RandomizerTest.TEMP_DIR;
+      if (tempDir.Name != "temp") {
+        Assert.Fail("Got the wrong directory!!!");
+        return;
+      }
+
+      var tempDirInfo = new DirectoryInfo(tempDir.FullName);
+      tempDirInfo.Delete(true);
+      tempDirInfo.Create();
+
+      var gameDir = "M:\\Games\\Steam\\steamapps\\common\\DARK SOULS III\\Game";
+
+      var spoilerLogs = tempDir.GetSubdir("spoiler_logs", true);
+      string path = string.Format($"{spoilerLogs.FullName}\\temp.txt");
+
+      Writers.SpoilerLogs = File.CreateText(path);
+
+      var modDirectory = IoDirectory.ModDirectory;
+      var fogdistDirectory = modDirectory.GetSubdir("fogdist");
+      var layoutsDirectory = fogdistDirectory.GetSubdir("Layouts");
+      var namesDirectory = fogdistDirectory.GetSubdir("Names");
+
+      var editor = new GameEditor(GameSpec.FromGame.DS3);
+      editor.Spec.GameDir = fogdistDirectory.FullName;
+      editor.Spec.LayoutDir = layoutsDirectory.FullName;
+      editor.Spec.NameDir = namesDirectory.FullName;
+
+      Console.WriteLine("Run 1");
+      await new Randomizer().Randomize(opt,
+                                       SoulsIds.GameSpec.FromGame.DS3,
+                                       editor,
+                                       opt["mergemods"]
+                                           ? gameDir + "\\randomizer"
+                                           : (string)null,
+                                       tempDir.FullName);
+
+
+      Console.WriteLine("\n\n\n");
+      Console.WriteLine("Run 2");
+      await new Randomizer().Randomize(opt,
+                                       SoulsIds.GameSpec.FromGame.DS3,
+                                       editor,
+                                       opt["mergemods"]
+                                           ? gameDir + "\\randomizer"
+                                           : (string)null,
+                                       tempDir.FullName);
+
+      Writers.SpoilerLogs.Close();
+    }
+
+    [TestMethod]
     public async Task VerifyAgainstGoldens() {
       var testExeDirectory = IoDirectory.GetCwd();
       var testProjectDirectory = testExeDirectory.GetSubdir("../..");

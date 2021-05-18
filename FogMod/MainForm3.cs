@@ -105,7 +105,15 @@ namespace FogMod {
       this.editor.Spec.GameDir = @"fogdist";
       this.editor.Spec.LayoutDir = @"fogdist\Layouts";
       this.editor.Spec.NameDir = @"fogdist\Names";
-      Task.Run(this.editor.LoadLayouts);
+
+      var ann = AnnotationManager.Get(this.editor);
+      Task.WhenAll(this.editor.LoadLayouts(),
+                   ann,
+                   Task.Run(async ()
+                                => MapsManager.Get(
+                                    this.exe.Text,
+                                    await ann,
+                                    this.editor)));
     }
 
     private void UpdateExePath() {
@@ -198,7 +206,7 @@ namespace FogMod {
       RandomizerOptions rand = mainForm3.options.Copy();
       mainForm3.randb.BackColor = Color.LightYellow;
       Randomizer randomizer = new Randomizer();
-      
+
       await Task.Run(async () => {
         Directory.CreateDirectory(
             "spoiler_logs");

@@ -68,26 +68,7 @@ namespace FogMod {
       }
       stopwatch.ResetAndPrint("  Loading menuFMGs");
 
-      // Overrides where only one copy is needed
-      var msbFiles = baseDirectory.GetFiles("*.msb.dcx");
-      var maps = new Dictionary<string, MSB3>();
-      foreach (var basePath in msbFiles) {
-        string path = basePath.FullName;
-        string name = GameEditor.BaseName(path);
-        if (!ann.Specs.ContainsKey(name)) {
-          return;
-        }
-
-        string altPath = $@"{gameDir}\map\mapstudio\{name}.msb.dcx";
-        if (gameDir != null && File.Exists(altPath)) {
-          Console.WriteLine($"Using override {altPath}");
-          path = altPath;
-        }
-
-        // TODO: Slow
-        maps[name] = MSB3.Read(path);
-      }
-      stopwatch.ResetAndPrint("  Loading maps");
+      var maps = await MapsManager.Get(gameDir, ann, editor);
 
       Dictionary<string, EMEVD> emevds = new Dictionary<string, EMEVD>();
       foreach (var basePath in baseDirectory.GetFiles("*.emevd.dcx")) {

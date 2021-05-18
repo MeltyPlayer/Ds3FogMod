@@ -11,7 +11,7 @@ using SoulsIds;
 
 namespace FogMod {
   public static class ParamsManager {
-    private static Dictionary<string, PARAM> cache_;
+    private static Task<Dictionary<string, PARAM>> cache_;
 
     public static async Task<Dictionary<string, PARAM>> Get(
         string gameDir,
@@ -19,21 +19,24 @@ namespace FogMod {
         GameEditor editor
     ) {
       if (ParamsManager.cache_ != null) {
-        return ParamsManager.cache_;
+        return await ParamsManager.cache_;
       }
 
-      var fogdistDirectory = new IoDirectory(editor.Spec.GameDir);
-      string path = fogdistDirectory.GetFile("Base\\Data0.bdt").FullName;
-      string altPath = $@"{gameDir}\Data0.bdt";
-      if (gameDir != null && File.Exists(altPath)) {
-        Console.WriteLine($"Using override {altPath}");
-        path = altPath;
-      }
+      return await (ParamsManager.cache_ = Task.Run(async () => {
+                       var fogdistDirectory =
+                           new IoDirectory(editor.Spec.GameDir);
+                       string path = fogdistDirectory.GetFile("Base\\Data0.bdt")
+                           .FullName;
+                       string altPath = $@"{gameDir}\Data0.bdt";
+                       if (gameDir != null && File.Exists(altPath)) {
+                         Console.WriteLine($"Using override {altPath}");
+                         path = altPath;
+                       }
 
-      // TODO: Slow
-      var layouts = await editor.LoadLayouts();
-      return ParamsManager.cache_ =
-                 await editor.LoadParams(path, layouts, true);
+                       // TODO: Slow
+                       var layouts = await editor.LoadLayouts();
+                       return await editor.LoadParams(path, layouts, true);
+                     }));
     }
   }
 }
