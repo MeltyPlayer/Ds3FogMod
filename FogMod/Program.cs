@@ -59,6 +59,8 @@ namespace FogMod {
         else
           await new Randomizer().Randomize(opt, game, editor, gameDir, gameDir);
       } else {
+        CommandLineFlags.Populate(args);
+
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
         Application.Run((Form) new MainForm3());

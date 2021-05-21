@@ -42,6 +42,9 @@ namespace FogMod {
         Events events,
         EventConfig eventConfig,
         GameEditor editor) {
+      MapsManager.ClearCache();
+      ParamsManager.ClearCache();
+
       var stopwatch = new Stopwatch();
       stopwatch.Start();
 

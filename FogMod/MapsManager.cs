@@ -13,8 +13,10 @@ using SoulsFormats;
 using SoulsIds;
 
 namespace FogMod {
-  public class MapsManager {
+  public static class MapsManager {
     private static Task<Dictionary<string, MSB3>> cache_;
+
+    public static void ClearCache() => MapsManager.cache_ = null;
 
     public static async Task<Dictionary<string, MSB3>> Get(
         string gameDir,

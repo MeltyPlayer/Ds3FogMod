@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,8 +7,6 @@ using System.Threading.Tasks;
 using FogMod.io;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-using FogMod.Properties;
 
 using SoulsFormats;
 
@@ -20,11 +17,21 @@ using FogMod.util.time;
 namespace FogMod {
   [TestClass]
   public class RandomizerTest {
+    private const int BIT_LEEWAY = 0;
+
     private static readonly IDirectory TEMP_DIR =
         IoDirectory.GetCwd().GetSubdir("temp", true);
 
     [TestMethod]
     public async Task TestSpeed() {
+      var testExeDirectory = IoDirectory.GetCwd();
+      var testProjectDirectory = testExeDirectory.GetSubdir("../..");
+
+      var testProjectGoldensDirectory = testProjectDirectory
+          .GetSubdir("goldens");
+      var goldenDirectories = testProjectGoldensDirectory.GetSubdirs();
+      var goldenDirectory = goldenDirectories.First();
+
       var opt = new RandomizerOptions {
         Game = SoulsIds.GameSpec.FromGame.DS3
       };
@@ -64,8 +71,6 @@ namespace FogMod {
       var spoilerLogs = tempDir.GetSubdir("spoiler_logs", true);
       string path = string.Format($"{spoilerLogs.FullName}\\temp.txt");
 
-      Writers.SpoilerLogs = File.CreateText(path);
-
       var modDirectory = IoDirectory.ModDirectory;
       var fogdistDirectory = modDirectory.GetSubdir("fogdist");
       var layoutsDirectory = fogdistDirectory.GetSubdir("Layouts");
@@ -76,27 +81,26 @@ namespace FogMod {
       editor.Spec.LayoutDir = layoutsDirectory.FullName;
       editor.Spec.NameDir = namesDirectory.FullName;
 
-      Console.WriteLine("Run 1");
-      await new Randomizer().Randomize(opt,
-                                       SoulsIds.GameSpec.FromGame.DS3,
-                                       editor,
-                                       opt["mergemods"]
-                                           ? gameDir + "\\randomizer"
-                                           : (string)null,
-                                       tempDir.FullName);
+      for (var i = 0; i < 3; ++i) {
+        Writers.SpoilerLogs = File.CreateText(path);
 
+        if (i > 0) {
+          Console.WriteLine("\n\n\n");
+        }
+        Console.WriteLine($"Run {i}");
+        
+        await new Randomizer().Randomize(opt,
+                                         SoulsIds.GameSpec.FromGame.DS3,
+                                         editor,
+                                         opt["mergemods"]
+                                             ? gameDir + "\\randomizer"
+                                             : (string)null,
+                                         tempDir.FullName);
 
-      Console.WriteLine("\n\n\n");
-      Console.WriteLine("Run 2");
-      await new Randomizer().Randomize(opt,
-                                       SoulsIds.GameSpec.FromGame.DS3,
-                                       editor,
-                                       opt["mergemods"]
-                                           ? gameDir + "\\randomizer"
-                                           : (string)null,
-                                       tempDir.FullName);
+        Writers.SpoilerLogs.Close();
 
-      Writers.SpoilerLogs.Close();
+        await this.AssertAgainstGolden_(goldenDirectory, tempDir, editor);
+      }
     }
 
     [TestMethod]
@@ -174,10 +178,17 @@ namespace FogMod {
                                        tempDir.FullName);
       Writers.SpoilerLogs.Close();
 
+      await this.AssertAgainstGolden_(goldenDirectory, tempDir, editor);
+    }
+
+    private async Task AssertAgainstGolden_(
+        IDirectory goldenDirectory,
+        IDirectory tempDir,
+        GameEditor editor) {
       var stopwatch = new Stopwatch();
       stopwatch.Start();
 
-      var directories = new[] {"event", "map", "msg", "script"};
+      var directories = new[] { "event", "map", "msg", "script" };
       foreach (var directory in directories) {
         var goldenSubdir = goldenDirectory.GetSubdir(directory);
         var tempSubdir = tempDir.GetSubdir(directory);
@@ -351,7 +362,7 @@ namespace FogMod {
 
           var displayType = expectedDef.DisplayType;
           if (displayType == PARAMDEF.DefType.dummy8) {
-            AssertBytes_(expectedValue as byte[],
+            this.AssertBytes_(expectedValue as byte[],
                          actualValue as byte[],
                          expectedDef.DisplayName);
           } else if (displayType == PARAMDEF.DefType.f32) {
@@ -406,26 +417,35 @@ namespace FogMod {
     private void AssertFilesBytes_(
         IFile expected,
         IFile actual,
-        bool decrypt = false) {
+        bool decrypt = false,
+        int leeway = BIT_LEEWAY) {
       var expectedBytes = this.ReadFileBytes_(expected, decrypt);
       var actualBytes = this.ReadFileBytes_(actual, decrypt);
-      this.AssertBytes_(expectedBytes, actualBytes, expected.FullName);
+      this.AssertBytes_(expectedBytes, actualBytes, expected.FullName, leeway);
     }
 
-    private void AssertBytes_(byte[] expected, byte[] actual, string name) {
+    private void AssertBytes_(byte[] expected, byte[] actual, string name, int leeway = BIT_LEEWAY) {
       var expectedLength = expected.Length;
       if (expectedLength != actual.Length) {
         this.SaveExpectedAndActual_(expected, actual);
         Assert.AreEqual(expectedLength,
                         actual.Length,
-                        "Expected files to be the same length.");
+                        $"Expected {name} files to be the same length.");
         return;
       }
 
       var differences = 0;
-      for (var i = 0; i < expectedLength; ++i) {
-        if (expected[i] != actual[i]) {
-          ++differences;
+      if (leeway == 0) {
+        for (var i = 0; i < expectedLength; ++i) {
+          if (expected[i] != actual[i]) {
+            ++differences;
+          }
+        }
+      } else {
+        for (var i = 0; i < expectedLength; ++i) {
+          if (Math.Abs(expected[i] - actual[i]) > leeway) {
+            ++differences;
+          }
         }
       }
 

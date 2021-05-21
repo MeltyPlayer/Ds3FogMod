@@ -102,9 +102,21 @@ namespace FogMod {
       }
 
       this.editor = new GameEditor(GameSpec.FromGame.DS3);
-      this.editor.Spec.GameDir = @"fogdist";
-      this.editor.Spec.LayoutDir = @"fogdist\Layouts";
-      this.editor.Spec.NameDir = @"fogdist\Names";
+
+      if (!CommandLineFlags.IsVisualStudio) {
+        this.editor.Spec.GameDir = @"fogdist";
+        this.editor.Spec.LayoutDir = @"fogdist\Layouts";
+        this.editor.Spec.NameDir = @"fogdist\Names";
+      } else {
+        var modDirectory = IoDirectory.ModDirectory;
+        var fogdistDirectory = modDirectory.GetSubdir("fogdist");
+        var layoutsDirectory = fogdistDirectory.GetSubdir("Layouts");
+        var namesDirectory = fogdistDirectory.GetSubdir("Names");
+
+        this.editor.Spec.GameDir = fogdistDirectory.FullName;
+        this.editor.Spec.LayoutDir = layoutsDirectory.FullName;
+        this.editor.Spec.NameDir = namesDirectory.FullName;
+      }
 
       var ann = AnnotationManager.Get(this.editor);
       Task.WhenAll(this.editor.LoadLayouts(),

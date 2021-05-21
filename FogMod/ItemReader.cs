@@ -131,20 +131,8 @@ namespace FogMod {
         }
         locationStopwatch.ResetAndPrint("    Locations 1");
 
-        Dictionary<int, PARAM.Row> dictionary3 = dictionary2["ItemLotParam"]
-                                                 .Rows.ToDictionary<PARAM.Row,
-                                                     int, PARAM.Row>(
-                                                     (Func<PARAM.Row, int>)
-                                                     (r => (int) r.ID),
-                                                     (Func<PARAM.Row, PARAM.Row>
-                                                     ) (r => r));
-        Dictionary<int, PARAM.Row> dictionary4 = dictionary2["ShopLineupParam"]
-                                                 .Rows.ToDictionary<PARAM.Row,
-                                                     int, PARAM.Row>(
-                                                     (Func<PARAM.Row, int>)
-                                                     (r => (int) r.ID),
-                                                     (Func<PARAM.Row, PARAM.Row>
-                                                     ) (r => r));
+        Dictionary<int, PARAM.Row> dictionary3 = dictionary2["ItemLotParam"].ToDictionary();
+        Dictionary<int, PARAM.Row> dictionary4 = dictionary2["ShopLineupParam"].ToDictionary();
         locationStopwatch.ResetAndPrint("    Locations 2");
 
         foreach (AnnotationData.KeyItemLoc keyItemLoc in ann.Locations.Items) {

@@ -13,6 +13,8 @@ namespace FogMod {
   public static class ParamsManager {
     private static Task<Dictionary<string, PARAM>> cache_;
 
+    public static void ClearCache() => ParamsManager.cache_ = null;
+
     public static async Task<Dictionary<string, PARAM>> Get(
         string gameDir,
         Events events,

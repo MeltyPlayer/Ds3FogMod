@@ -107,6 +107,14 @@ namespace SoulsFormats {
         this.DetectedSize = num1 - this.Rows[0].DataOffset;
     }
 
+    public Dictionary<int, PARAM.Row> ToDictionary() {
+      var dictionary = new Dictionary<int, PARAM.Row>();
+      foreach (var row in this.Rows) {
+        dictionary[(int)row.ID] = row;
+      }
+      return dictionary;
+    }
+
     protected override void Write(BinaryWriterEx bw) {
       if (this.AppliedParamdef == null)
         throw new InvalidOperationException(

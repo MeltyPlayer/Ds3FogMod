@@ -205,9 +205,10 @@ namespace SoulsFormats {
         EMEVD.Event @event = this.Events[eventIndex];
         for (int instrIndex = 0;
              instrIndex < @event.Instructions.Count;
-             ++instrIndex)
+             ++instrIndex) {
           @event.Instructions[instrIndex]
                 .WriteArgs(bw, this.Format, offsets, eventIndex, instrIndex);
+        }
       }
       if ((bw.Position - offsets.Arguments) % 16L > 0L)
         bw.WritePattern(16 - (int) (bw.Position - offsets.Arguments) % 16,
